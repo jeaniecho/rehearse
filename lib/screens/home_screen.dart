@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/scenarios.dart';
 import '../models/scenario.dart';
+import '../services/analytics.dart';
 import '../services/practice_history.dart';
 import '../services/subscription.dart';
 import '../theme/app_theme.dart';
@@ -335,7 +336,8 @@ class _FreeAllowanceStrip extends StatelessWidget {
           const SizedBox(width: 6),
           TextButton(
             key: const Key('open_paywall'),
-            onPressed: () => PaywallScreen.show(context),
+            onPressed: () =>
+                PaywallScreen.show(context, trigger: PaywallTrigger.homeUpsell),
             style: TextButton.styleFrom(
               foregroundColor: AppColors.forest,
               minimumSize: const Size(0, 36),

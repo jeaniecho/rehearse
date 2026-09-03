@@ -12,6 +12,7 @@ conversations. Flutter app plus a small Node proxy to an LLM.
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Day-by-day execution plan and milestones. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the code is put together. |
 | [`docs/REVENUECAT.md`](docs/REVENUECAT.md) | Dashboard and store setup, and how the app behaves without keys. |
+| [`docs/ANALYTICS.md`](docs/ANALYTICS.md) | The tracking plan, and the rule that no event may carry free text. |
 
 `PRD.md` and `ROADMAP.md` are the plan of record — **do not edit them to match
 the code.** When reality diverges, record it in `STATUS.md`.
@@ -21,7 +22,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 144 tests
+flutter test                    # 166 tests
 cd server && npm test           # 3 tests
 ```
 
@@ -54,8 +55,9 @@ then serve `build/web` — `.claude/launch.json` has a config for it.
 
 From `ROADMAP.md` §0, and they hold:
 
-1. P0 beats P1. RevenueCat is built; **analytics is the remaining untouched
-   P0**, and no sandbox purchase has been completed yet.
+1. P0 beats P1. RevenueCat and analytics are built; **onboarding is the last
+   untouched P0**. Neither a sandbox purchase nor a real analytics event has
+   been observed end to end yet.
 2. Working vertical slices beat architectural perfection.
 3. Do not rewrite working code to match the PRD more literally.
 4. Every day ends with a runnable app.
@@ -96,8 +98,9 @@ From `ROADMAP.md` §0, and they hold:
   `addPostFrameCallback` — see `ResultsScreen`.
 - **Scoring lives in `PracticeSummary`**, so the report and the stored record
   cannot disagree. Do not recompute it in a widget.
-- **Never send transcript content to analytics** when analytics is added
-  (PRD §16).
+- **Never send transcript content to analytics** (PRD §16). No method on
+  `Analytics` may take a `String` parameter — use an id or an enum. There are
+  tests that will fail if this slips.
 
 ## Testing notes
 
@@ -116,8 +119,8 @@ lib/models     Scenario, PracticeResponse, PracticeSummary, PracticeRecord,
                Subscription plans and outcomes
 lib/screens    home, brief, practice, results, progress, paywall
 lib/services   coach (remote/offline/resilient), speech in/out, history,
-               settings, subscription + RevenueCat client
+               settings, subscription + RevenueCat, analytics + PostHog
 lib/theme      AppColors tokens + Material 3 theme
-lib/widgets    shared UI + the three InheritedNotifier scopes
+lib/widgets    shared UI + the four InheritedNotifier scopes
 server         Node proxy: GET /health, POST /evaluate
 ```

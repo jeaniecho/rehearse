@@ -17,6 +17,7 @@ Built for the RevenueCat Shipaton 2026, leadership and career coaching.
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Execution plan and milestones. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the code is put together. |
 | [`docs/REVENUECAT.md`](docs/REVENUECAT.md) | Subscription setup, and how the app behaves without keys. |
+| [`docs/ANALYTICS.md`](docs/ANALYTICS.md) | The tracking plan and its privacy rule. |
 | [`CLAUDE.md`](CLAUDE.md) | Conventions and invariants for anyone, human or agent, changing this repo. |
 
 ## What works today
@@ -37,12 +38,14 @@ Built for the RevenueCat Shipaton 2026, leadership and career coaching.
   key or network connection.
 - Three free rehearsals, then a RevenueCat subscription, with prices and
   paywall copy driven from the dashboard rather than the code.
+- A product funnel instrumented end to end, built so that nothing you say in a
+  rehearsal can reach analytics.
 
 ## What does not exist yet
 
-**Analytics and onboarding.** Difficulty is a label on each scenario rather
-than a personality the user picks, and coaching feedback is a written sentence
-rather than a quote of what you actually said with a stronger alternative.
+**Onboarding.** Difficulty is a label on each scenario rather than a
+personality the user picks, and coaching feedback is a written sentence rather
+than a quote of what you actually said with a stronger alternative.
 
 Subscriptions are built and tested but have never completed a sandbox
 purchase, which needs App Store Connect and Play Console configuration —
@@ -57,7 +60,7 @@ order of work.
 - `lib/models`: scenario, response, summary, and history-record models
 - `lib/screens`: home, briefing, simulation, coaching report, and progress
 - `lib/services`: remote and offline coaching, speech in and out, the local
-  practice history and preferences, and subscriptions
+  practice history and preferences, subscriptions, and analytics
 - `lib/theme`: visual tokens and Material theme
 - `lib/widgets`: shared layout and brand components
 - `server`: lightweight OpenAI Responses API proxy and tests

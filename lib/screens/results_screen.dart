@@ -5,6 +5,7 @@ import '../models/practice_response.dart';
 import '../models/practice_summary.dart';
 import '../models/scenario.dart';
 import '../theme/app_theme.dart';
+import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_display.dart';
@@ -16,12 +17,17 @@ class ResultsScreen extends StatefulWidget {
     required this.scenario,
     required this.responses,
     this.mode = PracticeMode.guided,
+    this.isRetry = false,
     super.key,
   });
 
   final Scenario scenario;
   final List<PracticeResponse> responses;
   final PracticeMode mode;
+
+  /// Carried through from the rehearsal so the retry funnel stays intact
+  /// across a "Try again".
+  final bool isRetry;
 
   @override
   State<ResultsScreen> createState() => _ResultsScreenState();
@@ -53,6 +59,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
     // Only a finished rehearsal spends a free session, so abandoning one
     // costs nothing.
     final subscription = SubscriptionScope.maybeOf(context);
+    AnalyticsScope.maybeOf(
+      context,
+    )?.evaluationViewed(widget.scenario, mode: widget.mode, summary: _summary);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -77,8 +86,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
   void _retry() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            PracticeScreen(scenario: widget.scenario, mode: widget.mode),
+        builder: (_) => PracticeScreen(
+          scenario: widget.scenario,
+          mode: widget.mode,
+          isRetry: true,
+        ),
       ),
     );
   }

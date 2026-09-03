@@ -35,7 +35,7 @@ router package.
 ```text
 lib/
   main.dart            runApp
-  app.dart             owns the three notifiers and installs their scopes
+  app.dart             owns the four notifiers and installs their scopes
   data/
     scenarios.dart     all authored content — 7 const Scenario values
   models/
@@ -53,8 +53,10 @@ lib/
     app_settings.dart         device preferences + the key/value store
     subscription.dart         entitlement + the free allowance (the gate)
     subscription_client.dart  RevenueCat, behind an interface
+    analytics.dart            the typed funnel
+    analytics_sink.dart       PostHog, behind an interface
   theme/app_theme.dart   AppColors tokens + the Material 3 theme
-  widgets/               shared UI + the three InheritedNotifier scopes
+  widgets/               shared UI + the four InheritedNotifier scopes
 server/
   server.mjs           http server: GET /health, POST /evaluate
   coach.mjs            prompt construction and OpenAI Responses call
@@ -65,18 +67,19 @@ server/
 ## State management
 
 Plain `StatefulWidget` for screen-local state; `ChangeNotifier` exposed through
-`InheritedNotifier` for the three pieces of app-wide state. **No provider,
+`InheritedNotifier` for the four pieces of app-wide state. **No provider,
 riverpod, or bloc** — do not introduce one without a reason the PRD requires.
 
 ```text
 RehearseApp (StatefulWidget, owns the notifiers, calls load() in initState)
-  └── PracticeHistoryScope     (InheritedNotifier<PracticeHistory>)
-        └── AppSettingsScope   (InheritedNotifier<AppSettings>)
+  └── PracticeHistoryScope         (InheritedNotifier<PracticeHistory>)
+        └── AppSettingsScope       (InheritedNotifier<AppSettings>)
               └── SubscriptionScope (InheritedNotifier<Subscription>)
-                    └── MaterialApp
+                    └── AnalyticsScope (InheritedNotifier<Analytics>)
+                          └── MaterialApp
 ```
 
-All three scopes sit **above** `MaterialApp`, so pushed routes still find them
+All four scopes sit **above** `MaterialApp`, so pushed routes still find them
 by walking up through the `Navigator`.
 
 Each scope offers two accessors, and the difference matters:
@@ -228,6 +231,32 @@ weakest skill in the person's own history — see
 Restore lives on the progress screen as well as the paywall, because the app
 stores require it to be reachable without an upgrade prompt in the way.
 
+## Analytics
+
+```text
+Screens ──▶ Analytics (typed funnel) ──▶ AnalyticsSink ──▶ PostHog
+                                              │
+                                    no key ──▶ NoopAnalyticsSink
+```
+
+`Analytics` exposes one typed method per funnel step. **No method accepts free
+text** — every parameter is an id, an enum, a number, or a boolean, which is
+what makes PRD §16's "never send raw conversation contents" a property of the
+type system rather than of everyone's discipline. The manager's response
+reaches it only as a character count.
+
+Two tests hold that line: one plays a full free-form rehearsal with a
+distinctive phrase and searches every payload for it, and one asserts that
+every string emitted is catalog metadata from an allowlist.
+
+`AnalyticsSink` is three methods, so swapping PostHog for Amplitude, Mixpanel,
+or Segment is one class and no call-site changes. Event names and properties
+are the contract — see [`ANALYTICS.md`](ANALYTICS.md).
+
+Entitlement is registered as super properties whenever it changes, so any
+funnel can be split by free versus Pro without threading state through each
+call.
+
 ## Persistence
 
 `shared_preferences`, wrapped so tests never touch a platform channel.
@@ -285,6 +314,7 @@ Two shared widgets carry accessibility rules worth preserving:
 | `text_scale_test.dart` | every screen at 1.0×, 1.3×, 1.6× |
 | `coach_service_test.dart` | remote parsing and offline scoring |
 | `subscription_test.dart` | the gate, purchase and restore outcomes, and the paywall |
+| `analytics_test.dart` | the funnel end to end, and that no content leaks |
 | `visual_qa_test.dart` | renders each screen to `/tmp/rehearse-*.png` |
 
 Two of these are unusual and deliberate:

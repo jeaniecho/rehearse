@@ -5,9 +5,11 @@ import '../models/practice_record.dart';
 import '../models/practice_response.dart';
 import '../models/scenario.dart';
 import '../models/subscription.dart';
+import '../services/analytics.dart';
 import '../services/practice_history.dart';
 import '../services/subscription.dart';
 import '../theme/app_theme.dart';
+import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_display.dart';
@@ -138,6 +140,11 @@ class _PlanCardState extends State<_PlanCard> {
   Future<void> _restore(Subscription subscription) async {
     final outcome = await subscription.restore();
     if (!mounted) return;
+
+    AnalyticsScope.maybeOf(context)?.restoreCompleted(
+      restored: outcome.unlocksPro,
+      from: RestoreSource.progress,
+    );
     setState(() => _notice = outcome.message);
   }
 
@@ -228,7 +235,10 @@ class _PlanCardState extends State<_PlanCard> {
                     Expanded(
                       child: FilledButton(
                         key: const Key('upgrade_from_progress'),
-                        onPressed: () => PaywallScreen.show(context),
+                        onPressed: () => PaywallScreen.show(
+                          context,
+                          trigger: PaywallTrigger.progressUpsell,
+                        ),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(44),
                         ),

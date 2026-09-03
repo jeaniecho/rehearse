@@ -9,6 +9,7 @@ import 'package:rehearse/models/subscription.dart';
 import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/home_screen.dart';
 import 'package:rehearse/screens/paywall_screen.dart';
+import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/screens/progress_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
@@ -426,7 +427,11 @@ void main() {
       final subscription = await subscriptionWith(used: 3);
       addTearDown(subscription.dispose);
 
-      await pump(tester, const PaywallScreen(), subscription: subscription);
+      await pump(
+        tester,
+        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+        subscription: subscription,
+      );
 
       expect(find.text(r'$44.99'), findsOneWidget);
       expect(find.text(r'$8.99'), findsOneWidget);
@@ -447,7 +452,7 @@ void main() {
 
       await pump(
         tester,
-        const PaywallScreen(),
+        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
         subscription: subscription,
         records: [_record(clarity: 80, empathy: 78, courage: 40)],
       );
@@ -466,7 +471,11 @@ void main() {
       final subscription = await subscriptionWith(offer: null, used: 3);
       addTearDown(subscription.dispose);
 
-      await pump(tester, const PaywallScreen(), subscription: subscription);
+      await pump(
+        tester,
+        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+        subscription: subscription,
+      );
 
       expect(find.byKey(const Key('offer_unavailable')), findsOneWidget);
       expect(find.byKey(const Key('retry_offer')), findsOneWidget);
@@ -484,7 +493,11 @@ void main() {
       );
       addTearDown(subscription.dispose);
 
-      await pump(tester, const PaywallScreen(), subscription: subscription);
+      await pump(
+        tester,
+        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+        subscription: subscription,
+      );
       await tester.tap(find.byKey(const Key('start_subscription')));
       await tester.pumpAndSettle();
 
@@ -501,7 +514,11 @@ void main() {
       );
       addTearDown(subscription.dispose);
 
-      await pump(tester, const PaywallScreen(), subscription: subscription);
+      await pump(
+        tester,
+        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+        subscription: subscription,
+      );
       await tester.tap(find.byKey(const Key('start_subscription')));
       await tester.pumpAndSettle();
 

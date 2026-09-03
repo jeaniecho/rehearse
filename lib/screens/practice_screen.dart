@@ -3,12 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/practice_response.dart';
+import '../models/practice_summary.dart';
 import '../models/scenario.dart';
+import '../services/analytics.dart';
 import '../services/app_settings.dart';
 import '../services/coach_service.dart';
 import '../services/speech_input_service.dart';
 import '../services/speech_output_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/analytics_scope.dart';
 import '../widgets/app_settings_scope.dart';
 import '../widgets/app_shell.dart';
 import 'results_screen.dart';
@@ -20,11 +23,16 @@ class PracticeScreen extends StatefulWidget {
     this.coachService,
     this.speechInputService,
     this.speechOutputService,
+    this.isRetry = false,
     super.key,
   });
 
   final Scenario scenario;
   final PracticeMode mode;
+
+  /// Set when this rehearsal was started from "Try again", so the retry
+  /// funnel can be measured separately.
+  final bool isRetry;
   final CoachService? coachService;
   final SpeechInputService? speechInputService;
   final SpeechOutputService? speechOutputService;
@@ -42,6 +50,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
   late final SpeechInputService _speechInputService;
   late final SpeechOutputService _speechOutputService;
   AppSettings? _settings;
+  Analytics? _analytics;
+  final _startedAt = DateTime.now();
+  bool _reachedReport = false;
+  bool _startReported = false;
   int _turnIndex = 0;
   PracticeResponse? _selectedResponse;
   bool _isEvaluating = false;
@@ -83,7 +95,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _settings = AppSettingsScope.maybeOf(context);
+    _analytics = AnalyticsScope.maybeOf(context);
+
+    if (_startReported) return;
+    _startReported = true;
+    _analytics?.simulationStarted(
+      widget.scenario,
+      mode: widget.mode,
+      isRetry: widget.isRetry,
+    );
   }
+
+  int get _elapsedSeconds => DateTime.now().difference(_startedAt).inSeconds;
 
   /// A device with no usable voice just stays quiet — spoken replies are an
   /// enhancement, never a prerequisite for practicing.
@@ -260,13 +283,31 @@ class _PracticeScreenState extends State<PracticeScreen> {
     if (response == null) return;
 
     _responses.add(response);
+    _analytics?.simulationMessageSent(
+      widget.scenario,
+      mode: widget.mode,
+      turnIndex: _turnIndex,
+      responseLength: response.text.length,
+      source: response.source,
+    );
+
     if (_turnIndex == widget.scenario.turns.length - 1) {
+      _reachedReport = true;
+      _analytics?.simulationCompleted(
+        widget.scenario,
+        mode: widget.mode,
+        isRetry: widget.isRetry,
+        turnCount: _responses.length,
+        durationSeconds: _elapsedSeconds,
+        summary: PracticeSummary.fromResponses(_responses),
+      );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => ResultsScreen(
             scenario: widget.scenario,
             responses: List.unmodifiable(_responses),
             mode: widget.mode,
+            isRetry: widget.isRetry,
           ),
         ),
       );
@@ -297,6 +338,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   @override
   void dispose() {
+    // Leaving before the report is the drop-off the roadmap asks to measure.
+    if (!_reachedReport) {
+      _analytics?.simulationAbandoned(
+        widget.scenario,
+        mode: widget.mode,
+        turnReached: _turnIndex + 1,
+        durationSeconds: _elapsedSeconds,
+      );
+    }
     unawaited(_speechInputService.cancel());
     unawaited(_speechOutputService.stop());
     _scrollController.dispose();

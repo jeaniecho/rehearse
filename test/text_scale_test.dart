@@ -6,6 +6,7 @@ import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/home_screen.dart';
 import 'package:rehearse/screens/paywall_screen.dart';
+import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/screens/progress_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
@@ -126,7 +127,11 @@ void main() {
       });
 
       testWidgets('paywall', (tester) async {
-        await layOut(tester, const PaywallScreen(), textScale: textScale);
+        await layOut(
+          tester,
+          const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+          textScale: textScale,
+        );
       });
     });
   }

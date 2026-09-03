@@ -4,8 +4,8 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-03, after the RevenueCat integration.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (144 passing),
+> **Last audited:** 2026-09-03, after analytics.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (166 passing),
 > `cd server && npm test` (3 passing), `flutter build web --release` and
 > `flutter build apk --debug` (both succeed).
 
@@ -21,7 +21,11 @@ covered by tests — but it has never completed a sandbox purchase, because that
 needs App Store Connect and Play Console configuration. See
 [`REVENUECAT.md`](REVENUECAT.md).
 
-What is still missing from the commercial P0: **analytics and onboarding**.
+**Analytics is now built too** — the PRD §17 funnel, with the "never send
+transcript content" rule enforced by the type system rather than by
+discipline. See [`ANALYTICS.md`](ANALYTICS.md).
+
+The one commercial P0 still missing is **onboarding**.
 
 Two structural gaps inside the loop matter more than their size suggests:
 **difficulty is a label, not a behaviour**, and **simulation and evaluation
@@ -60,6 +64,10 @@ share one prompt**, which is why feedback is a generic sentence instead of
   from practice history so clearing history cannot hand sessions back.
 - **Contextual paywall** that opens on the weakest skill the person's own
   history shows, with copy overridable from offering metadata.
+- **Analytics**: the PRD §17 funnel end to end, including abandonment with the
+  turn reached, retry as its own attempt, and paywall triggers that
+  distinguish a forced paywall from a voluntary upsell. Entitlement rides
+  along as super properties. Provider-agnostic behind a three-method sink.
 
 ### Partially complete
 
@@ -80,9 +88,11 @@ share one prompt**, which is why feedback is a generic sentence instead of
 
 Everything below is **P0 in the PRD** unless marked otherwise.
 
-- **Analytics.** No SDK and no events. The PRD lists ~20 required events. This
-  is now the largest missing P0.
-- **Onboarding.** App opens straight onto the home screen.
+- **Onboarding.** App opens straight onto the home screen. This is now the
+  last missing P0, and the copy is already written in PRD §18.
+- Five PRD §16 events cannot fire yet because the feature does not exist:
+  `onboarding_started`, `onboarding_completed`, `difficulty_selected`,
+  `reminder_created`, `notification_opened`.
 - **Optimistic message rendering.** The manager's own message does not appear
   until the coach responds — PRD §28 wants it rendered immediately.
 - **Session outcome** (success / partial / unresolved / escalated).
@@ -98,7 +108,7 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 
 ### Broken
 
-Nothing. Analysis is clean, all 144 Flutter tests and 3 server tests pass, and
+Nothing. Analysis is clean, all 166 Flutter tests and 3 server tests pass, and
 both the web and Android builds succeed.
 
 The two known **defects** are cosmetic but real, and both are documented in
@@ -114,12 +124,13 @@ The two known **defects** are cosmetic but real, and both are documented in
 | **M1** Local vertical slice | 🟡 loop and free-session UX complete; onboarding and difficulty selection missing |
 | **M2** Real AI simulation | 🟡 works, but one combined prompt and no personality input |
 | **M3** Evaluation + retry | 🟡 scores and retry exist; quote-based critique does not |
-| **M4** Monetization + analytics | 🟡 RevenueCat built and tested but never sandbox-purchased; analytics not started |
+| **M4** Monetization + analytics | 🟡 both built and tested; RevenueCat has never completed a sandbox purchase |
 | **M5** Polish + reliability | 🟢 ahead of schedule — this is the strongest area |
 | **M6** Release + submission | ❌ bundle id and version only |
 | **M7–M9** Launch, growth, submission package | ❌ not started |
 
-Analytics is now the one untouched P0.
+Onboarding is the one untouched P0. M4's remaining risk is not code — it is
+that no real transaction and no real event have been observed end to end.
 
 ---
 
@@ -212,9 +223,10 @@ Ordered by what moves the submission, not by what is most interesting.
    Follow [`REVENUECAT.md`](REVENUECAT.md) §2–§6. The code is done; this is
    store configuration plus one device test, and until it happens the
    monetization is unproven.
-2. **Analytics.** The funnel from PRD §17. Cheap now that sessions and
-   entitlement are already tracked locally, and needed before any growth or
-   experiment work means anything.
+2. **Point analytics at a real PostHog project and watch the funnel fill.**
+   One `--dart-define` ([`ANALYTICS.md`](ANALYTICS.md) §Setup). Do it at the
+   same time as the sandbox purchase so the monetization funnel is verified
+   in one pass.
 3. **Split the prompt, add quote-based critique.** This is what makes the
    feedback "actually useful" (PRD §35) and what the two-minute demo has to
    show. Do it with the dimension change in one pass.
@@ -236,10 +248,14 @@ Backend          : Node http server in server/, OpenAI Responses API
 Persistence      : shared_preferences
 Monetization     : RevenueCat (purchases_flutter), entitlement `pro`,
                    3 free completed rehearsals, keys via --dart-define
+Analytics        : PostHog behind a provider-agnostic sink, key via
+                   --dart-define, no-op without one
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
-                   purchases_flutter
-Tests            : 144 Flutter + 3 server
+                   purchases_flutter, posthog_flutter
+Tests            : 166 Flutter + 3 server
 TODO/FIXME       : none
 ```
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the pieces fit together.
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the pieces fit together,
+[`REVENUECAT.md`](REVENUECAT.md) for store setup, and
+[`ANALYTICS.md`](ANALYTICS.md) for the tracking plan.

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../models/practice_response.dart';
 import '../models/scenario.dart';
+import '../services/analytics.dart';
 import '../theme/app_theme.dart';
+import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/subscription_scope.dart';
 import 'paywall_screen.dart';
@@ -21,19 +23,33 @@ class _BriefScreenState extends State<BriefScreen> {
   PracticeMode _mode = PracticeMode.freestyle;
 
   Scenario get scenario => widget.scenario;
+  bool _viewReported = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_viewReported) return;
+    _viewReported = true;
+    AnalyticsScope.maybeOf(context)?.scenarioViewed(scenario);
+  }
 
   /// Browsing and reading a briefing is always free; the gate is at the
   /// moment of starting, so nobody hits a paywall before they understand
   /// what they would be practicing (PRD §14).
   Future<void> _begin(BuildContext context) async {
     final subscription = SubscriptionScope.maybeOf(context);
+    final analytics = AnalyticsScope.maybeOf(context);
 
     if (subscription != null && subscription.isPaywalled) {
-      final unlocked = await PaywallScreen.show(context);
+      final unlocked = await PaywallScreen.show(
+        context,
+        trigger: PaywallTrigger.sessionLimit,
+      );
       if (!unlocked || !context.mounted) return;
     }
 
     if (!context.mounted) return;
+    analytics?.scenarioStarted(scenario, mode: _mode);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PracticeScreen(scenario: scenario, mode: _mode),

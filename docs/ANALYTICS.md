@@ -1,0 +1,167 @@
+# Analytics
+
+The PRD §17 funnel, instrumented. Provider-agnostic by design: PostHog is
+wired up, and swapping it is one class.
+
+**Nothing here is required to run the app.** With no key every event is a
+no-op.
+
+---
+
+## The rule that shapes the design
+
+> Never send raw conversation contents to analytics. — PRD §16
+
+This is enforced by the type system rather than by discipline. **No method on
+`Analytics` accepts free text.** Every parameter is an id, an enum, a number,
+or a boolean; the manager's response reaches the facade only as a character
+count. Adding a `String` parameter to a tracking method is the one change that
+should never pass review — it needs an enum or an id instead.
+
+Two tests hold the line:
+
+- A full free-form rehearsal is played with a distinctive phrase typed in, and
+  every recorded payload is searched for it. The scenario's own prose and the
+  authored choice text are checked too.
+- Every string value emitted by the facade is asserted to be catalog metadata
+  from a known allowlist.
+
+---
+
+## Events
+
+Fired today, in funnel order.
+
+| Event | When | Notable properties |
+|---|---|---|
+| `app_opened` | app start | — |
+| `scenario_viewed` | the briefing is shown | `scenario_id`, `scenario_skill`, `difficulty` |
+| `scenario_started` | start is tapped and the gate passes | `mode` |
+| `simulation_started` | the conversation screen mounts | `is_retry` |
+| `retry_started` | as above, when `is_retry` | |
+| `simulation_message_sent` | one manager turn is committed | `turn_index`, `response_length`, `coach` |
+| `simulation_completed` | the last turn is answered | `turn_count`, `simulation_duration_seconds`, scores, `score_band` |
+| `retry_completed` | as above, when `is_retry` | |
+| `simulation_abandoned` | the screen is left before the report | `turn_reached`, `simulation_duration_seconds` |
+| `evaluation_viewed` | the coaching report is shown | scores, `score_band` |
+| `paywall_viewed` | the paywall opens | `trigger`, `paywall_id`, `plan_count` |
+| `paywall_dismissed` | it is closed without buying | `trigger`, `paywall_id` |
+| `purchase_completed` | a purchase clears | `package_id`, `paywall_id` |
+| `trial_started` | as above, when the plan had a trial | |
+| `restore_completed` | restore finishes either way | `restored`, `from` |
+
+### Super properties
+
+Attached to every event, refreshed whenever entitlement changes:
+
+`is_pro`, `billing_configured`, `free_sessions_remaining`
+
+That means any funnel can be split by free versus Pro without threading state
+through each call.
+
+### Not yet emitted
+
+These are in PRD §16 but the feature does not exist:
+
+`onboarding_started`, `onboarding_completed`, `difficulty_selected`,
+`reminder_created`, `notification_opened`
+
+Add the event in the same commit as the feature, not before. An event that
+never fires is worse than a missing one — it looks like a measured zero.
+
+### Deliberate naming differences from the PRD
+
+- **`score_band`, not `outcome`.** PRD §9 describes success / partial /
+  unresolved / escalated. The simulation has no outcome model yet, so this is
+  the score band (`strong` / `solid` / `mixed` / `struggled`) named for what
+  it actually is. Rename it when outcomes are real.
+- **`scenario_skill`, not `scenario_category`.** Scenarios carry a skill, not
+  a category.
+- **`evaluation_requested` is folded into `simulation_message_sent`**, which
+  already records the coach that scored the turn.
+
+---
+
+## The funnel
+
+PRD §17, and what to query:
+
+```text
+app_opened
+   ↓
+scenario_viewed          browse rate
+   ↓
+scenario_started         commitment
+   ↓
+simulation_started
+   ↓
+simulation_completed     ← the activation metric
+   ↓
+evaluation_viewed
+   ↓
+simulation_started #2    ← secondary activation: the loop is compelling
+   ↓
+paywall_viewed
+   ↓
+purchase_completed / trial_started
+```
+
+`simulation_abandoned` carries `turn_reached`, which answers the roadmap's
+"drop-off turn" question directly.
+
+---
+
+## Setup
+
+1. Create a PostHog project (cloud or self-hosted).
+2. Copy the **project API key** — the `phc_…` one. It is publishable and
+   designed to ship in clients.
+3. Run with it:
+
+```bash
+flutter run --dart-define=REHEARSE_POSTHOG_KEY=phc_xxxxxxxx
+```
+
+For EU cloud or self-hosted, add the host:
+
+```bash
+--dart-define=REHEARSE_POSTHOG_HOST=https://eu.i.posthog.com
+```
+
+Both platforms set `com.posthog.posthog.AUTO_INIT` to `false` in native
+config, because setup happens from Dart with the build-time key. That is a
+boolean, not a secret — **no key is ever committed.**
+
+Autocapture, application lifecycle events, and session replay are all off.
+Screens are named by the funnel above rather than guessed from the widget
+tree, and replay would record what people type into a rehearsal.
+
+---
+
+## Swapping providers
+
+`AnalyticsSink` is three methods. To move to Amplitude, Mixpanel, or Segment,
+write one class and change `createAnalyticsSink()`:
+
+```dart
+abstract interface class AnalyticsSink {
+  Future<bool> configure();
+  Future<void> track(String event, Map<String, Object> properties);
+  Future<void> setSuperProperties(Map<String, Object> properties);
+}
+```
+
+No call site changes. The event names and properties above are the contract,
+not PostHog.
+
+---
+
+## Behaviour without a key
+
+| Situation | What happens |
+|---|---|
+| No `REHEARSE_POSTHOG_KEY` | `NoopAnalyticsSink`. Every call is silently dropped; `Analytics.isEnabled` is false. |
+| Key present, setup throws | Same — caught, and the app starts normally. |
+| A single event fails to send | Swallowed. Telemetry never interrupts a rehearsal. |
+
+`flutter test` and the web preview never reach a network.

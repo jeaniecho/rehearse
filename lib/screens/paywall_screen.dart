@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../models/practice_summary.dart';
 import '../models/subscription.dart';
+import '../services/analytics.dart';
 import '../theme/app_theme.dart';
+import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/subscription_scope.dart';
@@ -16,15 +18,22 @@ import '../widgets/subscription_scope.dart';
 /// Plans and prices come from the RevenueCat offering, never from code, so
 /// packaging can be changed and experimented on from the dashboard.
 class PaywallScreen extends StatefulWidget {
-  const PaywallScreen({super.key});
+  const PaywallScreen({required this.trigger, super.key});
+
+  /// How this person got here, so a forced paywall and a voluntary one can
+  /// be told apart in the funnel.
+  final PaywallTrigger trigger;
 
   /// Shows the paywall as a full-screen page. Resolves true if the person
   /// came away with Pro.
-  static Future<bool> show(BuildContext context) async {
+  static Future<bool> show(
+    BuildContext context, {
+    required PaywallTrigger trigger,
+  }) async {
     final unlocked = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         fullscreenDialog: true,
-        builder: (_) => const PaywallScreen(),
+        builder: (_) => PaywallScreen(trigger: trigger),
       ),
     );
     return unlocked ?? false;
@@ -37,6 +46,29 @@ class PaywallScreen extends StatefulWidget {
 class _PaywallScreenState extends State<PaywallScreen> {
   String? _selectedPlanId;
   String? _notice;
+  bool _viewReported = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_viewReported) return;
+    _viewReported = true;
+
+    final offer = SubscriptionScope.of(context).offer;
+    AnalyticsScope.maybeOf(context)?.paywallViewed(
+      trigger: widget.trigger,
+      offeringId: offer?.id,
+      planCount: offer?.plans.length ?? 0,
+    );
+  }
+
+  void _dismiss() {
+    AnalyticsScope.maybeOf(context)?.paywallDismissed(
+      trigger: widget.trigger,
+      offeringId: SubscriptionScope.of(context).offer?.id,
+    );
+    Navigator.of(context).pop(false);
+  }
 
   SubscriptionPlan? _planFor(SubscriptionOffer offer) {
     for (final plan in offer.plans) {
@@ -45,10 +77,33 @@ class _PaywallScreenState extends State<PaywallScreen> {
     return offer.recommended;
   }
 
-  Future<void> _handle(Future<PurchaseOutcome> Function() action) async {
-    final outcome = await action();
+  Future<void> _buy(SubscriptionPlan plan) async {
+    final offeringId = SubscriptionScope.of(context).offer?.id;
+    final outcome = await SubscriptionScope.of(context).purchase(plan);
     if (!mounted) return;
 
+    if (outcome == PurchaseOutcome.purchased) {
+      AnalyticsScope.maybeOf(context)?.purchaseCompleted(
+        packageId: plan.id,
+        offeringId: offeringId,
+        startedTrial: plan.hasTrial,
+      );
+    }
+    _settle(outcome);
+  }
+
+  Future<void> _restore() async {
+    final outcome = await SubscriptionScope.of(context).restore();
+    if (!mounted) return;
+
+    AnalyticsScope.maybeOf(context)?.restoreCompleted(
+      restored: outcome.unlocksPro,
+      from: RestoreSource.paywall,
+    );
+    _settle(outcome);
+  }
+
+  void _settle(PurchaseOutcome outcome) {
     if (outcome.unlocksPro) {
       Navigator.of(context).pop(true);
       return;
@@ -67,17 +122,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
         leading: IconButton(
           key: const Key('close_paywall'),
           tooltip: 'Close',
-          onPressed: subscription.isBusy
-              ? null
-              : () => Navigator.of(context).pop(false),
+          onPressed: subscription.isBusy ? null : _dismiss,
           icon: const Icon(Icons.close_rounded),
         ),
         actions: [
           TextButton(
             key: const Key('restore_purchases'),
-            onPressed: subscription.isBusy
-                ? null
-                : () => _handle(subscription.restore),
+            onPressed: subscription.isBusy ? null : _restore,
             child: const Text('Restore'),
           ),
           const SizedBox(width: 8),
@@ -134,7 +185,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     : () {
                         final plan = _planFor(offer);
                         if (plan == null) return;
-                        _handle(() => subscription.purchase(plan));
+                        _buy(plan);
                       },
                 child: subscription.isBusy
                     ? const SizedBox(
