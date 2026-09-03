@@ -80,12 +80,19 @@ class ProgressScreen extends StatelessWidget {
           const SizedBox(width: 6),
         ],
       ),
-      body: PageBody(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 30),
-        safeTop: false,
+      body: PageWidth(
         child: records.isEmpty
-            ? const _EmptyProgress()
+            ? const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: _EmptyProgress(),
+              )
             : ListView(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  4,
+                  20,
+                  MediaQuery.paddingOf(context).bottom + 30,
+                ),
                 children: [
                   const SizedBox(height: 8),
                   _StreakBanner(history: history),
@@ -164,7 +171,7 @@ class _PlanCardState extends State<_PlanCard> {
       child: Card(
         key: const Key('plan_card'),
         child: Padding(
-          padding: const EdgeInsets.all(19),
+          padding: const EdgeInsets.all(17),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -175,7 +182,7 @@ class _PlanCardState extends State<_PlanCard> {
                     height: 38,
                     decoration: BoxDecoration(
                       color: isPro ? AppColors.mint : AppColors.canvas,
-                      borderRadius: BorderRadius.circular(13),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       isPro
@@ -229,7 +236,7 @@ class _PlanCardState extends State<_PlanCard> {
                   ),
                 ),
               ],
-              const SizedBox(height: 15),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   if (!isPro) ...[
@@ -292,7 +299,7 @@ class _EmptyProgress extends StatelessWidget {
               size: 34,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           Text(
             'No rehearsals yet',
             style: Theme.of(context).textTheme.headlineMedium,
@@ -311,7 +318,7 @@ class _EmptyProgress extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
           SizedBox(
             width: 220,
             child: FilledButton(
@@ -336,10 +343,10 @@ class _StreakBanner extends StatelessWidget {
     final trend = history.scoreTrend();
 
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.forest,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +389,7 @@ class _StreakBanner extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Row(
             children: [
               _BannerStat(
@@ -468,13 +475,13 @@ class _SkillTrends extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(21),
+        padding: const EdgeInsets.all(17),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Skills across every rehearsal',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 5),
             Text(
@@ -484,7 +491,7 @@ class _SkillTrends extends StatelessWidget {
                         '${weakest.key.label} is where the next point is.',
               style: const TextStyle(color: AppColors.muted, fontSize: 13),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 18),
             SkillBars(values: skills, spacing: 17),
           ],
         ),
@@ -510,10 +517,10 @@ class _SessionTile extends StatelessWidget {
     final scenario = _scenario;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
@@ -523,7 +530,7 @@ class _SessionTile extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               color: scenario?.tint ?? AppColors.canvas,
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               scenario?.icon ?? Icons.forum_rounded,

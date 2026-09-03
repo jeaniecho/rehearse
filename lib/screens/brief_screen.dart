@@ -89,11 +89,9 @@ class _BriefScreenState extends State<BriefScreen> {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
-      body: PageBody(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        safeTop: false,
-        safeBottom: false,
+      body: PageWidth(
         child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           children: [
             const SizedBox(height: 12),
             Text(

@@ -52,11 +52,19 @@ class HomeScreen extends StatelessWidget {
     final recommended = recommendedScenario(history);
 
     return Scaffold(
-      body: PageBody(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+      body: PageWidth(
         child: ListView(
+          // There is no app bar, so the top inset is the only thing keeping
+          // the wordmark out of the status bar. Nothing at the bottom is
+          // tappable, so that inset is not needed and 24 is just breathing
+          // room under the last card.
+          padding: EdgeInsets.fromLTRB(
+            20,
+            MediaQuery.paddingOf(context).top,
+            20,
+            24,
+          ),
           children: [
-            const SizedBox(height: 4),
             Row(
               children: [
                 // Flexible so the wordmark yields to the progress button
@@ -206,7 +214,7 @@ class _HeroCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.forest,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Stack(
         children: [
@@ -221,30 +229,20 @@ class _HeroCard extends StatelessWidget {
             child: _DecorativeCircle(size: 128, color: Color(0xFFE86D4A)),
           ),
           Padding(
-            padding: const EdgeInsets.all(22),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    eyebrow,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.0,
-                    ),
+                Text(
+                  eyebrow,
+                  style: const TextStyle(
+                    color: Color(0xFFD9E5DD),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
                   ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 14),
                 Text(
                   headline,
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
@@ -266,7 +264,7 @@ class _HeroCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
                 FilledButton.icon(
                   key: const Key('start_recommended'),
                   onPressed: onStart,
@@ -308,7 +306,7 @@ class _FreeAllowanceStrip extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(15, 12, 12, 12),
       decoration: BoxDecoration(
         color: spent ? AppColors.peach : AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: spent ? AppColors.peach : AppColors.border),
       ),
       child: Row(
@@ -448,14 +446,14 @@ class _MomentumCard extends StatelessWidget {
 
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         key: const Key('momentum_card'),
         onTap: history.isEmpty ? null : onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
           ),
           child: content,
@@ -539,9 +537,9 @@ class _ScenarioCard extends StatelessWidget {
       child: InkWell(
         key: Key('scenario_${scenario.id}'),
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(15),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -550,11 +548,11 @@ class _ScenarioCard extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: scenario.tint,
-                  borderRadius: BorderRadius.circular(17),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(scenario.icon, color: AppColors.ink, size: 25),
+                child: Icon(scenario.icon, color: AppColors.ink, size: 23),
               ),
-              const SizedBox(width: 13),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,25 +571,36 @@ class _ScenarioCard extends StatelessWidget {
                     ],
                     Text(
                       scenario.title,
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: const TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                      ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 4),
                     Text(
                       scenario.subtitle,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                        height: 1.35,
+                      ),
                     ),
-                    const SizedBox(height: 13),
+                    const SizedBox(height: 10),
                     Wrap(
-                      spacing: 7,
+                      spacing: 8,
                       runSpacing: 7,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        MetaPill(
-                          icon: Icons.bolt_rounded,
-                          label: scenario.skill,
-                        ),
-                        MetaPill(
-                          icon: Icons.timer_outlined,
-                          label: '${scenario.durationMinutes} min',
+                        Text(
+                          '${scenario.skill.toUpperCase()}  ·  ${scenario.durationMinutes} MIN',
+                          style: const TextStyle(
+                            color: AppColors.coral,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.75,
+                          ),
                         ),
                         if (bestScore case final best?)
                           MetaPill(
@@ -608,11 +617,11 @@ class _ScenarioCard extends StatelessWidget {
                 ),
               ),
               const Padding(
-                padding: EdgeInsets.only(top: 14),
+                padding: EdgeInsets.only(top: 12),
                 child: Icon(
                   Icons.arrow_forward_ios_rounded,
                   color: AppColors.muted,
-                  size: 16,
+                  size: 15,
                 ),
               ),
             ],

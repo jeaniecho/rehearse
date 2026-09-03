@@ -144,6 +144,11 @@ void main() {
       _size.height / _ratio,
     );
     tester.view.devicePixelRatio = 1;
+    // Without these the frame has no notch and no home indicator, so the
+    // output cannot show a safe-area mistake and does not match the device.
+    // Physical equals logical here because the ratio above is 1.
+    tester.view.viewPadding = const FakeViewPadding(top: 59, bottom: 34);
+    tester.view.padding = const FakeViewPadding(top: 59, bottom: 34);
     addTearDown(tester.view.reset);
 
     final boundary = GlobalKey();

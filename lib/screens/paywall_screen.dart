@@ -116,6 +116,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final subscription = SubscriptionScope.of(context);
     final offer = subscription.offer;
     final weakest = PracticeHistoryScope.maybeOf(context)?.weakestSkill;
+    final hasPlans = offer != null && !offer.isEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -134,18 +135,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: PageBody(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        safeTop: false,
-        safeBottom: false,
+      body: PageWidth(
         child: ListView(
+          // The action bar carries the bottom inset, but it is only built
+          // when there is a plan to buy — so without one the list takes it.
+          padding: EdgeInsets.fromLTRB(
+            20,
+            0,
+            20,
+            hasPlans ? 24 : MediaQuery.paddingOf(context).bottom + 24,
+          ),
           children: [
             const SizedBox(height: 4),
             _Header(offer: offer, weakest: weakest),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             const _ValueList(),
-            const SizedBox(height: 24),
-            if (offer == null || offer.isEmpty)
+            const SizedBox(height: 20),
+            if (!hasPlans)
               _Unavailable(
                 onRetry: subscription.isBusy ? null : subscription.refreshOffer,
               )
@@ -175,7 +181,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: offer == null || offer.isEmpty
+      bottomNavigationBar: !hasPlans
           ? null
           : PageActionBar(
               child: FilledButton(
@@ -228,13 +234,16 @@ class _Header extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const MetaPill(
-          icon: Icons.workspace_premium_outlined,
-          label: 'REHEARSE PRO',
-          color: AppColors.forest,
-          backgroundColor: AppColors.mint,
+        const Text(
+          'REHEARSE PRO',
+          style: TextStyle(
+            color: AppColors.coral,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.1,
+          ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
         Text(
           offer?.headline ?? 'Keep going.',
           style: Theme.of(context).textTheme.headlineLarge,
@@ -276,7 +285,7 @@ class _ValueList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(17),
         child: Column(
           children: [
             for (var index = 0; index < _items.length; index++) ...[
@@ -323,7 +332,7 @@ class _ValueList extends StatelessWidget {
                   ),
                 ],
               ),
-              if (index != _items.length - 1) const SizedBox(height: 18),
+              if (index != _items.length - 1) const SizedBox(height: 16),
             ],
           ],
         ),
@@ -350,15 +359,15 @@ class _PlanCard extends StatelessWidget {
       button: true,
       child: Material(
         color: selected ? AppColors.mint : AppColors.surface,
-        borderRadius: BorderRadius.circular(19),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
           key: Key('plan_${plan.id}'),
           onTap: onTap,
-          borderRadius: BorderRadius.circular(19),
+          borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 15),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(19),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: selected ? AppColors.forest : AppColors.border,
                 width: selected ? 1.5 : 1,
@@ -436,10 +445,10 @@ class _Unavailable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: const Key('offer_unavailable'),
-      padding: const EdgeInsets.all(19),
+      padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: AppColors.canvas,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -461,7 +470,7 @@ class _Unavailable extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.muted, fontSize: 13, height: 1.4),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 14),
           OutlinedButton(
             key: const Key('retry_offer'),
             onPressed: onRetry,
@@ -482,10 +491,10 @@ class _Notice extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       key: const Key('paywall_notice'),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: AppColors.peach,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

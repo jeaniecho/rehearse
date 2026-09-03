@@ -88,13 +88,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageBody(
-        padding: EdgeInsets.zero,
-        safeBottom: false,
+      body: PageWidth(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 12, 0),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                MediaQuery.paddingOf(context).top + 4,
+                12,
+                0,
+              ),
               child: Row(
                 children: [
                   const Flexible(child: BrandMark()),
@@ -161,7 +164,7 @@ class _PageView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               page.art,
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
               Text(
                 page.headline,
                 style: Theme.of(context).textTheme.headlineLarge,
@@ -229,10 +232,10 @@ class _ArtFrame extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minHeight: 244),
       alignment: Alignment.center,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: child,
     );
@@ -256,14 +259,14 @@ class _Bubble extends StatelessWidget {
         if (fromYou) const SizedBox(width: 34),
         Flexible(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
             decoration: BoxDecoration(
               color: fromYou ? AppColors.forest : AppColors.surface,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(fromYou ? 16 : 4),
-                topRight: Radius.circular(fromYou ? 4 : 16),
-                bottomLeft: const Radius.circular(16),
-                bottomRight: const Radius.circular(16),
+                topLeft: Radius.circular(fromYou ? 18 : 0),
+                topRight: Radius.circular(fromYou ? 0 : 18),
+                bottomLeft: const Radius.circular(18),
+                bottomRight: const Radius.circular(18),
               ),
               border: fromYou ? null : Border.all(color: AppColors.border),
             ),

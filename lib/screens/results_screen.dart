@@ -124,10 +124,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: PageBody(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-        safeBottom: false,
+      body: PageWidth(
         child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           children: [
             const SizedBox(height: 8),
             Row(

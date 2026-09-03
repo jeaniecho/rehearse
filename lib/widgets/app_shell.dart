@@ -2,30 +2,23 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-class PageBody extends StatelessWidget {
-  const PageBody({
-    required this.child,
-    super.key,
-    this.padding = const EdgeInsets.fromLTRB(20, 8, 20, 32),
-    this.safeTop = true,
-    this.safeBottom = true,
-  });
+/// Keeps a phone-shaped column on iPad and the web instead of letting a
+/// screen stretch to the edges.
+///
+/// Safe-area insets and padding deliberately live in each screen instead:
+/// wrapping a scrollable in either one shrinks its viewport, so the list
+/// gets clipped partway up the screen rather than scrolling off the edge.
+class PageWidth extends StatelessWidget {
+  const PageWidth({required this.child, super.key});
 
   final Widget child;
-  final EdgeInsets padding;
-  final bool safeTop;
-  final bool safeBottom;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: safeTop,
-      bottom: safeBottom,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Padding(padding: padding, child: child),
-        ),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: child,
       ),
     );
   }

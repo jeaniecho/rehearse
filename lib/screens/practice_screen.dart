@@ -533,10 +533,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
           ),
         ),
       ),
-      body: PageBody(
-        padding: EdgeInsets.zero,
-        safeTop: false,
-        safeBottom: false,
+      body: PageWidth(
         child: Column(
           children: [
             Expanded(
