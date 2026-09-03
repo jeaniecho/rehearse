@@ -5,6 +5,7 @@ import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
+import 'package:rehearse/services/speech_input_service.dart';
 import 'package:rehearse/theme/app_theme.dart';
 
 void main() {
@@ -86,6 +87,168 @@ void main() {
 
     await tester.tap(find.byKey(const Key('continue_practice')));
     await tester.pumpAndSettle();
-    expect(find.text('2 / 3'), findsOneWidget);
+    expect(find.text('TURN 2 OF 3'), findsOneWidget);
   });
+
+  testWidgets('adds live speech after existing typed text', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final speech = FakeSpeechInputService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: PracticeScreen(
+          scenario: scenarios.first,
+          mode: PracticeMode.freestyle,
+          coachService: OfflineCoachService(),
+          speechInputService: speech,
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('freeform_response')),
+      'Jordan,',
+    );
+    await tester.tap(find.byKey(const Key('speech_input')));
+    await tester.pump();
+
+    expect(
+      find.text('Listening… speak naturally, then tap stop.'),
+      findsOneWidget,
+    );
+    expect(speech.startCalls, 1);
+
+    speech.emit('I hear how much you have taken on.');
+    await tester.pump();
+
+    final field = tester.widget<TextField>(
+      find.byKey(const Key('freeform_response')),
+    );
+    expect(
+      field.controller!.text,
+      'Jordan, I hear how much you have taken on.',
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input')));
+    await tester.pump();
+    expect(speech.stopCalls, 1);
+  });
+
+  testWidgets('keeps typing available when speech is unsupported', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: PracticeScreen(
+          scenario: scenarios.first,
+          mode: PracticeMode.freestyle,
+          coachService: OfflineCoachService(),
+          speechInputService: FakeSpeechInputService(available: false),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input')));
+    await tester.pump();
+
+    expect(
+      find.text(
+        'Speech input isn’t available here. You can still type your response.',
+      ),
+      findsOneWidget,
+    );
+    final field = tester.widget<TextField>(
+      find.byKey(const Key('freeform_response')),
+    );
+    expect(field.enabled, isTrue);
+    expect(field.readOnly, isFalse);
+  });
+
+  testWidgets('response panel fills and owns the bottom safe area', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(390, 844),
+            padding: EdgeInsets.only(bottom: 34),
+            viewPadding: EdgeInsets.only(bottom: 34),
+          ),
+          child: PracticeScreen(
+            scenario: scenarios.first,
+            mode: PracticeMode.freestyle,
+            coachService: OfflineCoachService(),
+            speechInputService: FakeSpeechInputService(),
+          ),
+        ),
+      ),
+    );
+
+    final panel = find.byKey(const Key('response_panel'));
+    expect(panel, findsOneWidget);
+    expect(tester.getBottomLeft(panel).dy, 844);
+  });
+}
+
+class FakeSpeechInputService implements SpeechInputService {
+  FakeSpeechInputService({this.available = true});
+
+  final bool available;
+  SpeechStateCallback? _onListeningChanged;
+  SpeechResultCallback? _onResult;
+  int startCalls = 0;
+  int stopCalls = 0;
+
+  @override
+  Future<bool> initialize({
+    required SpeechStateCallback onListeningChanged,
+    required SpeechErrorCallback onError,
+  }) async {
+    _onListeningChanged = onListeningChanged;
+    return available;
+  }
+
+  @override
+  Future<void> start({required SpeechResultCallback onResult}) async {
+    startCalls += 1;
+    _onResult = onResult;
+    _onListeningChanged?.call(true);
+  }
+
+  void emit(String text, {bool isFinal = false}) {
+    _onResult?.call(text, isFinal);
+    if (isFinal) _onListeningChanged?.call(false);
+  }
+
+  @override
+  Future<void> stop() async {
+    stopCalls += 1;
+    _onListeningChanged?.call(false);
+  }
+
+  @override
+  Future<void> cancel() async {}
 }

@@ -19,9 +19,10 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageBody(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
         child: ListView(
           children: [
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             Row(
               children: [
                 const BrandMark(),
@@ -38,11 +39,11 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 18),
             _HeroCard(onStart: () => _openScenario(context, scenarios.first)),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
             const _MomentumCard(),
-            const SizedBox(height: 34),
+            const SizedBox(height: 28),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -72,7 +73,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             for (final scenario in scenarios) ...[
               _ScenarioCard(
                 scenario: scenario,
@@ -110,7 +111,7 @@ class _HeroCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.forest,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(28),
       ),
       child: Stack(
         children: [
@@ -125,7 +126,7 @@ class _HeroCard extends StatelessWidget {
             child: _DecorativeCircle(size: 128, color: Color(0xFFE86D4A)),
           ),
           Padding(
-            padding: const EdgeInsets.all(26),
+            padding: const EdgeInsets.all(22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -148,26 +149,29 @@ class _HeroCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 26),
+                const SizedBox(height: 18),
                 Text(
                   'Say the hard thing.\nBetter.',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.displayLarge?.copyWith(color: Colors.white),
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    color: Colors.white,
+                    fontSize: 36,
+                    height: 1.03,
+                    letterSpacing: -1.2,
+                  ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 390),
                   child: const Text(
                     'Practice high-stakes conversations, learn from each choice, and walk in ready.',
                     style: TextStyle(
                       color: Color(0xFFD9E5DD),
-                      fontSize: 15,
+                      fontSize: 14,
                       height: 1.45,
                     ),
                   ),
                 ),
-                const SizedBox(height: 26),
+                const SizedBox(height: 20),
                 FilledButton.icon(
                   key: const Key('start_recommended'),
                   onPressed: onStart,
@@ -176,7 +180,7 @@ class _HeroCard extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.forest,
-                    minimumSize: const Size(220, 52),
+                    minimumSize: const Size(220, 50),
                   ),
                 ),
               ],
@@ -209,65 +213,89 @@ class _MomentumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.peach,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(
-                Icons.local_fire_department_rounded,
-                color: AppColors.coral,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Build your conversation muscle',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 3),
-                  const Text(
-                    'One 4-minute practice is enough for today.',
-                    style: TextStyle(color: AppColors.muted, fontSize: 13),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Column(
-              children: [
-                Text(
-                  '0',
-                  style: TextStyle(
-                    color: AppColors.ink,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                Text(
-                  'DAY STREAK',
-                  style: TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
       ),
+      child: const Row(
+        children: [
+          Expanded(
+            child: _ProofPoint(
+              icon: Icons.timer_outlined,
+              title: '4 min',
+              label: 'per practice',
+            ),
+          ),
+          _ProofDivider(),
+          Expanded(
+            child: _ProofPoint(
+              icon: Icons.forum_outlined,
+              title: '3 turns',
+              label: 'real dialogue',
+            ),
+          ),
+          _ProofDivider(),
+          Expanded(
+            child: _ProofPoint(
+              icon: Icons.lock_outline_rounded,
+              title: 'Private',
+              label: 'practice room',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProofPoint extends StatelessWidget {
+  const _ProofPoint({
+    required this.icon,
+    required this.title,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String title;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 17, color: AppColors.coral),
+        const SizedBox(height: 5),
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.ink,
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.muted, fontSize: 9),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProofDivider extends StatelessWidget {
+  const _ProofDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 36,
+      child: VerticalDivider(color: AppColors.border, width: 1),
     );
   }
 }
@@ -289,22 +317,22 @@ class _ScenarioCard extends StatelessWidget {
       child: InkWell(
         key: Key('scenario_${scenario.id}'),
         onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: scenario.tint,
                   borderRadius: BorderRadius.circular(17),
                 ),
                 child: Icon(scenario.icon, color: AppColors.ink, size: 25),
               ),
-              const SizedBox(width: 15),
+              const SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

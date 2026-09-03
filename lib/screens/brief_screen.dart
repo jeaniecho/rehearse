@@ -43,7 +43,9 @@ class _BriefScreenState extends State<BriefScreen> {
         ),
       ),
       body: PageBody(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        safeTop: false,
+        safeBottom: false,
         child: ListView(
           children: [
             const SizedBox(height: 12),
@@ -138,10 +140,10 @@ class _BriefScreenState extends State<BriefScreen> {
             const SizedBox(height: 12),
             _ModeOption(
               key: const Key('mode_freestyle'),
-              icon: Icons.auto_awesome_rounded,
+              icon: Icons.mic_rounded,
               title: 'Speak freely',
               description:
-                  'Type what you would really say and get personal feedback.',
+                  'Say or type what you would really say and get personal feedback.',
               badge: 'RECOMMENDED',
               selected: _mode == PracticeMode.freestyle,
               onTap: () => setState(() => _mode = PracticeMode.freestyle),
@@ -185,22 +187,24 @@ class _BriefScreenState extends State<BriefScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              key: const Key('begin_simulation'),
-              onPressed: () => _begin(context),
-              icon: Icon(
-                _mode == PracticeMode.freestyle
-                    ? Icons.keyboard_rounded
-                    : Icons.play_arrow_rounded,
-              ),
-              label: Text(
-                _mode == PracticeMode.freestyle
-                    ? 'Start free-form practice'
-                    : 'Start guided practice',
-              ),
-            ),
+            const SizedBox(height: 8),
           ],
+        ),
+      ),
+      bottomNavigationBar: PageActionBar(
+        child: FilledButton.icon(
+          key: const Key('begin_simulation'),
+          onPressed: () => _begin(context),
+          icon: Icon(
+            _mode == PracticeMode.freestyle
+                ? Icons.mic_rounded
+                : Icons.play_arrow_rounded,
+          ),
+          label: Text(
+            _mode == PracticeMode.freestyle
+                ? 'Start speaking practice'
+                : 'Start guided practice',
+          ),
         ),
       ),
     );

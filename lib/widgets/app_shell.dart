@@ -7,18 +7,60 @@ class PageBody extends StatelessWidget {
     required this.child,
     super.key,
     this.padding = const EdgeInsets.fromLTRB(20, 8, 20, 32),
+    this.safeTop = true,
+    this.safeBottom = true,
   });
 
   final Widget child;
   final EdgeInsets padding;
+  final bool safeTop;
+  final bool safeBottom;
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      top: safeTop,
+      bottom: safeBottom,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
           child: Padding(padding: padding, child: child),
+        ),
+      ),
+    );
+  }
+}
+
+class PageActionBar extends StatelessWidget {
+  const PageActionBar({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 18,
+            offset: Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              child: SizedBox(width: double.infinity, child: child),
+            ),
+          ),
         ),
       ),
     );

@@ -1,0 +1,69 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:rehearse/data/scenarios.dart';
+import 'package:rehearse/models/practice_response.dart';
+import 'package:rehearse/screens/brief_screen.dart';
+import 'package:rehearse/screens/home_screen.dart';
+import 'package:rehearse/screens/practice_screen.dart';
+import 'package:rehearse/screens/results_screen.dart';
+import 'package:rehearse/services/coach_service.dart';
+import 'package:rehearse/theme/app_theme.dart';
+
+void main() {
+  Future<void> render(
+    WidgetTester tester,
+    Widget screen,
+    String filename,
+  ) async {
+    tester.view.physicalSize = const Size(1179, 2556);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    await tester.pumpWidget(MaterialApp(theme: AppTheme.light, home: screen));
+    await tester.pumpAndSettle();
+    final element = tester.element(find.byType(Scaffold).first);
+    await tester.runAsync(() async {
+      final image = await captureImage(element);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      await File('/tmp/$filename').writeAsBytes(data!.buffer.asUint8List());
+      image.dispose();
+    });
+  }
+
+  testWidgets('render UI review screens', (tester) async {
+    final scenario = scenarios.first;
+    final responses = scenario.turns
+        .map((turn) => PracticeResponse.fromChoice(turn.choices.first))
+        .toList();
+
+    await render(tester, const HomeScreen(), 'rehearse-home-refined.png');
+    await render(
+      tester,
+      BriefScreen(scenario: scenario),
+      'rehearse-brief-refined.png',
+    );
+    await render(
+      tester,
+      PracticeScreen(
+        scenario: scenario,
+        mode: PracticeMode.freestyle,
+        coachService: OfflineCoachService(),
+      ),
+      'rehearse-practice-refined.png',
+    );
+    await render(
+      tester,
+      ResultsScreen(
+        scenario: scenario,
+        responses: responses,
+        mode: PracticeMode.guided,
+      ),
+      'rehearse-results-refined.png',
+    );
+  });
+}

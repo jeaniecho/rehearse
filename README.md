@@ -8,7 +8,7 @@ specific feedback on clarity, empathy, and courage.
 
 - Three playable leadership scenarios: clear feedback, boundaries, and repair.
 - A briefing before each conversation with context, goal, and a common trap.
-- Guided choices or typed free-form answers for every scenario.
+- Guided choices or typed or spoken free-form answers for every scenario.
 - AI-personalized scoring and in-character replies through a secure server.
 - Automatic offline coaching when the server is not configured or unavailable.
 - A final conversation score and skill-by-skill coaching report.
@@ -34,6 +34,9 @@ flutter run
 ```
 
 Without configuration, free-form mode uses the private on-device demo coach.
+Tap the microphone in free-form mode to dictate a response; the system speech
+service may require network access depending on the device. Typing remains
+available when speech recognition is unsupported or permission is declined.
 Guided mode is always available.
 
 ## Enable the AI coach
@@ -69,4 +72,4 @@ flutter test
 cd server && npm test
 ```
 
-The next product step is speech input and optional spoken character replies.
+The next product step is optional spoken character replies.

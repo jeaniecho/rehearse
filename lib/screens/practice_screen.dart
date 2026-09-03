@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/practice_response.dart';
 import '../models/scenario.dart';
 import '../services/coach_service.dart';
+import '../services/speech_input_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
 import 'results_screen.dart';
@@ -12,12 +15,14 @@ class PracticeScreen extends StatefulWidget {
     required this.scenario,
     this.mode = PracticeMode.guided,
     this.coachService,
+    this.speechInputService,
     super.key,
   });
 
   final Scenario scenario;
   final PracticeMode mode;
   final CoachService? coachService;
+  final SpeechInputService? speechInputService;
 
   @override
   State<PracticeScreen> createState() => _PracticeScreenState();
@@ -29,10 +34,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
   final _responseFocus = FocusNode();
   final List<PracticeResponse> _responses = [];
   late final CoachService _coachService;
+  late final SpeechInputService _speechInputService;
   int _turnIndex = 0;
   PracticeResponse? _selectedResponse;
   bool _isEvaluating = false;
+  bool _isListening = false;
+  bool _speechInitialized = false;
   String? _inputError;
+  String? _speechError;
+  String _speechPrefix = '';
 
   DialogueTurn get _turn => widget.scenario.turns[_turnIndex];
 
@@ -48,6 +58,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void initState() {
     super.initState();
     _coachService = widget.coachService ?? createCoachService();
+    _speechInputService =
+        widget.speechInputService ?? DeviceSpeechInputService();
   }
 
   void _select(ResponseChoice choice) {
@@ -57,6 +69,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   Future<void> _submitFreeform() async {
+    if (_isListening) await _stopListening();
     final text = _responseController.text.trim();
     if (text.length < 3) {
       setState(() => _inputError = 'Write at least a few words to continue.');
@@ -92,6 +105,83 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
   }
 
+  Future<void> _toggleListening() async {
+    if (_isListening) {
+      await _stopListening();
+      return;
+    }
+
+    _responseFocus.unfocus();
+    setState(() {
+      _inputError = null;
+      _speechError = null;
+    });
+
+    try {
+      if (!_speechInitialized) {
+        final available = await _speechInputService.initialize(
+          onListeningChanged: _handleListeningChanged,
+          onError: _handleSpeechError,
+        );
+        if (!mounted) return;
+        _speechInitialized = true;
+        if (!available) {
+          setState(() {
+            _speechError =
+                'Speech input isn’t available here. You can still type your response.';
+          });
+          return;
+        }
+      }
+
+      _speechPrefix = _responseController.text.trimRight();
+      await _speechInputService.start(onResult: _handleSpeechResult);
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _isListening = false;
+        _speechError =
+            'Speech input couldn’t start. You can try again or keep typing.';
+      });
+    }
+  }
+
+  Future<void> _stopListening() async {
+    if (mounted) setState(() => _isListening = false);
+    try {
+      await _speechInputService.stop();
+    } on Object {
+      // The recognizer may already have ended after a platform timeout.
+    }
+  }
+
+  void _handleListeningChanged(bool isListening) {
+    if (!mounted || _isListening == isListening) return;
+    setState(() => _isListening = isListening);
+  }
+
+  void _handleSpeechResult(String transcript, bool isFinal) {
+    if (!mounted || transcript.trim().isEmpty) return;
+    final separator = _speechPrefix.isEmpty ? '' : ' ';
+    final text = '$_speechPrefix$separator${transcript.trim()}';
+    setState(() {
+      _responseController.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+      _speechError = null;
+      if (isFinal) _isListening = false;
+    });
+  }
+
+  void _handleSpeechError(String message) {
+    if (!mounted) return;
+    setState(() {
+      _isListening = false;
+      _speechError = message;
+    });
+  }
+
   void _continue() {
     final response = _selectedResponse;
     if (response == null) return;
@@ -115,6 +205,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _selectedResponse = null;
       _responseController.clear();
       _inputError = null;
+      _speechError = null;
     });
     _scrollToBottom();
   }
@@ -132,6 +223,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   @override
   void dispose() {
+    unawaited(_speechInputService.cancel());
     _scrollController.dispose();
     _responseController.dispose();
     _responseFocus.dispose();
@@ -144,41 +236,81 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 62,
+        titleSpacing: 0,
+        leadingWidth: 52,
         leading: IconButton(
           tooltip: 'Leave practice',
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.close_rounded),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
-            Text(
-              widget.scenario.personName,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-            ),
-            Text(
-              widget.mode == PracticeMode.freestyle
-                  ? 'FREE-FORM SIMULATION'
-                  : 'GUIDED SIMULATION',
-              style: const TextStyle(
-                color: AppColors.coral,
-                fontSize: 8,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.8,
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: widget.scenario.tint,
+                shape: BoxShape.circle,
               ),
+              child: Text(
+                widget.scenario.personInitials,
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.scenario.personName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  widget.mode == PracticeMode.freestyle
+                      ? 'SPEAK FREELY'
+                      : 'GUIDED PRACTICE',
+                  style: const TextStyle(
+                    color: AppColors.coral,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 18),
+            padding: const EdgeInsets.only(right: 14),
             child: Center(
-              child: Text(
-                '${_turnIndex + 1} / ${widget.scenario.turns.length}',
-                style: const TextStyle(
-                  color: AppColors.muted,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Text(
+                  'TURN ${_turnIndex + 1} OF ${widget.scenario.turns.length}',
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.55,
+                  ),
                 ),
               ),
             ),
@@ -188,7 +320,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
             value: progress,
-            minHeight: 4,
+            minHeight: 3,
             color: AppColors.coral,
             backgroundColor: AppColors.border,
           ),
@@ -196,15 +328,17 @@ class _PracticeScreenState extends State<PracticeScreen> {
       ),
       body: PageBody(
         padding: EdgeInsets.zero,
+        safeTop: false,
+        safeBottom: false,
         child: Column(
           children: [
             Expanded(
               child: ListView(
                 controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
                 children: [
                   const _RoomNotice(),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 18),
                   for (var index = 0; index < _responses.length; index++) ...[
                     _PersonMessage(
                       scenario: widget.scenario,
@@ -215,7 +349,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     ),
                     const SizedBox(height: 14),
                     _YourMessage(text: _responses[index].text),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 18),
                   ],
                   _PersonMessage(
                     key: ValueKey(_turnIndex),
@@ -240,9 +374,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
               focusNode: _responseFocus,
               isEvaluating: _isEvaluating,
               inputError: _inputError,
+              speechError: _speechError,
+              isListening: _isListening,
               aiEnabled: _coachService.isAiEnabled,
               onSelect: _select,
               onSubmit: _submitFreeform,
+              onToggleListening: _toggleListening,
               onContinue: _continue,
             ),
           ],
@@ -257,25 +394,33 @@ class _RoomNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(
-          Icons.lock_outline_rounded,
-          size: 13,
-          color: AppColors.muted,
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppColors.border),
         ),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(
-            'Private practice · responses stay in this session',
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontSize: 11),
-          ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_outline_rounded, size: 12, color: AppColors.muted),
+            SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                'Private practice · just you and your coach',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -292,8 +437,8 @@ class _PersonMessage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 38,
-          height: 38,
+          width: 34,
+          height: 34,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: scenario.tint,
@@ -326,8 +471,8 @@ class _PersonMessage extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
+                  horizontal: 15,
+                  vertical: 12,
                 ),
                 decoration: const BoxDecoration(
                   color: AppColors.surface,
@@ -345,7 +490,7 @@ class _PersonMessage extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 34),
+        const SizedBox(width: 24),
       ],
     );
   }
@@ -364,7 +509,7 @@ class _YourMessage extends StatelessWidget {
         const SizedBox(width: 58),
         Flexible(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
             decoration: const BoxDecoration(
               color: AppColors.forest,
               borderRadius: BorderRadius.only(
@@ -467,9 +612,12 @@ class _ResponsePanel extends StatelessWidget {
     required this.focusNode,
     required this.isEvaluating,
     required this.inputError,
+    required this.speechError,
+    required this.isListening,
     required this.aiEnabled,
     required this.onSelect,
     required this.onSubmit,
+    required this.onToggleListening,
     required this.onContinue,
   });
 
@@ -481,23 +629,34 @@ class _ResponsePanel extends StatelessWidget {
   final FocusNode focusNode;
   final bool isEvaluating;
   final String? inputError;
+  final String? speechError;
+  final bool isListening;
   final bool aiEnabled;
   final ValueChanged<ResponseChoice> onSelect;
   final VoidCallback onSubmit;
+  final VoidCallback onToggleListening;
   final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      key: const Key('response_panel'),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 18,
+            offset: Offset(0, -5),
+          ),
+        ],
       ),
       padding: EdgeInsets.fromLTRB(
         20,
-        16,
+        14,
         20,
-        16 + MediaQuery.paddingOf(context).bottom,
+        14 + MediaQuery.paddingOf(context).bottom,
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 220),
@@ -525,8 +684,11 @@ class _ResponsePanel extends StatelessWidget {
                 focusNode: focusNode,
                 isEvaluating: isEvaluating,
                 inputError: inputError,
+                speechError: speechError,
+                isListening: isListening,
                 aiEnabled: aiEnabled,
                 onSubmit: onSubmit,
+                onToggleListening: onToggleListening,
               ),
       ),
     );
@@ -567,8 +729,11 @@ class _FreeformComposer extends StatelessWidget {
     required this.focusNode,
     required this.isEvaluating,
     required this.inputError,
+    required this.speechError,
+    required this.isListening,
     required this.aiEnabled,
     required this.onSubmit,
+    required this.onToggleListening,
     super.key,
   });
 
@@ -577,8 +742,11 @@ class _FreeformComposer extends StatelessWidget {
   final FocusNode focusNode;
   final bool isEvaluating;
   final String? inputError;
+  final String? speechError;
+  final bool isListening;
   final bool aiEnabled;
   final VoidCallback onSubmit;
+  final VoidCallback onToggleListening;
 
   @override
   Widget build(BuildContext context) {
@@ -625,36 +793,96 @@ class _FreeformComposer extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 9),
         TextField(
           key: const Key('freeform_response'),
           controller: controller,
           focusNode: focusNode,
           enabled: !isEvaluating,
-          minLines: 2,
+          readOnly: isListening,
+          minLines: 1,
           maxLines: 3,
           maxLength: 600,
           textCapitalization: TextCapitalization.sentences,
           decoration: InputDecoration(
-            hintText: 'Type what you would say…',
+            hintText: isListening
+                ? 'Listening…'
+                : 'Say it out loud or type your response…',
             errorText: inputError,
             counterText: '',
             filled: true,
-            fillColor: AppColors.canvas,
-            contentPadding: const EdgeInsets.all(14),
+            fillColor: isListening ? AppColors.peach : AppColors.canvas,
+            contentPadding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
+            suffixIcon: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Material(
+                color: isListening ? AppColors.coral : AppColors.forest,
+                borderRadius: BorderRadius.circular(11),
+                child: IconButton(
+                  key: const Key('speech_input'),
+                  onPressed: isEvaluating ? null : onToggleListening,
+                  tooltip: isListening ? 'Stop listening' : 'Start speaking',
+                  icon: Icon(
+                    isListening ? Icons.stop_rounded : Icons.mic_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(
+                color: isListening ? AppColors.coral : AppColors.border,
+                width: isListening ? 1.5 : 1,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
               borderSide: const BorderSide(color: AppColors.forest, width: 1.5),
             ),
           ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          child: isListening || speechError != null
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        isListening
+                            ? Icons.graphic_eq_rounded
+                            : Icons.info_outline_rounded,
+                        size: 16,
+                        color: isListening ? AppColors.coral : AppColors.muted,
+                      ),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        child: Text(
+                          isListening
+                              ? 'Listening… speak naturally, then tap stop.'
+                              : speechError!,
+                          key: const Key('speech_status'),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: isListening
+                                    ? AppColors.coral
+                                    : AppColors.muted,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
         const SizedBox(height: 9),
         FilledButton.icon(
