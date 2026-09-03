@@ -7,12 +7,18 @@ import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/home_screen.dart';
+import 'package:rehearse/models/practice_record.dart';
 import 'package:rehearse/screens/practice_screen.dart';
+import 'package:rehearse/screens/progress_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
+import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/theme/app_theme.dart';
+import 'package:rehearse/widgets/practice_history_scope.dart';
 
 void main() {
+  late PracticeHistory history;
+
   Future<void> render(
     WidgetTester tester,
     Widget screen,
@@ -24,7 +30,12 @@ void main() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
-    await tester.pumpWidget(MaterialApp(theme: AppTheme.light, home: screen));
+    await tester.pumpWidget(
+      PracticeHistoryScope(
+        history: history,
+        child: MaterialApp(theme: AppTheme.light, home: screen),
+      ),
+    );
     await tester.pumpAndSettle();
     final element = tester.element(find.byType(Scaffold).first);
     await tester.runAsync(() async {
@@ -37,11 +48,31 @@ void main() {
 
   testWidgets('render UI review screens', (tester) async {
     final scenario = scenarios.first;
+    history = PracticeHistory(store: InMemoryHistoryStore());
+    addTearDown(history.dispose);
     final responses = scenario.turns
         .map((turn) => PracticeResponse.fromChoice(turn.choices.first))
         .toList();
 
+    await render(tester, const HomeScreen(), 'rehearse-home-empty.png');
+
+    for (var day = 0; day < 3; day++) {
+      await history.add(
+        PracticeRecord(
+          scenarioId: scenarios[day % scenarios.length].id,
+          completedAt: DateTime.now().subtract(Duration(days: day)),
+          mode: PracticeMode.freestyle,
+          score: 62 + day * 7,
+          clarity: 58 + day * 6,
+          empathy: 74,
+          courage: 50 + day * 9,
+          usedAi: day.isEven,
+        ),
+      );
+    }
+
     await render(tester, const HomeScreen(), 'rehearse-home-refined.png');
+    await render(tester, const ProgressScreen(), 'rehearse-progress.png');
     await render(
       tester,
       BriefScreen(scenario: scenario),

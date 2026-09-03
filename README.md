@@ -12,6 +12,8 @@ specific feedback on clarity, empathy, and courage.
 - AI-personalized scoring and in-character replies through a secure server.
 - Automatic offline coaching when the server is not configured or unavailable.
 - A final conversation score and skill-by-skill coaching report.
+- On-device progress: a practice streak, weekly count, average score, and a
+  full session history that never leaves the phone.
 - A responsive Material 3 experience for iOS, Android, and web.
 - Fully local scenario logic, so the demo is fast and reliable without an API
   key or network connection.
@@ -19,9 +21,9 @@ specific feedback on clarity, empathy, and courage.
 ## Project structure
 
 - `lib/data`: curated branching scenario content
-- `lib/models`: scenario and response models
-- `lib/screens`: home, briefing, simulation, and coaching report
-- `lib/services`: remote and offline coaching implementations
+- `lib/models`: scenario, response, summary, and history-record models
+- `lib/screens`: home, briefing, simulation, coaching report, and progress
+- `lib/services`: remote and offline coaching, plus the local practice history
 - `lib/theme`: visual tokens and Material theme
 - `lib/widgets`: shared layout and brand components
 - `server`: lightweight OpenAI Responses API proxy and tests
@@ -32,6 +34,10 @@ specific feedback on clarity, empathy, and courage.
 flutter pub get
 flutter run
 ```
+
+Finished rehearsals are stored on the device with `shared_preferences`, so the
+streak and history survive a restart. Nothing is uploaded; the progress screen
+can clear everything at any time.
 
 Without configuration, free-form mode uses the private on-device demo coach.
 Tap the microphone in free-form mode to dictate a response; the system speech

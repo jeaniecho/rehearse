@@ -5,6 +5,7 @@ import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
+import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/services/speech_input_service.dart';
 import 'package:rehearse/theme/app_theme.dart';
 
@@ -12,7 +13,10 @@ void main() {
   testWidgets('completes the recommended practice and shows coaching', (
     tester,
   ) async {
-    await tester.pumpWidget(const RehearseApp());
+    final history = PracticeHistory(store: InMemoryHistoryStore());
+    addTearDown(history.dispose);
+    await tester.pumpWidget(RehearseApp(history: history));
+    await tester.pumpAndSettle();
 
     expect(find.text('Say the hard thing.\nBetter.'), findsOneWidget);
 
@@ -52,6 +56,11 @@ void main() {
     expect(find.text('COACHING REPORT'), findsOneWidget);
     expect(find.text('88'), findsOneWidget);
     expect(find.text('You held the line with care.'), findsOneWidget);
+
+    expect(history.records, hasLength(1));
+    expect(history.records.single.scenarioId, scenarios.first.id);
+    expect(history.records.single.score, 88);
+    expect(history.records.single.mode, PracticeMode.guided);
   });
 
   testWidgets('evaluates a typed response with the private demo coach', (

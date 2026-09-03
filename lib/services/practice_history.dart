@@ -1,0 +1,194 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/practice_record.dart';
+
+/// Where finished rehearsals are kept. Swapped for an in-memory store in
+/// tests so nothing touches platform channels.
+abstract interface class PracticeHistoryStore {
+  Future<List<String>> read();
+
+  Future<void> write(List<String> entries);
+}
+
+class SharedPreferencesHistoryStore implements PracticeHistoryStore {
+  const SharedPreferencesHistoryStore();
+
+  static const _key = 'rehearse.practice_history';
+
+  @override
+  Future<List<String>> read() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getStringList(_key) ?? const [];
+  }
+
+  @override
+  Future<void> write(List<String> entries) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setStringList(_key, entries);
+  }
+}
+
+class InMemoryHistoryStore implements PracticeHistoryStore {
+  InMemoryHistoryStore([List<String>? entries])
+    : _entries = List.of(entries ?? const []);
+
+  List<String> _entries;
+
+  @override
+  Future<List<String>> read() async => List.of(_entries);
+
+  @override
+  Future<void> write(List<String> entries) async {
+    _entries = List.of(entries);
+  }
+}
+
+/// The device-local record of every finished rehearsal, plus the momentum
+/// figures the home screen and progress screen read from it.
+///
+/// Records are held newest-first.
+class PracticeHistory extends ChangeNotifier {
+  PracticeHistory({PracticeHistoryStore? store, DateTime Function()? now})
+    : _store = store ?? const SharedPreferencesHistoryStore(),
+      _now = now ?? DateTime.now;
+
+  /// Older entries fall off the end so a long-running install cannot grow
+  /// preferences without bound.
+  static const maxRecords = 200;
+
+  final PracticeHistoryStore _store;
+  final DateTime Function() _now;
+  List<PracticeRecord> _records = const [];
+  bool _isLoaded = false;
+
+  List<PracticeRecord> get records => List.unmodifiable(_records);
+
+  bool get isLoaded => _isLoaded;
+
+  bool get isEmpty => _records.isEmpty;
+
+  Future<void> load() async {
+    List<String> entries;
+    try {
+      entries = await _store.read();
+    } on Object {
+      entries = const [];
+    }
+
+    _records = _sorted([for (final entry in entries) ?_decode(entry)]);
+    _isLoaded = true;
+    notifyListeners();
+  }
+
+  Future<void> add(PracticeRecord record) async {
+    _records = _sorted([record, ..._records]);
+    if (_records.length > maxRecords) {
+      _records = _records.sublist(0, maxRecords);
+    }
+    _isLoaded = true;
+    notifyListeners();
+    await _persist();
+  }
+
+  Future<void> clear() async {
+    _records = const [];
+    _isLoaded = true;
+    notifyListeners();
+    await _persist();
+  }
+
+  // Momentum figures.
+
+  /// Consecutive days ending today, or ending yesterday when today has no
+  /// practice yet — so a streak is not lost before the day is over.
+  int get streakDays {
+    if (_records.isEmpty) return 0;
+
+    final days = _records.map((record) => _dayOf(record.completedAt)).toSet();
+    var cursor = _dayOf(_now());
+    if (!days.contains(cursor)) {
+      cursor = cursor.subtract(const Duration(days: 1));
+      if (!days.contains(cursor)) return 0;
+    }
+
+    var streak = 0;
+    while (days.contains(cursor)) {
+      streak += 1;
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+    return streak;
+  }
+
+  bool get practicedToday =>
+      _records.any((record) => _dayOf(record.completedAt) == _dayOf(_now()));
+
+  int get sessionsThisWeek {
+    final cutoff = _dayOf(_now()).subtract(const Duration(days: 6));
+    return _records
+        .where((record) => !_dayOf(record.completedAt).isBefore(cutoff))
+        .length;
+  }
+
+  int get averageScore => _average(_records.map((record) => record.score));
+
+  int get averageClarity => _average(_records.map((record) => record.clarity));
+
+  int get averageEmpathy => _average(_records.map((record) => record.empathy));
+
+  int get averageCourage => _average(_records.map((record) => record.courage));
+
+  /// Change in average score between the most recent [window] sessions and
+  /// the [window] before them. Null until there is something to compare.
+  int? scoreTrend({int window = 3}) {
+    if (_records.length < window * 2) return null;
+    final recent = _average(
+      _records.take(window).map((record) => record.score),
+    );
+    final earlier = _average(
+      _records.skip(window).take(window).map((record) => record.score),
+    );
+    return recent - earlier;
+  }
+
+  List<PracticeRecord> recordsFor(String scenarioId) => [
+    for (final record in _records)
+      if (record.scenarioId == scenarioId) record,
+  ];
+
+  int? bestScoreFor(String scenarioId) {
+    final scores = recordsFor(scenarioId).map((record) => record.score);
+    return scores.isEmpty ? null : scores.reduce((a, b) => a > b ? a : b);
+  }
+
+  Future<void> _persist() async {
+    try {
+      await _store.write([
+        for (final record in _records) jsonEncode(record.toJson()),
+      ]);
+    } on Object {
+      // Losing a history write should never interrupt a practice session.
+    }
+  }
+
+  static PracticeRecord? _decode(String entry) {
+    try {
+      return PracticeRecord.tryFromJson(jsonDecode(entry));
+    } on FormatException {
+      return null;
+    }
+  }
+
+  static List<PracticeRecord> _sorted(List<PracticeRecord> records) =>
+      records..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+
+  static DateTime _dayOf(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  static int _average(Iterable<int> values) {
+    if (values.isEmpty) return 0;
+    return (values.reduce((a, b) => a + b) / values.length).round();
+  }
+}

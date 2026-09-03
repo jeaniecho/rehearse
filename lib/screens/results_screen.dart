@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../models/practice_record.dart';
 import '../models/practice_response.dart';
+import '../models/practice_summary.dart';
 import '../models/scenario.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/practice_history_scope.dart';
+import '../widgets/score_display.dart';
 import 'practice_screen.dart';
 
-class ResultsScreen extends StatelessWidget {
+class ResultsScreen extends StatefulWidget {
   const ResultsScreen({
     required this.scenario,
     required this.responses,
@@ -18,61 +22,67 @@ class ResultsScreen extends StatelessWidget {
   final List<PracticeResponse> responses;
   final PracticeMode mode;
 
-  int get _score {
-    final total = responses.fold<int>(50, (sum, item) => sum + item.scoreDelta);
-    return total.clamp(0, 100);
+  @override
+  State<ResultsScreen> createState() => _ResultsScreenState();
+}
+
+class _ResultsScreenState extends State<ResultsScreen> {
+  late final PracticeSummary _summary = PracticeSummary.fromResponses(
+    widget.responses,
+  );
+  bool _recorded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _recordOnce();
   }
 
-  int _dimensionScore(int Function(PracticeResponse) read) {
-    final total = responses.fold<int>(50, (sum, item) => sum + read(item) * 8);
-    return total.clamp(0, 100);
+  /// Reaching the report is what counts as finishing a rehearsal, so the
+  /// history entry is written here rather than mid-conversation.
+  ///
+  /// Recording notifies the history's listeners, so it waits until this
+  /// frame is done rather than marking widgets dirty mid-build.
+  void _recordOnce() {
+    if (_recorded) return;
+    final history = PracticeHistoryScope.maybeOf(context);
+    if (history == null) return;
+
+    _recorded = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      history.add(
+        PracticeRecord.fromSummary(
+          scenarioId: widget.scenario.id,
+          completedAt: DateTime.now(),
+          mode: widget.mode,
+          summary: _summary,
+        ),
+      );
+    });
   }
-
-  String get _headline => switch (_score) {
-    >= 82 => 'You held the line with care.',
-    >= 68 => 'A solid conversation—with room to sharpen.',
-    >= 52 => 'You stayed in it. That’s where growth starts.',
-    _ => 'That was hard. Let’s make the next one clearer.',
-  };
-
-  String get _summary => switch (_score) {
-    >= 82 =>
-      'You balanced candor with curiosity and ended on a concrete agreement.',
-    >= 68 =>
-      'Your intent was clear. A little more specificity would make the outcome easier to act on.',
-    >= 52 =>
-      'You protected the relationship, but softened key moments where clarity mattered.',
-    _ =>
-      'You reacted to the pressure instead of naming the issue. A slower opening can change the whole conversation.',
-  };
 
   PracticeResponse get _strongest =>
-      responses.reduce((a, b) => a.scoreDelta >= b.scoreDelta ? a : b);
+      widget.responses.reduce((a, b) => a.scoreDelta >= b.scoreDelta ? a : b);
 
   PracticeResponse get _weakest =>
-      responses.reduce((a, b) => a.scoreDelta <= b.scoreDelta ? a : b);
+      widget.responses.reduce((a, b) => a.scoreDelta <= b.scoreDelta ? a : b);
 
-  bool get _usedAi =>
-      responses.any((response) => response.source == EvaluationSource.ai);
-
-  void _retry(BuildContext context) {
+  void _retry() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => PracticeScreen(scenario: scenario, mode: mode),
+        builder: (_) =>
+            PracticeScreen(scenario: widget.scenario, mode: widget.mode),
       ),
     );
   }
 
-  void _finish(BuildContext context) {
+  void _finish() {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override
   Widget build(BuildContext context) {
-    final clarity = _dimensionScore((choice) => choice.clarity);
-    final empathy = _dimensionScore((choice) => choice.empathy);
-    final courage = _dimensionScore((choice) => choice.courage);
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -80,7 +90,7 @@ class ResultsScreen extends StatelessWidget {
         actions: [
           TextButton(
             key: const Key('finish_practice'),
-            onPressed: () => _finish(context),
+            onPressed: _finish,
             child: const Text('Done'),
           ),
           const SizedBox(width: 8),
@@ -102,14 +112,14 @@ class ResultsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            if (mode == PracticeMode.freestyle) ...[
+            if (widget.mode == PracticeMode.freestyle) ...[
               const SizedBox(height: 9),
               Center(
                 child: MetaPill(
-                  icon: _usedAi
+                  icon: _summary.usedAi
                       ? Icons.auto_awesome_rounded
                       : Icons.offline_bolt_rounded,
-                  label: _usedAi
+                  label: _summary.usedAi
                       ? 'Personalized by AI'
                       : 'Private demo scoring',
                   color: AppColors.forest,
@@ -118,16 +128,16 @@ class ResultsScreen extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 18),
-            _ScoreRing(score: _score),
+            ScoreRing(key: const Key('final_score'), score: _summary.score),
             const SizedBox(height: 20),
             Text(
-              _headline,
+              _summary.headline,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             const SizedBox(height: 9),
             Text(
-              _summary,
+              _summary.summary,
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -150,22 +160,22 @@ class ResultsScreen extends StatelessWidget {
                       style: TextStyle(color: AppColors.muted, fontSize: 13),
                     ),
                     const SizedBox(height: 22),
-                    _SkillBar(
+                    SkillBar(
                       label: 'Clarity',
-                      value: clarity,
-                      color: AppColors.coral,
+                      value: _summary.clarity,
+                      color: SkillColors.clarity,
                     ),
                     const SizedBox(height: 17),
-                    _SkillBar(
+                    SkillBar(
                       label: 'Empathy',
-                      value: empathy,
-                      color: AppColors.forest,
+                      value: _summary.empathy,
+                      color: SkillColors.empathy,
                     ),
                     const SizedBox(height: 17),
-                    _SkillBar(
+                    SkillBar(
                       label: 'Courage',
-                      value: courage,
-                      color: const Color(0xFF7660A8),
+                      value: _summary.courage,
+                      color: SkillColors.courage,
                     ),
                   ],
                 ),
@@ -186,7 +196,7 @@ class ResultsScreen extends StatelessWidget {
               eyebrow: 'TRY NEXT TIME',
               title: 'Make the message easier to act on',
               body: _weakest.scoreDelta >= 8
-                  ? scenario.watchFor
+                  ? widget.scenario.watchFor
                   : _weakest.feedback,
               color: AppColors.coral,
               background: AppColors.peach,
@@ -197,7 +207,7 @@ class ResultsScreen extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     key: const Key('retry_scenario'),
-                    onPressed: () => _retry(context),
+                    onPressed: _retry,
                     icon: const Icon(Icons.replay_rounded),
                     label: const Text('Try again'),
                   ),
@@ -205,7 +215,7 @@ class ResultsScreen extends StatelessWidget {
                 const SizedBox(width: 11),
                 Expanded(
                   child: FilledButton(
-                    onPressed: () => _finish(context),
+                    onPressed: _finish,
                     child: const Text('Choose another'),
                   ),
                 ),
@@ -213,7 +223,7 @@ class ResultsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             Text(
-              'Practice complete · ${scenario.durationMinutes} min',
+              'Practice complete · ${widget.scenario.durationMinutes} min',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.muted,
@@ -224,114 +234,6 @@ class ResultsScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ScoreRing extends StatelessWidget {
-  const _ScoreRing({required this.score});
-
-  final int score;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SizedBox(
-        width: 142,
-        height: 142,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox.expand(
-              child: CircularProgressIndicator(
-                value: score / 100,
-                strokeWidth: 11,
-                strokeCap: StrokeCap.round,
-                color: AppColors.coral,
-                backgroundColor: AppColors.border,
-              ),
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$score',
-                  key: const Key('final_score'),
-                  style: const TextStyle(
-                    color: AppColors.ink,
-                    fontSize: 46,
-                    height: 1,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1.5,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  'CONVERSATION SCORE',
-                  style: TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SkillBar extends StatelessWidget {
-  const _SkillBar({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final int value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.ink,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            Text(
-              '$value',
-              style: TextStyle(
-                color: color,
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(99),
-          child: LinearProgressIndicator(
-            value: value / 100,
-            minHeight: 8,
-            color: color,
-            backgroundColor: AppColors.border,
-          ),
-        ),
-      ],
     );
   }
 }

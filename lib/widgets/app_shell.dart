@@ -133,12 +133,18 @@ class MetaPill extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 14),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+          // Flexible so a long label or a large text scale shortens the pill
+          // instead of overflowing the card it sits in.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

@@ -2,12 +2,32 @@ import 'package:flutter/material.dart';
 
 import '../data/scenarios.dart';
 import '../models/scenario.dart';
+import '../services/practice_history.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/practice_history_scope.dart';
 import 'brief_screen.dart';
+import 'progress_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  /// What to put in front of someone next: whatever they have rehearsed
+  /// least, keeping the authored order as the tie-break so a fresh install
+  /// still opens on the warm-up.
+  static Scenario recommendedScenario(PracticeHistory history) {
+    var best = scenarios.first;
+    var fewest = history.recordsFor(best.id).length;
+
+    for (final scenario in scenarios.skip(1)) {
+      final reps = history.recordsFor(scenario.id).length;
+      if (reps < fewest) {
+        best = scenario;
+        fewest = reps;
+      }
+    }
+    return best;
+  }
 
   void _openScenario(BuildContext context, Scenario scenario) {
     Navigator.of(context).push(
@@ -15,8 +35,17 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void _openProgress(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const ProgressScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final history = PracticeHistoryScope.of(context);
+    final recommended = recommendedScenario(history);
+
     return Scaffold(
       body: PageBody(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -28,9 +57,10 @@ class HomeScreen extends StatelessWidget {
                 const BrandMark(),
                 const Spacer(),
                 IconButton.filledTonal(
-                  tooltip: 'Profile',
-                  onPressed: () {},
-                  icon: const Icon(Icons.person_outline_rounded),
+                  key: const Key('open_progress'),
+                  tooltip: 'Your progress',
+                  onPressed: () => _openProgress(context),
+                  icon: const Icon(Icons.insights_rounded),
                   style: IconButton.styleFrom(
                     backgroundColor: AppColors.surface,
                     foregroundColor: AppColors.ink,
@@ -40,9 +70,15 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 18),
-            _HeroCard(onStart: () => _openScenario(context, scenarios.first)),
+            _HeroCard(
+              history: history,
+              onStart: () => _openScenario(context, recommended),
+            ),
             const SizedBox(height: 14),
-            const _MomentumCard(),
+            _MomentumCard(
+              history: history,
+              onTap: () => _openProgress(context),
+            ),
             const SizedBox(height: 28),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -77,7 +113,9 @@ class HomeScreen extends StatelessWidget {
             for (final scenario in scenarios) ...[
               _ScenarioCard(
                 scenario: scenario,
-                recommended: scenario == scenarios.first,
+                recommended: scenario == recommended,
+                reps: history.recordsFor(scenario.id).length,
+                bestScore: history.bestScoreFor(scenario.id),
                 onTap: () => _openScenario(context, scenario),
               ),
               const SizedBox(height: 12),
@@ -101,12 +139,45 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.onStart});
+  const _HeroCard({required this.history, required this.onStart});
 
+  final PracticeHistory history;
   final VoidCallback onStart;
+
+  (String, String, String) get _copy {
+    final streak = history.streakDays;
+    if (history.isEmpty) {
+      return (
+        'YOUR PRIVATE PRACTICE ROOM',
+        'Say the hard thing.\nBetter.',
+        'Practice high-stakes conversations, learn from each choice, and walk in ready.',
+      );
+    }
+    if (history.practicedToday) {
+      return (
+        streak > 1 ? '$streak-DAY STREAK · DONE TODAY' : 'DONE FOR TODAY',
+        'One more rep?\nGo again.',
+        'The second rehearsal is where the wording gets sharp. Nothing here is graded twice.',
+      );
+    }
+    if (streak > 0) {
+      return (
+        '$streak-DAY STREAK ON THE LINE',
+        'Keep the streak.\nOne conversation.',
+        'A few minutes today holds the habit together. Pick up where you left off.',
+      );
+    }
+    return (
+      'WELCOME BACK',
+      'Ready for a\nharder one?',
+      'You have rehearsed before. Today is a chance to make the message land faster.',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final (eyebrow, headline, body) = _copy;
+
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -139,9 +210,9 @@ class _HeroCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Text(
-                    'YOUR PRIVATE PRACTICE ROOM',
-                    style: TextStyle(
+                  child: Text(
+                    eyebrow,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -151,7 +222,7 @@ class _HeroCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Say the hard thing.\nBetter.',
+                  headline,
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
                     color: Colors.white,
                     fontSize: 36,
@@ -162,9 +233,9 @@ class _HeroCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 390),
-                  child: const Text(
-                    'Practice high-stakes conversations, learn from each choice, and walk in ready.',
-                    style: TextStyle(
+                  child: Text(
+                    body,
+                    style: const TextStyle(
                       color: Color(0xFFD9E5DD),
                       fontSize: 14,
                       height: 1.45,
@@ -176,7 +247,11 @@ class _HeroCard extends StatelessWidget {
                   key: const Key('start_recommended'),
                   onPressed: onStart,
                   icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('Start today’s practice'),
+                  label: Text(
+                    history.isEmpty
+                        ? 'Start today’s practice'
+                        : 'Start next practice',
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.forest,
@@ -208,44 +283,99 @@ class _DecorativeCircle extends StatelessWidget {
   }
 }
 
+/// Before the first rehearsal this sells the format; afterwards it reports
+/// real numbers and becomes a doorway into the progress screen.
 class _MomentumCard extends StatelessWidget {
-  const _MomentumCard();
+  const _MomentumCard({required this.history, required this.onTap});
+
+  final PracticeHistory history;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+    final trend = history.scoreTrend();
+
+    // History loads asynchronously, so a returning manager sees the intro
+    // card for a frame or two. Cross-fade rather than snap into the stats.
+    final content = AnimatedSwitcher(
+      duration: const Duration(milliseconds: 260),
+      child: Padding(
+        key: ValueKey(history.isEmpty),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        child: history.isEmpty
+            ? const Row(
+                children: [
+                  Expanded(
+                    child: _ProofPoint(
+                      icon: Icons.timer_outlined,
+                      title: '4 min',
+                      label: 'per practice',
+                    ),
+                  ),
+                  _ProofDivider(),
+                  Expanded(
+                    child: _ProofPoint(
+                      icon: Icons.forum_outlined,
+                      title: '3 turns',
+                      label: 'real dialogue',
+                    ),
+                  ),
+                  _ProofDivider(),
+                  Expanded(
+                    child: _ProofPoint(
+                      icon: Icons.lock_outline_rounded,
+                      title: 'Private',
+                      label: 'practice room',
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: _ProofPoint(
+                      icon: Icons.local_fire_department_rounded,
+                      title: '${history.streakDays}',
+                      label: 'day streak',
+                    ),
+                  ),
+                  const _ProofDivider(),
+                  Expanded(
+                    child: _ProofPoint(
+                      icon: Icons.event_available_outlined,
+                      title: '${history.sessionsThisWeek}',
+                      label: 'this week',
+                    ),
+                  ),
+                  const _ProofDivider(),
+                  Expanded(
+                    child: _ProofPoint(
+                      icon: Icons.insights_rounded,
+                      title: '${history.averageScore}',
+                      label: trend == null
+                          ? 'average score'
+                          : '${trend > 0 ? '+' : ''}$trend recently',
+                    ),
+                  ),
+                ],
+              ),
       ),
-      child: const Row(
-        children: [
-          Expanded(
-            child: _ProofPoint(
-              icon: Icons.timer_outlined,
-              title: '4 min',
-              label: 'per practice',
-            ),
+    );
+
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        key: const Key('momentum_card'),
+        onTap: history.isEmpty ? null : onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border),
           ),
-          _ProofDivider(),
-          Expanded(
-            child: _ProofPoint(
-              icon: Icons.forum_outlined,
-              title: '3 turns',
-              label: 'real dialogue',
-            ),
-          ),
-          _ProofDivider(),
-          Expanded(
-            child: _ProofPoint(
-              icon: Icons.lock_outline_rounded,
-              title: 'Private',
-              label: 'practice room',
-            ),
-          ),
-        ],
+          child: content,
+        ),
       ),
     );
   }
@@ -264,26 +394,30 @@ class _ProofPoint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 17, color: AppColors.coral),
-        const SizedBox(height: 5),
-        Text(
-          title,
-          style: const TextStyle(
-            color: AppColors.ink,
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
+    return Semantics(
+      label: '$title $label',
+      excludeSemantics: true,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 17, color: AppColors.coral),
+          const SizedBox(height: 5),
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.ink,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
           ),
-        ),
-        const SizedBox(height: 1),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.muted, fontSize: 9),
-        ),
-      ],
+          const SizedBox(height: 1),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.muted, fontSize: 9),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -304,11 +438,15 @@ class _ScenarioCard extends StatelessWidget {
   const _ScenarioCard({
     required this.scenario,
     required this.recommended,
+    required this.reps,
+    required this.bestScore,
     required this.onTap,
   });
 
   final Scenario scenario;
   final bool recommended;
+  final int reps;
+  final int? bestScore;
   final VoidCallback onTap;
 
   @override
@@ -338,9 +476,9 @@ class _ScenarioCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (recommended) ...[
-                      const Text(
-                        'RECOMMENDED',
-                        style: TextStyle(
+                      Text(
+                        reps == 0 ? 'RECOMMENDED' : 'UP NEXT',
+                        style: const TextStyle(
                           color: AppColors.coral,
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
@@ -371,6 +509,15 @@ class _ScenarioCard extends StatelessWidget {
                           icon: Icons.timer_outlined,
                           label: '${scenario.durationMinutes} min',
                         ),
+                        if (bestScore case final best?)
+                          MetaPill(
+                            icon: Icons.replay_rounded,
+                            label: reps == 1
+                                ? '1 rep · best $best'
+                                : '$reps reps · best $best',
+                            color: AppColors.forest,
+                            backgroundColor: AppColors.mint,
+                          ),
                       ],
                     ),
                   ],
