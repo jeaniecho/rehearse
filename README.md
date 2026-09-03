@@ -47,7 +47,10 @@ Built for the RevenueCat Shipaton 2026, leadership and career coaching.
 Every P0 feature is built. The gaps are product depth and release: difficulty
 is a label on each scenario rather than a personality the user picks, coaching
 feedback is a written sentence rather than a quote of what you actually said
-with a stronger alternative, and the app still ships the stock Flutter icon.
+with a stronger alternative.
+
+For release, what remains is a privacy policy, store metadata and screenshots,
+signing, and crash reporting.
 
 Subscriptions are built and tested but have never completed a sandbox
 purchase, which needs App Store Connect and Play Console configuration —

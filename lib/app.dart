@@ -7,10 +7,10 @@ import 'services/app_settings.dart';
 import 'services/practice_history.dart';
 import 'services/subscription.dart';
 import 'theme/app_theme.dart';
+import 'theme/brand_mark_painter.dart';
 import 'widgets/analytics_scope.dart';
 import 'widgets/app_settings_scope.dart';
 import 'widgets/practice_history_scope.dart';
-import 'widgets/app_shell.dart';
 import 'widgets/subscription_scope.dart';
 
 class RehearseApp extends StatefulWidget {
@@ -125,8 +125,11 @@ class _Root extends StatelessWidget {
   }
 }
 
-/// The one or two frames before preferences resolve. Branded rather than
-/// blank, so a cold start does not flash white.
+/// The one or two frames before preferences resolve.
+///
+/// Deliberately identical to the native splash — same canvas, same mark at
+/// the same size — so the handoff from the platform launch screen to Flutter
+/// is invisible rather than a flash of something else.
 class _Launch extends StatelessWidget {
   const _Launch();
 
@@ -134,7 +137,17 @@ class _Launch extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       key: Key('launch'),
-      body: Center(child: BrandMark()),
+      backgroundColor: AppColors.canvas,
+      body: Center(
+        child: CustomPaint(
+          size: Size.square(120),
+          painter: BrandMarkPainter(
+            frontBubble: AppColors.forest,
+            separator: AppColors.canvas,
+            scale: 0.9,
+          ),
+        ),
+      ),
     );
   }
 }

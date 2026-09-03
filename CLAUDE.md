@@ -22,7 +22,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 177 tests
+flutter test                    # 191 tests
 cd server && npm test           # 3 tests
 ```
 
@@ -42,6 +42,14 @@ With the AI coach:
 cd server && OPENAI_API_KEY=... npm start
 flutter run --dart-define=REHEARSE_COACH_URL=http://127.0.0.1:8787
 ```
+
+To regenerate the app icon and splash after changing the mark:
+
+```bash
+flutter test tool/generate_app_icon.dart && dart run flutter_launcher_icons && git checkout -- ios/Runner.xcodeproj/project.pbxproj
+```
+
+The final revert is required — see `docs/ARCHITECTURE.md`, Brand assets.
 
 To check layout with real fonts (widget tests render text as boxes):
 
@@ -122,7 +130,7 @@ lib/models     Scenario, PracticeResponse, PracticeSummary, PracticeRecord,
 lib/screens    onboarding, home, brief, practice, results, progress, paywall
 lib/services   coach (remote/offline/resilient), speech in/out, history,
                settings, subscription + RevenueCat, analytics + PostHog
-lib/theme      AppColors tokens + Material 3 theme
+lib/theme      AppColors tokens, Material 3 theme, and the brand mark painter
 lib/widgets    shared UI + the four InheritedNotifier scopes
 server         Node proxy: GET /health, POST /evaluate
 ```

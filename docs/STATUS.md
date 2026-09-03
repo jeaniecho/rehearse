@@ -5,7 +5,7 @@
 > document a new session should read first.
 >
 > **Last audited:** 2026-09-03, after onboarding.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (177 passing),
+> **Verified by:** `flutter analyze` (clean), `flutter test` (191 passing),
 > `cd server && npm test` (3 passing), `flutter build web --release` and
 > `flutter build apk --debug` (both succeed).
 
@@ -73,6 +73,9 @@ share one prompt**, which is why feedback is a generic sentence instead of
 - **Onboarding**: three screens, skippable, remembered. The app waits on the
   preferences read rather than guessing, so a returning manager never sees a
   flash of the intro.
+- **App icon and splash** on iOS, Android (adaptive + themed), and web, drawn
+  in Dart from the brand tokens. Both native splashes match Flutter's own
+  launch state, so the handoff is invisible.
 
 ### Partially complete
 
@@ -101,8 +104,6 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 - **Simulation state** (trust, tension, clarity, goal progress).
 - **Employee background** field — the prompt has name and role only.
 - **Crash reporting.**
-- **App icon and launch screen** — still the stock Flutter logo. This is also a
-  store-screenshot problem, not just a release checkbox.
 - **Privacy policy**, store metadata, screenshots, signing config.
 - OneSignal reminders *(P1)*.
 - Session replay / "practice this moment again" *(P1)*.
@@ -110,7 +111,7 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 
 ### Broken
 
-Nothing. Analysis is clean, all 177 Flutter tests and 3 server tests pass, and
+Nothing. Analysis is clean, all 191 Flutter tests and 3 server tests pass, and
 both the web and Android builds succeed.
 
 The two known **defects** are cosmetic but real, and both are documented in
@@ -128,7 +129,7 @@ The two known **defects** are cosmetic but real, and both are documented in
 | **M3** Evaluation + retry | 🟡 scores and retry exist; quote-based critique does not |
 | **M4** Monetization + analytics | 🟡 both built and tested; neither verified against a live service |
 | **M5** Polish + reliability | 🟢 ahead of schedule — this is the strongest area |
-| **M6** Release + submission | ❌ bundle id and version only |
+| **M6** Release + submission | 🟡 bundle id, version, icon, and splash done; privacy policy, metadata, signing, and crash reporting not started |
 | **M7–M9** Launch, growth, submission package | ❌ not started |
 
 No P0 feature is unbuilt. The remaining risk is that none of M4 has been
@@ -248,10 +249,10 @@ Ordered by what moves the submission, not by what is most interesting.
    show. Do it with the dimension change in one pass.
 4. **Difficulty selection.** Make the existing enum a pre-session choice that
    reaches the simulation prompt.
-5. **App icon and launch screen.** An hour, and it is in every screenshot.
-6. **Release checklist** — privacy policy, store metadata, signing, crash
-   reporting. M6 has barely started and it gates submission.
-7. Contrast fixes and dark theme, if there is time before submission.
+5. **Release checklist** — privacy policy, store metadata, screenshots,
+   signing, crash reporting. This is all that is left of M6, and it gates
+   submission.
+6. Contrast fixes and dark theme, if there is time before submission.
 
 ---
 
@@ -270,7 +271,7 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 177 Flutter + 3 server
+Tests            : 191 Flutter + 3 server
 TODO/FIXME       : none
 ```
 

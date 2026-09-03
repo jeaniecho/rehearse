@@ -311,6 +311,42 @@ Two shared widgets carry accessibility rules worth preserving:
 
 ---
 
+## Brand assets
+
+The app icon and splash mark are **drawn in Dart**, not shipped as art:
+`lib/theme/brand_mark_painter.dart` paints two speech bubbles on a 1024 grid
+using the same `AppColors` as the rest of the app, so the icon cannot drift
+from the brand. The same painter renders Flutter's own launch state, which is
+why the handoff from the native splash is invisible.
+
+To regenerate after changing the mark:
+
+```bash
+flutter test tool/generate_app_icon.dart   # masters -> assets/icon/
+dart run flutter_launcher_icons             # fan out to every platform
+git checkout -- ios/Runner.xcodeproj/project.pbxproj
+```
+
+> **That last line is not optional.** flutter_launcher_icons 0.14.4 does a
+> naive string replace on the pbxproj and clobbers
+> `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` — a boolean —
+> with `AppIcon`, on the two build configurations that have no
+> `ASSETCATALOG_COMPILER_APPICON_NAME` line of their own. The project already
+> sets the icon name correctly, so the edit is pure damage.
+
+Four masters come out of the generator, and each exists for a reason:
+
+| Master | Used for | Why it differs |
+|---|---|---|
+| `app_icon` | iOS, web, Android legacy | opaque, mark nearly full-bleed |
+| `app_icon_foreground` | Android adaptive | transparent; sized so the mark still fills the circle *after* flutter_launcher_icons adds its own 16% inset |
+| `app_icon_monochrome` | Android 13 themed icons | one colour, with the gap between bubbles cut out rather than painted, so a tint keeps them legible |
+| `launch_mark` | both splashes | inked forest-on-canvas, because the icon's cream bubble is invisible on the splash colour |
+
+`test/app_icon_test.dart` guards the outputs, most importantly that the iOS
+1024 icon has no alpha channel — App Store Connect rejects one that does, at
+the last step of submission.
+
 ## Testing
 
 | File | Covers |
@@ -325,6 +361,7 @@ Two shared widgets carry accessibility rules worth preserving:
 | `subscription_test.dart` | the gate, purchase and restore outcomes, and the paywall |
 | `analytics_test.dart` | the funnel end to end, and that no content leaks |
 | `onboarding_test.dart` | first run, skip, the no-flash launch, and copy honesty |
+| `app_icon_test.dart` | the generated icons and splashes on every platform |
 | `visual_qa_test.dart` | renders each screen to `/tmp/rehearse-*.png` |
 
 Two of these are unusual and deliberate:
