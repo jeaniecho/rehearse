@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rehearse/theme/app_theme.dart';
 
 /// Guards the generated launcher icons.
 ///
@@ -96,8 +98,8 @@ void main() {
         'android/app/src/main/res/values/colors.xml',
       ).readAsStringSync();
 
-      expect(colors, contains('#214E3B'));
-      expect(colors, contains('#F5F2EA'));
+      expect(colors, contains(_hex(AppColors.forest)));
+      expect(colors, contains(_hex(AppColors.canvas)));
     });
 
     test('both light and dark splashes draw the mark', () {
@@ -182,3 +184,8 @@ void main() {
     hasAlpha: colorType == 4 || colorType == 6,
   );
 }
+
+/// The palette in the form the Android resource files write it, so these
+/// assertions follow AppColors instead of being retyped when it changes.
+String _hex(Color color) =>
+    '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).toUpperCase().padLeft(6, '0')}';

@@ -50,12 +50,11 @@ void main() {
   }
 
   testWidgets('generate app icons', (tester) async {
-    // Store and web: opaque, mark sized for a square that gets corner-masked.
-    await render(
-      tester,
-      'app_icon',
-      const BrandMarkPainter(background: AppColors.forest, scale: 0.96),
-    );
+    // assets/icon/app_icon.png is not drawn here. The store master is a
+    // paper cut-out illustration of the same two bubbles, and it is the one
+    // surface where the texture is worth the file size. The layers below
+    // stay drawn, because Android's adaptive and themed icons are flat by
+    // definition and a rendered texture would only muddy them.
 
     // Android adaptive foreground: transparent, and sized so the mark fills
     // about two thirds of the circle the launcher masks it to. Note that
