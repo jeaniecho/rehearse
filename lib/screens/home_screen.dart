@@ -72,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                   const Text(
                     'PRO',
                     style: TextStyle(
-                      color: AppColors.green,
+                      color: AppColors.forest,
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.8,
@@ -285,7 +285,7 @@ class _ScenarioRow extends StatelessWidget {
                       const Text(
                         'START HERE',
                         style: TextStyle(
-                          color: AppColors.green,
+                          color: AppColors.forest,
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.8,

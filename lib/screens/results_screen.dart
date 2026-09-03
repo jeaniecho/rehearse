@@ -159,9 +159,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
-            _ResultHero(summary: _summary),
-            const SizedBox(height: 24),
+            const SizedBox(height: 26),
+            _ScoreBlock(summary: _summary),
+            const SizedBox(height: 22),
+            _CoachBubble(text: _summary.summary),
+            const SizedBox(height: 30),
             Text(
               focusIsImprovement ? 'The moment to rehearse' : 'What landed',
               style: Theme.of(context).textTheme.headlineMedium,
@@ -253,53 +255,100 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 }
 
-class _ResultHero extends StatelessWidget {
-  const _ResultHero({required this.summary});
+/// The score, given the whole width and nothing to compete with.
+///
+/// It used to sit as a ring inside a dark card next to the headline, which
+/// made three things fight for the same moment.
+class _ScoreBlock extends StatelessWidget {
+  const _ScoreBlock({required this.summary});
 
   final PracticeSummary summary;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.forest,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        children: [
-          ScoreRing.onDark(
-            key: const Key('final_score'),
-            score: summary.score,
-            diameter: 104,
-            caption: 'SCORE',
+    return Column(
+      children: [
+        const Text(
+          'SCORE',
+          style: TextStyle(
+            color: AppColors.muted,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.4,
           ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  summary.headline,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    height: 1.18,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  summary.summary,
-                  style: const TextStyle(
-                    color: Color(0xFFD9E5DD),
-                    fontSize: 13,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${summary.score}',
+          key: const Key('final_score'),
+          style: const TextStyle(
+            color: AppColors.ink,
+            fontSize: 76,
+            height: 1,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -3,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          summary.headline,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+      ],
+    );
+  }
+}
+
+/// The coach saying it, rather than a paragraph of report prose.
+///
+/// A voice needs somewhere to come from, so the read of the conversation is
+/// spoken by the mark the app is already signed with.
+class _CoachBubble extends StatelessWidget {
+  const _CoachBubble({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: AppColors.forest,
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: const Icon(Icons.forum_rounded, color: Colors.white, size: 18),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(15, 13, 15, 14),
+            decoration: BoxDecoration(
+              color: AppColors.butter,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+              border: Border.all(color: AppColors.butterEdge),
+            ),
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppColors.ink,
+                fontSize: 14,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
