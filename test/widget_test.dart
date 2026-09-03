@@ -112,7 +112,7 @@ void main() {
     expect(find.byKey(const Key('coach_feedback')), findsNothing);
     expect(find.byKey(const Key('continue_practice')), findsNothing);
     expect(find.text(scenarios.first.turns[1].employeeLine), findsOneWidget);
-    expect(find.text('TURN 2 OF 3'), findsOneWidget);
+    expect(find.text('2 / 3'), findsOneWidget);
   });
 
   testWidgets('a free-form conversation ends in a coaching report', (

@@ -96,27 +96,16 @@ class _BriefScreenState extends State<BriefScreen> {
         child: ListView(
           children: [
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                MetaPill(
-                  icon: Icons.bolt_rounded,
-                  label: scenario.skill,
-                  backgroundColor: scenario.tint,
-                  color: AppColors.ink,
-                ),
-                MetaPill(
-                  icon: Icons.timer_outlined,
-                  label: '${scenario.durationMinutes} minutes',
-                ),
-                MetaPill(
-                  icon: Icons.signal_cellular_alt_rounded,
-                  label: scenario.stakes.label,
-                ),
-              ],
+            Text(
+              '${scenario.skill.toUpperCase()}  ·  ${scenario.durationMinutes} MIN  ·  ${scenario.stakes.label.toUpperCase()}',
+              style: const TextStyle(
+                color: AppColors.coral,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.75,
+              ),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 14),
             Text(
               scenario.title,
               style: Theme.of(context).textTheme.headlineLarge,
@@ -128,81 +117,78 @@ class _BriefScreenState extends State<BriefScreen> {
                 context,
               ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
             ),
-            const SizedBox(height: 26),
+            const SizedBox(height: 20),
             _PersonCard(scenario: scenario),
-            const SizedBox(height: 18),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(22),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'YOUR BRIEF',
-                      style: TextStyle(
-                        color: AppColors.coral,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    _BriefItem(
-                      icon: Icons.notes_rounded,
-                      label: 'What’s happening',
-                      text: scenario.context,
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 18),
-                      child: Divider(color: AppColors.border, height: 1),
-                    ),
-                    _BriefItem(
-                      icon: Icons.flag_outlined,
-                      label: 'Your goal',
-                      text: scenario.goal,
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 18),
-                      child: Divider(color: AppColors.border, height: 1),
-                    ),
-                    _BriefItem(
-                      icon: Icons.visibility_outlined,
-                      label: 'Watch for',
-                      text: scenario.watchFor,
-                    ),
-                  ],
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                border: Border(
+                  left: BorderSide(color: AppColors.coralBright, width: 4),
                 ),
               ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'YOUR GOAL',
+                    style: TextStyle(
+                      color: AppColors.coral,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.9,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    scenario.goal,
+                    style: const TextStyle(
+                      color: AppColors.ink,
+                      fontSize: 14,
+                      height: 1.4,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
             Text(
-              'How do you want to practice?',
+              'Practice setup',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 5),
             const Text(
-              'You can switch styles each time you rehearse.',
+              'Choose how you want this rehearsal to feel.',
               style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 12),
-            _ModeOption(
-              key: const Key('mode_freestyle'),
-              icon: Icons.mic_rounded,
-              title: 'Speak freely',
-              description:
-                  'Say or type what you would really say and get personal feedback.',
-              badge: 'RECOMMENDED',
-              selected: _mode == PracticeMode.freestyle,
-              onTap: () => setState(() => _mode = PracticeMode.freestyle),
-            ),
-            const SizedBox(height: 9),
-            _ModeOption(
-              key: const Key('mode_guided'),
-              icon: Icons.format_list_bulleted_rounded,
-              title: 'Guided choices',
-              description: 'Choose between examples and learn the tradeoffs.',
-              selected: _mode == PracticeMode.guided,
-              onTap: () => setState(() => _mode = PracticeMode.guided),
+            Row(
+              children: [
+                Expanded(
+                  child: _ModeOption(
+                    key: const Key('mode_freestyle'),
+                    icon: Icons.mic_rounded,
+                    title: 'Speak freely',
+                    description: 'Use your own words',
+                    badge: 'Recommended',
+                    selected: _mode == PracticeMode.freestyle,
+                    onTap: () => setState(() => _mode = PracticeMode.freestyle),
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: _ModeOption(
+                    key: const Key('mode_guided'),
+                    icon: Icons.format_list_bulleted_rounded,
+                    title: 'Guided',
+                    description: 'Compare responses',
+                    selected: _mode == PracticeMode.guided,
+                    onTap: () => setState(() => _mode = PracticeMode.guided),
+                  ),
+                ),
+              ],
             ),
             // Only free-form has a model playing the other person, so only
             // free-form can honour this. Offering it in guided mode would be
@@ -217,8 +203,8 @@ class _BriefScreenState extends State<BriefScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'How hard should ${scenario.personName.split(' ').first} push back?',
-                            style: Theme.of(context).textTheme.titleLarge,
+                            'Pushback level',
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 5),
                           const Text(
@@ -238,32 +224,34 @@ class _BriefScreenState extends State<BriefScreen> {
                     )
                   : const SizedBox(width: double.infinity),
             ),
-            const SizedBox(height: 18),
-            Container(
-              padding: const EdgeInsets.all(17),
-              decoration: BoxDecoration(
-                color: AppColors.mint,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 14),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+                leading: const Icon(
+                  Icons.description_outlined,
+                  color: AppColors.forest,
+                ),
+                title: const Text(
+                  'Read the full brief',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                ),
+                subtitle: const Text('Situation and coaching cue'),
                 children: [
-                  Icon(
-                    Icons.psychology_alt_outlined,
-                    color: AppColors.forest,
-                    size: 22,
+                  const Divider(color: AppColors.border),
+                  const SizedBox(height: 10),
+                  _BriefItem(
+                    icon: Icons.notes_rounded,
+                    label: 'What’s happening',
+                    text: scenario.context,
                   ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'There is no perfect script. Choose what you would genuinely say—your coach will unpack the tradeoffs.',
-                      style: TextStyle(
-                        color: AppColors.forest,
-                        fontSize: 13,
-                        height: 1.4,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                  const SizedBox(height: 16),
+                  _BriefItem(
+                    icon: Icons.visibility_outlined,
+                    label: 'Watch for',
+                    text: scenario.watchFor,
                   ),
                 ],
               ),
@@ -392,86 +380,67 @@ class _ModeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.mint : AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(19),
-        side: BorderSide(
-          color: selected ? AppColors.forest : AppColors.border,
-          width: selected ? 1.5 : 1,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: [title, description, ?badge].join('. '),
+      child: Material(
+        color: selected ? AppColors.mint : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: selected ? AppColors.forest : AppColors.border,
+            width: selected ? 1.5 : 1,
+          ),
         ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(19),
-        child: Padding(
-          padding: const EdgeInsets.all(15),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.forest : AppColors.canvas,
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            child: Row(
+              children: [
+                Icon(
                   icon,
                   size: 20,
-                  color: selected ? Colors.white : AppColors.ink,
+                  color: selected ? AppColors.forest : AppColors.muted,
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              color: AppColors.ink,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.ink,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
                         ),
-                        if (badge != null) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            badge!,
-                            style: const TextStyle(
-                              color: AppColors.coral,
-                              fontSize: 8,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 12,
-                        height: 1.35,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                selected
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                color: selected ? AppColors.forest : AppColors.muted,
-              ),
-            ],
+                if (selected)
+                  const Icon(
+                    Icons.check_rounded,
+                    size: 17,
+                    color: AppColors.forest,
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -487,16 +456,16 @@ class _PersonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: AppColors.forest,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
           Container(
-            width: 58,
-            height: 58,
+            width: 48,
+            height: 48,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: scenario.tint,
@@ -506,7 +475,7 @@ class _PersonCard extends StatelessWidget {
               scenario.personInitials,
               style: const TextStyle(
                 color: AppColors.ink,
-                fontSize: 18,
+                fontSize: 15,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -517,7 +486,7 @@ class _PersonCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'YOU’RE MEETING WITH',
+                  'REHEARSING WITH',
                   style: TextStyle(
                     color: Color(0xFFAEC5B7),
                     fontSize: 9,
@@ -525,12 +494,12 @@ class _PersonCard extends StatelessWidget {
                     letterSpacing: 0.9,
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 3),
                 Text(
                   scenario.personName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 19,
+                    fontSize: 17,
                     fontWeight: FontWeight.w800,
                   ),
                 ),

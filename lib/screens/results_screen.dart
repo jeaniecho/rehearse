@@ -100,6 +100,17 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final focusIsImprovement = _summary.improvements.isNotEmpty;
+    final focusNote = focusIsImprovement
+        ? _summary.improvements.first
+        : _summary.strengths.isNotEmpty
+        ? _summary.strengths.first
+        : CoachingNote(
+            turnIndex: 0,
+            quote: '',
+            comment: widget.scenario.watchFor,
+          );
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -114,75 +125,70 @@ class _ResultsScreenState extends State<ResultsScreen> {
         ],
       ),
       body: PageBody(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 30),
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        safeBottom: false,
         child: ListView(
           children: [
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Text(
+                  'COACHING REPORT',
+                  style: TextStyle(
+                    color: AppColors.coral,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                if (widget.mode == PracticeMode.freestyle)
+                  Expanded(
+                    child: Text(
+                      _summary.usedAi
+                          ? 'Personalized by AI'
+                          : 'Private demo scoring',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 12),
-            const Center(
-              child: Text(
-                'COACHING REPORT',
-                style: TextStyle(
-                  color: AppColors.coral,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ),
-            if (widget.mode == PracticeMode.freestyle) ...[
-              const SizedBox(height: 9),
-              Center(
-                child: MetaPill(
-                  icon: _summary.usedAi
-                      ? Icons.auto_awesome_rounded
-                      : Icons.offline_bolt_rounded,
-                  label: _summary.usedAi
-                      ? 'Personalized by AI'
-                      : 'Private demo scoring',
-                  color: AppColors.forest,
-                  backgroundColor: AppColors.mint,
-                ),
-              ),
-            ],
-            const SizedBox(height: 18),
-            ScoreRing(key: const Key('final_score'), score: _summary.score),
-            const SizedBox(height: 20),
+            _ResultHero(summary: _summary),
+            const SizedBox(height: 24),
             Text(
-              _summary.headline,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineLarge,
+              focusIsImprovement ? 'The moment to rehearse' : 'What landed',
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
-            const SizedBox(height: 9),
+            const SizedBox(height: 5),
             Text(
-              _summary.summary,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
+              focusIsImprovement
+                  ? 'One small rewrite can change how the whole message lands.'
+                  : 'Keep this part of your approach intact next time.',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 28),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(21),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Your conversation balance',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 5),
-                    const Text(
-                      'The four skills that make hard messages land.',
-                      style: TextStyle(color: AppColors.muted, fontSize: 13),
-                    ),
-                    const SizedBox(height: 22),
-                    SkillBars(values: _summary.skills, spacing: 17),
-                  ],
-                ),
-              ),
+            const SizedBox(height: 12),
+            _NoteCard(
+              key: const Key('focus_note'),
+              note: focusNote,
+              eyebrow: focusIsImprovement ? 'TRY THIS INSTEAD' : 'KEEP THIS',
+              icon: focusIsImprovement
+                  ? Icons.replay_rounded
+                  : Icons.check_circle_rounded,
+              color: focusIsImprovement ? AppColors.coral : AppColors.forest,
+              background: focusIsImprovement ? AppColors.peach : AppColors.mint,
+              prominent: true,
             ),
-            for (final note in _summary.strengths) ...[
+            for (final note in _summary.strengths.skip(
+              focusIsImprovement ? 0 : 1,
+            )) ...[
               const SizedBox(height: 12),
               _NoteCard(
                 note: note,
@@ -192,7 +198,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 background: AppColors.mint,
               ),
             ],
-            for (final note in _summary.improvements) ...[
+            for (final note in _summary.improvements.skip(
+              focusIsImprovement ? 1 : 0,
+            )) ...[
               const SizedBox(height: 12),
               _NoteCard(
                 note: note,
@@ -202,53 +210,96 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 background: AppColors.peach,
               ),
             ],
-            if (_summary.strengths.isEmpty &&
-                _summary.improvements.isEmpty) ...[
-              const SizedBox(height: 12),
-              _NoteCard(
-                note: CoachingNote(
-                  turnIndex: 0,
-                  quote: '',
-                  comment: widget.scenario.watchFor,
+            const SizedBox(height: 18),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 4,
                 ),
-                eyebrow: 'WATCH FOR',
-                icon: Icons.visibility_outlined,
-                color: AppColors.coral,
-                background: AppColors.peach,
+                childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+                title: const Text(
+                  'Your skill breakdown',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                ),
+                subtitle: const Text(
+                  'Clarity · empathy · directness · confidence',
+                ),
+                children: [SkillBars(values: _summary.skills, spacing: 17)],
               ),
-            ],
-            const SizedBox(height: 26),
-            Row(
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+      bottomNavigationBar: PageActionBar(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FilledButton.icon(
+              key: const Key('retry_scenario'),
+              onPressed: _retry,
+              icon: const Icon(Icons.replay_rounded),
+              label: const Text('Practice this scenario again'),
+            ),
+            TextButton(
+              onPressed: _finish,
+              child: const Text('Choose another scenario'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultHero extends StatelessWidget {
+  const _ResultHero({required this.summary});
+
+  final PracticeSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.forest,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Row(
+        children: [
+          ScoreRing.onDark(
+            key: const Key('final_score'),
+            score: summary.score,
+            diameter: 104,
+            caption: 'SCORE',
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    key: const Key('retry_scenario'),
-                    onPressed: _retry,
-                    icon: const Icon(Icons.replay_rounded),
-                    label: const Text('Try again'),
+                Text(
+                  summary.headline,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    height: 1.18,
                   ),
                 ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: _finish,
-                    child: const Text('Choose another'),
+                const SizedBox(height: 8),
+                Text(
+                  summary.summary,
+                  style: const TextStyle(
+                    color: Color(0xFFD9E5DD),
+                    fontSize: 13,
+                    height: 1.4,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 22),
-            Text(
-              'Practice complete · ${widget.scenario.durationMinutes} min',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.muted,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -265,6 +316,8 @@ class _NoteCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.background,
+    super.key,
+    this.prominent = false,
   });
 
   final CoachingNote note;
@@ -272,14 +325,15 @@ class _NoteCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final Color background;
+  final bool prominent;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(19),
+      padding: EdgeInsets.all(prominent ? 20 : 17),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(prominent ? 18 : 14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

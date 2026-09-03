@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  static const canvas = Color(0xFFF5F2EA);
-  static const surface = Color(0xFFFFFCF5);
+  static const canvas = Color(0xFFF4F0E7);
+  static const surface = Color(0xFFFFFDF8);
   static const ink = Color(0xFF18211D);
-  static const muted = Color(0xFF66716B);
+  static const muted = Color(0xFF59645E);
   static const forest = Color(0xFF214E3B);
   static const mint = Color(0xFFDDEADF);
-  static const coral = Color(0xFFE86D4A);
+  static const coral = Color(0xFFB94A2F);
+  static const coralBright = Color(0xFFE86D4A);
   static const peach = Color(0xFFF8D9C8);
   static const lavender = Color(0xFFE7E0F2);
   static const sky = Color(0xFFD7E5EF);
@@ -17,10 +18,6 @@ abstract final class AppColors {
 }
 
 abstract final class AppTheme {
-  /// Only resolves on Apple platforms; elsewhere Flutter falls back to the
-  /// platform default. See `docs/STATUS.md` §6.
-  static const fontFamily = 'SF Pro Display';
-
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.forest,
@@ -34,20 +31,19 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.canvas,
-      fontFamily: fontFamily,
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           color: AppColors.ink,
           fontSize: 44,
           height: 1.02,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           letterSpacing: -1.8,
         ),
         headlineLarge: TextStyle(
           color: AppColors.ink,
           fontSize: 32,
           height: 1.1,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           letterSpacing: -1.0,
         ),
         headlineMedium: TextStyle(
@@ -88,7 +84,7 @@ abstract final class AppTheme {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: AppColors.border),
         ),
       ),
@@ -98,13 +94,9 @@ abstract final class AppTheme {
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(56),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
-            fontFamily: fontFamily,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -113,13 +105,9 @@ abstract final class AppTheme {
           minimumSize: const Size.fromHeight(54),
           side: const BorderSide(color: AppColors.border),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
-            fontFamily: fontFamily,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
     );

@@ -437,7 +437,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 62,
+        toolbarHeight: 58,
         titleSpacing: 0,
         leadingWidth: 52,
         leading: IconButton(
@@ -479,16 +479,13 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     ),
                   ),
                   Text(
-                    widget.mode == PracticeMode.freestyle
-                        ? 'SPEAK FREELY'
-                        : 'GUIDED PRACTICE',
+                    widget.scenario.personRole,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: AppColors.coral,
-                      fontSize: 8,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.8,
+                      color: AppColors.muted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -513,26 +510,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.only(right: 14),
+            padding: const EdgeInsets.only(right: 16),
             child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Text(
-                  'TURN ${_turnIndex + 1} OF ${widget.scenario.turns.length}',
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.55,
-                  ),
+              child: Text(
+                '${_turnIndex + 1} / ${widget.scenario.turns.length}',
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
@@ -543,7 +528,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
           child: LinearProgressIndicator(
             value: progress,
             minHeight: 3,
-            color: AppColors.coral,
+            color: AppColors.coralBright,
             backgroundColor: AppColors.border,
           ),
         ),
@@ -559,8 +544,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 controller: _scrollController,
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
                 children: [
-                  const _RoomNotice(),
-                  const SizedBox(height: 18),
+                  if (_responses.isEmpty) ...[
+                    const _RoomNotice(),
+                    const SizedBox(height: 20),
+                  ],
                   for (var index = 0; index < _responses.length; index++) ...[
                     _PersonMessage(
                       scenario: widget.scenario,
@@ -623,7 +610,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 inputError: _inputError,
                 speechError: _speechError,
                 isListening: _isListening,
-                aiEnabled: _coachService.isAiEnabled,
                 onSelect: _select,
                 onSubmit: _submitFreeform,
                 onToggleListening: _toggleListening,
@@ -641,33 +627,23 @@ class _RoomNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.lock_outline_rounded, size: 12, color: AppColors.muted),
-            SizedBox(width: 5),
-            Flexible(
-              child: Text(
-                'Private practice · just you and your coach',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.muted,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+    return const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.lock_outline_rounded, size: 13, color: AppColors.muted),
+        SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            'Private rehearsal · feedback appears after the conversation',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -694,14 +670,17 @@ class _PersonMessage extends StatelessWidget {
     final bubble = Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Color.alphaBlend(
+          scenario.tint.withValues(alpha: 0.42),
+          AppColors.surface,
+        ),
         borderRadius: const BorderRadius.only(
           topRight: Radius.circular(18),
           bottomLeft: Radius.circular(18),
           bottomRight: Radius.circular(18),
         ),
         border: Border.all(
-          color: isSpeaking ? AppColors.forest : AppColors.border,
+          color: isSpeaking ? AppColors.forest : scenario.tint,
           width: isSpeaking ? 1.5 : 1,
         ),
       ),
@@ -1050,7 +1029,6 @@ class _ResponsePanel extends StatelessWidget {
     required this.inputError,
     required this.speechError,
     required this.isListening,
-    required this.aiEnabled,
     required this.onSelect,
     required this.onSubmit,
     required this.onToggleListening,
@@ -1067,7 +1045,6 @@ class _ResponsePanel extends StatelessWidget {
   final String? inputError;
   final String? speechError;
   final bool isListening;
-  final bool aiEnabled;
   final ValueChanged<ResponseChoice> onSelect;
   final VoidCallback onSubmit;
   final VoidCallback onToggleListening;
@@ -1090,9 +1067,9 @@ class _ResponsePanel extends StatelessWidget {
       ),
       padding: EdgeInsets.fromLTRB(
         20,
-        14,
+        12,
         20,
-        14 + MediaQuery.paddingOf(context).bottom,
+        12 + MediaQuery.paddingOf(context).bottom,
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 220),
@@ -1122,7 +1099,6 @@ class _ResponsePanel extends StatelessWidget {
                 inputError: inputError,
                 speechError: speechError,
                 isListening: isListening,
-                aiEnabled: aiEnabled,
                 onSubmit: onSubmit,
                 onToggleListening: onToggleListening,
               ),
@@ -1167,7 +1143,6 @@ class _FreeformComposer extends StatelessWidget {
     required this.inputError,
     required this.speechError,
     required this.isListening,
-    required this.aiEnabled,
     required this.onSubmit,
     required this.onToggleListening,
     super.key,
@@ -1180,7 +1155,6 @@ class _FreeformComposer extends StatelessWidget {
   final String? inputError;
   final String? speechError;
   final bool isListening;
-  final bool aiEnabled;
   final VoidCallback onSubmit;
   final VoidCallback onToggleListening;
 
@@ -1190,45 +1164,7 @@ class _FreeformComposer extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                turn.prompt,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-              decoration: BoxDecoration(
-                color: aiEnabled ? AppColors.mint : AppColors.canvas,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    aiEnabled
-                        ? Icons.auto_awesome_rounded
-                        : Icons.offline_bolt_rounded,
-                    color: aiEnabled ? AppColors.forest : AppColors.muted,
-                    size: 12,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    aiEnabled ? 'AI COACH' : 'DEMO COACH',
-                    style: TextStyle(
-                      color: aiEnabled ? AppColors.forest : AppColors.muted,
-                      fontSize: 8,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        Text(turn.prompt, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 9),
         TextField(
           key: const Key('freeform_response'),
@@ -1239,6 +1175,9 @@ class _FreeformComposer extends StatelessWidget {
           minLines: 1,
           maxLines: 3,
           maxLength: 600,
+          onSubmitted: (_) {
+            if (!isBusy) onSubmit();
+          },
           textCapitalization: TextCapitalization.sentences,
           decoration: InputDecoration(
             hintText: isListening
@@ -1248,23 +1187,46 @@ class _FreeformComposer extends StatelessWidget {
             counterText: '',
             filled: true,
             fillColor: isListening ? AppColors.peach : AppColors.canvas,
-            contentPadding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
-            suffixIcon: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Material(
-                color: isListening ? AppColors.coral : AppColors.forest,
-                borderRadius: BorderRadius.circular(11),
-                child: IconButton(
+            contentPadding: const EdgeInsets.fromLTRB(14, 14, 4, 14),
+            suffixIconConstraints: const BoxConstraints(minWidth: 104),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
                   key: const Key('speech_input'),
                   onPressed: isBusy ? null : onToggleListening,
                   tooltip: isListening ? 'Stop listening' : 'Start speaking',
                   icon: Icon(
-                    isListening ? Icons.stop_rounded : Icons.mic_rounded,
-                    color: Colors.white,
-                    size: 20,
+                    isListening ? Icons.stop_circle_rounded : Icons.mic_rounded,
+                    color: isListening ? AppColors.coral : AppColors.forest,
+                    size: 23,
                   ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 5),
+                  child: IconButton.filled(
+                    key: const Key('submit_response'),
+                    onPressed: isBusy ? null : onSubmit,
+                    tooltip: 'Send response',
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.forest,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.border,
+                      minimumSize: const Size(42, 42),
+                    ),
+                    icon: isBusy
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.arrow_upward_rounded, size: 20),
+                  ),
+                ),
+              ],
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
@@ -1319,23 +1281,6 @@ class _FreeformComposer extends StatelessWidget {
                   ),
                 )
               : const SizedBox.shrink(),
-        ),
-        const SizedBox(height: 9),
-        FilledButton.icon(
-          key: const Key('submit_response'),
-          onPressed: isBusy ? null : onSubmit,
-          icon: isBusy
-              ? const SizedBox(
-                  width: 17,
-                  height: 17,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.arrow_upward_rounded),
-          label: Text(isBusy ? 'Sending…' : 'Send response'),
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
         ),
       ],
     );
