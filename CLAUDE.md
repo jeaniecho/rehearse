@@ -15,6 +15,7 @@ conversations. Flutter app plus a small Node proxy to an LLM.
 | [`docs/ANALYTICS.md`](docs/ANALYTICS.md) | The tracking plan, and the rule that no event may carry free text. |
 | [`docs/RELEASE.md`](docs/RELEASE.md) | Submission checklist, store copy, and the privacy questionnaire answers. |
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | The privacy policy. Update it in the same commit as anything that changes what is sent. |
+| [`docs/ILLUSTRATIONS.md`](docs/ILLUSTRATIONS.md) | The illustration style, and the prompt for every image in the set. |
 
 `PRD.md` and `ROADMAP.md` are the plan of record — **do not edit them to match
 the code.** When reality diverges, record it in `STATUS.md`.
