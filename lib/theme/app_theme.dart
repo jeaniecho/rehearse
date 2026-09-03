@@ -18,7 +18,17 @@ abstract final class AppColors {
 }
 
 abstract final class AppTheme {
-  static ThemeData get light {
+  static ThemeData get light => withFont(null);
+
+  /// The theme names no font, so the app uses each platform's own.
+  ///
+  /// [fontFamily] exists for `tool/generate_screenshots.dart`: the test
+  /// environment ships no fonts at all, so the generator loads one and has
+  /// to be able to tell the theme about it. It threads through here rather
+  /// than being applied to the theme afterwards because `ButtonStyle`'s
+  /// `textStyle` replaces rather than merges, so a family applied to the
+  /// text theme alone never reaches a button label.
+  static ThemeData withFont(String? fontFamily) {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.forest,
       brightness: Brightness.light,
@@ -28,6 +38,9 @@ abstract final class AppTheme {
     );
 
     return ThemeData(
+      // ThemeData applies this to textTheme and primaryTextTheme, and every
+      // explicit TextStyle in the app inherits it through DefaultTextStyle.
+      fontFamily: fontFamily,
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.canvas,
@@ -96,7 +109,11 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -107,7 +124,11 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );

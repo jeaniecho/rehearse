@@ -43,15 +43,24 @@ const _ratio = 3.0;
 
 final _scenario = scenarios.first;
 
-/// The theme asks for 'SF Pro Display', which the test environment does not
-/// have — without this every glyph renders as a box and the output is
-/// useless as a store asset.
+/// The name the loaded system typeface is registered under. The theme is
+/// told about it explicitly — see [_theme] — because the app itself names
+/// no font, so registering one it never asks for would leave every glyph a
+/// box while this function still reported success.
+const _brandFamily = 'SF Pro Display';
+
+/// Whether [_brandFamily] actually loaded. Only then is the theme told to
+/// use it, so the warning below and the output always agree.
+bool _brandFontLoaded = false;
+
+/// The test environment ships no fonts, so without this every glyph renders
+/// as a box and the output is useless as a store asset.
 ///
 /// Loading the system copy works on a Mac and produces exactly what an
 /// iPhone shows. Elsewhere the generator still runs and still checks layout;
 /// it just cannot be used for submission.
 Future<bool> _loadBrandFont() async {
-  final text = await _register('SF Pro Display', const [
+  final text = await _register(_brandFamily, const [
     '/System/Library/Fonts/SFNS.ttf',
     '/System/Library/Fonts/Helvetica.ttc',
   ]);
@@ -87,13 +96,18 @@ Future<bool> _register(String family, List<String> candidates) async {
   return false;
 }
 
+/// The app's own theme, told about the font this harness loaded.
+ThemeData get _theme =>
+    AppTheme.withFont(_brandFontLoaded ? _brandFamily : null);
+
 void main() {
   late PracticeHistory history;
   late AppSettings settings;
   late Subscription subscription;
 
   setUpAll(() async {
-    if (!await _loadBrandFont()) {
+    _brandFontLoaded = await _loadBrandFont();
+    if (!_brandFontLoaded) {
       stdout.writeln(
         'WARNING: no system font found — glyphs will render as boxes and '
         'these images must not be submitted.',
@@ -165,7 +179,7 @@ void main() {
                 analytics: Analytics(sink: const NoopAnalyticsSink()),
                 child: MaterialApp(
                   debugShowCheckedModeBanner: false,
-                  theme: AppTheme.light,
+                  theme: _theme,
                   home: screen,
                 ),
               ),
