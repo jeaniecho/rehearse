@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/practice_response.dart';
 import '../models/scenario.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
@@ -9,18 +10,20 @@ class ResultsScreen extends StatelessWidget {
   const ResultsScreen({
     required this.scenario,
     required this.responses,
+    this.mode = PracticeMode.guided,
     super.key,
   });
 
   final Scenario scenario;
-  final List<ResponseChoice> responses;
+  final List<PracticeResponse> responses;
+  final PracticeMode mode;
 
   int get _score {
     final total = responses.fold<int>(50, (sum, item) => sum + item.scoreDelta);
     return total.clamp(0, 100);
   }
 
-  int _dimensionScore(int Function(ResponseChoice) read) {
+  int _dimensionScore(int Function(PracticeResponse) read) {
     final total = responses.fold<int>(50, (sum, item) => sum + read(item) * 8);
     return total.clamp(0, 100);
   }
@@ -43,16 +46,19 @@ class ResultsScreen extends StatelessWidget {
       'You reacted to the pressure instead of naming the issue. A slower opening can change the whole conversation.',
   };
 
-  ResponseChoice get _strongest =>
+  PracticeResponse get _strongest =>
       responses.reduce((a, b) => a.scoreDelta >= b.scoreDelta ? a : b);
 
-  ResponseChoice get _weakest =>
+  PracticeResponse get _weakest =>
       responses.reduce((a, b) => a.scoreDelta <= b.scoreDelta ? a : b);
+
+  bool get _usedAi =>
+      responses.any((response) => response.source == EvaluationSource.ai);
 
   void _retry(BuildContext context) {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => PracticeScreen(scenario: scenario),
+        builder: (_) => PracticeScreen(scenario: scenario, mode: mode),
       ),
     );
   }
@@ -96,6 +102,21 @@ class ResultsScreen extends StatelessWidget {
                 ),
               ),
             ),
+            if (mode == PracticeMode.freestyle) ...[
+              const SizedBox(height: 9),
+              Center(
+                child: MetaPill(
+                  icon: _usedAi
+                      ? Icons.auto_awesome_rounded
+                      : Icons.offline_bolt_rounded,
+                  label: _usedAi
+                      ? 'Personalized by AI'
+                      : 'Private demo scoring',
+                  color: AppColors.forest,
+                  backgroundColor: AppColors.mint,
+                ),
+              ),
+            ],
             const SizedBox(height: 18),
             _ScoreRing(score: _score),
             const SizedBox(height: 20),

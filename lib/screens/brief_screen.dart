@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
 
+import '../models/practice_response.dart';
 import '../models/scenario.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
 import 'practice_screen.dart';
 
-class BriefScreen extends StatelessWidget {
+class BriefScreen extends StatefulWidget {
   const BriefScreen({required this.scenario, super.key});
 
   final Scenario scenario;
 
+  @override
+  State<BriefScreen> createState() => _BriefScreenState();
+}
+
+class _BriefScreenState extends State<BriefScreen> {
+  PracticeMode _mode = PracticeMode.freestyle;
+
+  Scenario get scenario => widget.scenario;
+
   void _begin(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => PracticeScreen(scenario: scenario),
+        builder: (_) => PracticeScreen(scenario: scenario, mode: _mode),
       ),
     );
   }
@@ -116,6 +126,36 @@ class BriefScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
+            Text(
+              'How do you want to practice?',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 5),
+            const Text(
+              'You can switch styles each time you rehearse.',
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            _ModeOption(
+              key: const Key('mode_freestyle'),
+              icon: Icons.auto_awesome_rounded,
+              title: 'Speak freely',
+              description:
+                  'Type what you would really say and get personal feedback.',
+              badge: 'RECOMMENDED',
+              selected: _mode == PracticeMode.freestyle,
+              onTap: () => setState(() => _mode = PracticeMode.freestyle),
+            ),
+            const SizedBox(height: 9),
+            _ModeOption(
+              key: const Key('mode_guided'),
+              icon: Icons.format_list_bulleted_rounded,
+              title: 'Guided choices',
+              description: 'Choose between examples and learn the tradeoffs.',
+              selected: _mode == PracticeMode.guided,
+              onTap: () => setState(() => _mode = PracticeMode.guided),
+            ),
+            const SizedBox(height: 18),
             Container(
               padding: const EdgeInsets.all(17),
               decoration: BoxDecoration(
@@ -149,10 +189,125 @@ class BriefScreen extends StatelessWidget {
             FilledButton.icon(
               key: const Key('begin_simulation'),
               onPressed: () => _begin(context),
-              icon: const Icon(Icons.mic_none_rounded),
-              label: const Text('Enter the conversation'),
+              icon: Icon(
+                _mode == PracticeMode.freestyle
+                    ? Icons.keyboard_rounded
+                    : Icons.play_arrow_rounded,
+              ),
+              label: Text(
+                _mode == PracticeMode.freestyle
+                    ? 'Start free-form practice'
+                    : 'Start guided practice',
+              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeOption extends StatelessWidget {
+  const _ModeOption({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.selected,
+    required this.onTap,
+    super.key,
+    this.badge,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final bool selected;
+  final VoidCallback onTap;
+  final String? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.mint : AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(19),
+        side: BorderSide(
+          color: selected ? AppColors.forest : AppColors.border,
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(19),
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.forest : AppColors.canvas,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: selected ? Colors.white : AppColors.ink,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              color: AppColors.ink,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        if (badge != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            badge!,
+                            style: const TextStyle(
+                              color: AppColors.coral,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                selected
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: selected ? AppColors.forest : AppColors.muted,
+              ),
+            ],
+          ),
         ),
       ),
     );
