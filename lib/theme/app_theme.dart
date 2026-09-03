@@ -1,20 +1,33 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  static const canvas = Color(0xFFF4F0E7);
-  static const surface = Color(0xFFFFFDF8);
-  static const ink = Color(0xFF18211D);
-  static const muted = Color(0xFF59645E);
-  static const forest = Color(0xFF214E3B);
-  static const mint = Color(0xFFDDEADF);
-  static const coral = Color(0xFFB94A2F);
-  static const coralBright = Color(0xFFE86D4A);
-  static const peach = Color(0xFFF8D9C8);
-  static const lavender = Color(0xFFE7E0F2);
-  static const sky = Color(0xFFD7E5EF);
-  static const butter = Color(0xFFF4E5BE);
-  static const rose = Color(0xFFF2DBE1);
-  static const border = Color(0xFFE4DFD3);
+  /// Cards are white on white; the border is what separates them. The old
+  /// cream canvas was most of what made the app read as generated.
+  static const canvas = Color(0xFFFFFFFF);
+  static const surface = Color(0xFFFFFFFF);
+  static const subtle = Color(0xFFF3F3F5);
+  static const border = Color(0xFFE4E4E7);
+
+  static const ink = Color(0xFF1A1A1A);
+  static const muted = Color(0xFF6B6B72);
+
+  /// Charcoal carries every primary action. Green is kept for progress and
+  /// success only, so it still means something when it appears.
+  static const charcoal = Color(0xFF3A342F);
+  static const green = Color(0xFF00A862);
+  static const forest = Color(0xFF17624A);
+
+  /// Semantic surfaces. Nothing here is decorative — a colour on screen
+  /// should say what kind of thing it is.
+  static const mint = Color(0xFFE3F5EB);
+  static const peach = Color(0xFFFDECE0);
+  static const butter = Color(0xFFFBF7A8);
+  static const butterEdge = Color(0xFFE6DF6A);
+  static const coral = Color(0xFFB3400F);
+  static const coralBright = Color(0xFFE05B2A);
+  static const lavender = Color(0xFFECE8F7);
+  static const sky = Color(0xFFE1ECF5);
+  static const rose = Color(0xFFF7E5EA);
 }
 
 abstract final class AppTheme {
@@ -28,12 +41,15 @@ abstract final class AppTheme {
   /// than being applied to the theme afterwards because `ButtonStyle`'s
   /// `textStyle` replaces rather than merges, so a family applied to the
   /// text theme alone never reaches a button label.
-  static ThemeData withFont(String? fontFamily) {
+  static ThemeData withFont(
+    String? fontFamily, {
+    List<String>? fontFamilyFallback,
+  }) {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.forest,
       brightness: Brightness.light,
-      primary: AppColors.forest,
-      secondary: AppColors.coral,
+      primary: AppColors.charcoal,
+      secondary: AppColors.green,
       surface: AppColors.surface,
     );
 
@@ -41,47 +57,48 @@ abstract final class AppTheme {
       // ThemeData applies this to textTheme and primaryTextTheme, and every
       // explicit TextStyle in the app inherits it through DefaultTextStyle.
       fontFamily: fontFamily,
+      fontFamilyFallback: fontFamilyFallback,
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.canvas,
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           color: AppColors.ink,
-          fontSize: 44,
-          height: 1.02,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -1.8,
+          fontSize: 40,
+          height: 1.08,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -1.4,
         ),
         headlineLarge: TextStyle(
           color: AppColors.ink,
-          fontSize: 32,
-          height: 1.1,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -1.0,
+          fontSize: 30,
+          height: 1.12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.9,
         ),
         headlineMedium: TextStyle(
           color: AppColors.ink,
-          fontSize: 24,
-          height: 1.15,
-          fontWeight: FontWeight.w700,
+          fontSize: 23,
+          height: 1.18,
+          fontWeight: FontWeight.w800,
           letterSpacing: -0.5,
         ),
         titleLarge: TextStyle(
           color: AppColors.ink,
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.25,
+          fontSize: 19,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.3,
         ),
         titleMedium: TextStyle(
           color: AppColors.ink,
           fontSize: 16,
           fontWeight: FontWeight.w700,
         ),
-        bodyLarge: TextStyle(color: AppColors.ink, fontSize: 16, height: 1.45),
+        bodyLarge: TextStyle(color: AppColors.ink, fontSize: 16, height: 1.5),
         bodyMedium: TextStyle(
           color: AppColors.muted,
           fontSize: 14,
-          height: 1.4,
+          height: 1.45,
         ),
         labelLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
       ),
@@ -103,12 +120,10 @@ abstract final class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.forest,
+          backgroundColor: AppColors.charcoal,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          shape: const StadiumBorder(),
           textStyle: TextStyle(
             fontFamily: fontFamily,
             fontSize: 16,
@@ -121,9 +136,7 @@ abstract final class AppTheme {
           foregroundColor: AppColors.ink,
           minimumSize: const Size.fromHeight(54),
           side: const BorderSide(color: AppColors.border),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+          shape: const StadiumBorder(),
           textStyle: TextStyle(
             fontFamily: fontFamily,
             fontSize: 15,

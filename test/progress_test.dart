@@ -28,7 +28,10 @@ PracticeRecord record({
 }
 
 void main() {
-  final today = DateTime(2026, 9, 3, 9);
+  // Tracks the real clock: the session list formats relative days against
+  // DateTime.now(), so a pinned date makes these pass on one day only.
+  final realNow = DateTime.now();
+  final today = DateTime(realNow.year, realNow.month, realNow.day, 9);
   DateTime now() => today;
 
   Future<PracticeHistory> pumpApp(
@@ -64,9 +67,9 @@ void main() {
       await pumpApp(tester, const HomeScreen());
 
       expect(find.text('Say the hard thing.\nBetter.'), findsOneWidget);
-      expect(find.text('per practice'), findsOneWidget);
-      expect(find.text('RECOMMENDED'), findsOneWidget);
-      expect(find.text('day streak'), findsNothing);
+      expect(find.text('Start practicing'), findsOneWidget);
+      expect(find.text('START HERE'), findsOneWidget);
+      expect(find.textContaining('day streak'), findsNothing);
     });
 
     testWidgets('reports the real streak once there is history', (
@@ -85,10 +88,8 @@ void main() {
         ],
       );
 
-      expect(find.text('day streak'), findsOneWidget);
-      expect(find.text('this week'), findsOneWidget);
-      expect(find.text('per practice'), findsNothing);
-      expect(find.text('2-DAY STREAK · DONE TODAY'), findsOneWidget);
+      expect(find.text('🔥 2 day streak'), findsOneWidget);
+      expect(find.text('One more rep?\nGo again.'), findsOneWidget);
       expect(find.text('2 reps · best 74'), findsOneWidget);
     });
 
@@ -106,7 +107,7 @@ void main() {
         ],
       );
 
-      expect(find.text('1-DAY STREAK ON THE LINE'), findsOneWidget);
+      expect(find.text('🔥 1 day streak'), findsOneWidget);
       expect(find.text('Keep the streak.\nOne conversation.'), findsOneWidget);
     });
 

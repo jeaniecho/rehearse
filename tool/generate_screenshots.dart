@@ -49,9 +49,15 @@ final _scenario = scenarios.first;
 /// box while this function still reported success.
 const _brandFamily = 'SF Pro Display';
 
+/// Scenario rows are identified by an emoji, and the test environment has
+/// no font that can draw one — so without this they render as boxes on
+/// exactly the screen the store listing leads with.
+const _emojiFamily = 'Apple Color Emoji';
+
 /// Whether [_brandFamily] actually loaded. Only then is the theme told to
 /// use it, so the warning below and the output always agree.
 bool _brandFontLoaded = false;
+bool _emojiFontLoaded = false;
 
 /// The test environment ships no fonts, so without this every glyph renders
 /// as a box and the output is useless as a store asset.
@@ -70,6 +76,10 @@ Future<bool> _loadBrandFont() async {
   final root = Platform.environment['FLUTTER_ROOT'];
   final home = Platform.environment['HOME'];
   const suffix = 'bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf';
+  _emojiFontLoaded = await _register(_emojiFamily, const [
+    '/System/Library/Fonts/Apple Color Emoji.ttc',
+  ]);
+
   await _register('MaterialIcons', [
     if (root != null && root.isNotEmpty) '$root/$suffix',
     if (home != null) '$home/Dev/flutter/$suffix',
@@ -97,8 +107,10 @@ Future<bool> _register(String family, List<String> candidates) async {
 }
 
 /// The app's own theme, told about the font this harness loaded.
-ThemeData get _theme =>
-    AppTheme.withFont(_brandFontLoaded ? _brandFamily : null);
+ThemeData get _theme => AppTheme.withFont(
+  _brandFontLoaded ? _brandFamily : null,
+  fontFamilyFallback: _emojiFontLoaded ? const [_emojiFamily] : null,
+);
 
 void main() {
   late PracticeHistory history;

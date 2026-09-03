@@ -86,6 +86,7 @@ class Scenario {
     required this.durationMinutes,
     required this.stakes,
     required this.icon,
+    required this.emoji,
     required this.tint,
     required this.personName,
     required this.personRole,
@@ -104,6 +105,11 @@ class Scenario {
   final int durationMinutes;
   final ScenarioStakes stakes;
   final IconData icon;
+
+  /// Stands in for an illustration in lists. A drawn mark reads as a
+  /// thing; a flat glyph in a tinted square reads as a template.
+  final String emoji;
+
   final Color tint;
   final String personName;
   final String personRole;
