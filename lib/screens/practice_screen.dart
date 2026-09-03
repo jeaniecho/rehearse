@@ -452,7 +452,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               height: 34,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: widget.scenario.tint,
+                color: AppColors.subtle,
                 shape: BoxShape.circle,
               ),
               child: Text(
@@ -524,12 +524,16 @@ class _PracticeScreenState extends State<PracticeScreen> {
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 3,
-            color: AppColors.coralBright,
-            backgroundColor: AppColors.border,
+          preferredSize: const Size.fromHeight(6),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 2),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              color: AppColors.green,
+              backgroundColor: AppColors.subtle,
+              borderRadius: BorderRadius.all(Radius.circular(999)),
+            ),
           ),
         ),
       ),
@@ -667,17 +671,14 @@ class _PersonMessage extends StatelessWidget {
     final bubble = Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(
-          scenario.tint.withValues(alpha: 0.42),
-          AppColors.surface,
-        ),
+        color: AppColors.subtle,
         borderRadius: const BorderRadius.only(
           topRight: Radius.circular(18),
           bottomLeft: Radius.circular(18),
           bottomRight: Radius.circular(18),
         ),
         border: Border.all(
-          color: isSpeaking ? AppColors.forest : scenario.tint,
+          color: isSpeaking ? AppColors.forest : AppColors.border,
           width: isSpeaking ? 1.5 : 1,
         ),
       ),
@@ -692,7 +693,7 @@ class _PersonMessage extends StatelessWidget {
           height: 34,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: scenario.tint,
+            color: AppColors.subtle,
             shape: BoxShape.circle,
           ),
           child: Text(
@@ -776,7 +777,7 @@ class _YourMessage extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
             decoration: const BoxDecoration(
-              color: AppColors.forest,
+              color: AppColors.charcoal,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(18),
                 bottomLeft: Radius.circular(18),
@@ -884,7 +885,7 @@ class _Typing extends StatelessWidget {
           height: 34,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: scenario.tint,
+            color: AppColors.subtle,
             shape: BoxShape.circle,
           ),
           child: Text(
@@ -1195,7 +1196,7 @@ class _FreeformComposer extends StatelessWidget {
                   tooltip: isListening ? 'Stop listening' : 'Start speaking',
                   icon: Icon(
                     isListening ? Icons.stop_circle_rounded : Icons.mic_rounded,
-                    color: isListening ? AppColors.coral : AppColors.forest,
+                    color: isListening ? AppColors.coral : AppColors.muted,
                     size: 23,
                   ),
                 ),
@@ -1206,7 +1207,7 @@ class _FreeformComposer extends StatelessWidget {
                     onPressed: isBusy ? null : onSubmit,
                     tooltip: 'Send response',
                     style: IconButton.styleFrom(
-                      backgroundColor: AppColors.forest,
+                      backgroundColor: AppColors.charcoal,
                       foregroundColor: Colors.white,
                       disabledBackgroundColor: AppColors.border,
                       minimumSize: const Size(42, 42),
@@ -1238,7 +1239,7 @@ class _FreeformComposer extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
-              borderSide: const BorderSide(color: AppColors.forest, width: 1.5),
+              borderSide: const BorderSide(color: AppColors.ink, width: 1.5),
             ),
           ),
         ),
