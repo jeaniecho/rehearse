@@ -73,7 +73,7 @@ class ScoreRing extends StatelessWidget {
                         color: valueColor,
                         fontSize: diameter * 0.324,
                         height: 1,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: -1.5,
                       ),
                     ),
@@ -84,7 +84,7 @@ class ScoreRing extends StatelessWidget {
                       style: TextStyle(
                         color: captionColor,
                         fontSize: 8,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: 0.6,
                       ),
                     ),
@@ -136,7 +136,7 @@ class SkillBar extends StatelessWidget {
                 style: TextStyle(
                   color: color,
                   fontSize: 13,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],

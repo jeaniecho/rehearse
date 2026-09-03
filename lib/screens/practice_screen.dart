@@ -460,7 +460,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 style: const TextStyle(
                   color: AppColors.ink,
                   fontSize: 9,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
@@ -700,7 +700,7 @@ class _PersonMessage extends StatelessWidget {
             style: const TextStyle(
               color: AppColors.ink,
               fontSize: 11,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ),
@@ -838,7 +838,7 @@ class _InlineCoach extends StatelessWidget {
                         style: TextStyle(
                           color: color,
                           fontSize: 12,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
@@ -847,7 +847,7 @@ class _InlineCoach extends StatelessWidget {
                       style: TextStyle(
                         color: color.withValues(alpha: 0.72),
                         fontSize: 8,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -892,7 +892,7 @@ class _Typing extends StatelessWidget {
             style: const TextStyle(
               color: AppColors.ink,
               fontSize: 11,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ),
@@ -1322,7 +1322,7 @@ class _ChoiceButton extends StatelessWidget {
                   style: const TextStyle(
                     color: AppColors.muted,
                     fontSize: 11,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),

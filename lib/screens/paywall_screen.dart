@@ -239,7 +239,7 @@ class _Header extends StatelessWidget {
           style: TextStyle(
             color: AppColors.coral,
             fontSize: 10,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w800,
             letterSpacing: 1.1,
           ),
         ),
@@ -424,7 +424,7 @@ class _PlanCard extends StatelessWidget {
                   style: const TextStyle(
                     color: AppColors.ink,
                     fontSize: 16,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],

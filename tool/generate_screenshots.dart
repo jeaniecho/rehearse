@@ -43,33 +43,33 @@ const _ratio = 3.0;
 
 final _scenario = scenarios.first;
 
-/// The name the loaded system typeface is registered under. The theme is
-/// told about it explicitly — see [_theme] — because the app itself names
-/// no font, so registering one it never asks for would leave every glyph a
-/// box while this function still reported success.
-const _brandFamily = 'SF Pro Display';
-
 /// Scenario rows are identified by an emoji, and the test environment has
 /// no font that can draw one — so without this they render as boxes on
 /// exactly the screen the store listing leads with.
 const _emojiFamily = 'Apple Color Emoji';
 
-/// Whether [_brandFamily] actually loaded. Only then is the theme told to
-/// use it, so the warning below and the output always agree.
+/// Whether the bundled typeface loaded. The warning below and the output
+/// always agree because the theme names this font either way.
 bool _brandFontLoaded = false;
 bool _emojiFontLoaded = false;
 
-/// The test environment ships no fonts, so without this every glyph renders
-/// as a box and the output is useless as a store asset.
+/// The test environment loads no fonts of its own, so without this every
+/// glyph renders as a box and the output is useless as a store asset.
 ///
-/// Loading the system copy works on a Mac and produces exactly what an
-/// iPhone shows. Elsewhere the generator still runs and still checks layout;
-/// it just cannot be used for submission.
+/// This loads the typeface the app itself bundles, which is why the output
+/// now matches the real app on any machine rather than only on a Mac.
 Future<bool> _loadBrandFont() async {
-  final text = await _register(_brandFamily, const [
-    '/System/Library/Fonts/SFNS.ttf',
-    '/System/Library/Fonts/Helvetica.ttc',
-  ]);
+  var text = true;
+  try {
+    final loader = FontLoader(AppTheme.fontFamily)
+      ..addFont(rootBundle.load('assets/fonts/PlusJakartaSans[wght].ttf'))
+      ..addFont(
+        rootBundle.load('assets/fonts/PlusJakartaSans-Italic[wght].ttf'),
+      );
+    await loader.load();
+  } on Object {
+    text = false;
+  }
 
   // Icons live in a separate family the test environment does not load
   // either, so without this every icon renders as a box too.
@@ -106,11 +106,9 @@ Future<bool> _register(String family, List<String> candidates) async {
   return false;
 }
 
-/// The app's own theme, told about the font this harness loaded.
-ThemeData get _theme => AppTheme.withFont(
-  _brandFontLoaded ? _brandFamily : null,
-  fontFamilyFallback: _emojiFontLoaded ? const [_emojiFamily] : null,
-);
+/// The app's own theme, plus the emoji family this harness had to supply.
+ThemeData get _theme =>
+    AppTheme.withFallback(_emojiFontLoaded ? const [_emojiFamily] : null);
 
 void main() {
   late PracticeHistory history;
@@ -121,8 +119,8 @@ void main() {
     _brandFontLoaded = await _loadBrandFont();
     if (!_brandFontLoaded) {
       stdout.writeln(
-        'WARNING: no system font found — glyphs will render as boxes and '
-        'these images must not be submitted.',
+        'WARNING: the bundled typeface did not load — glyphs will render '
+        'as boxes and these images must not be submitted.',
       );
     }
   });

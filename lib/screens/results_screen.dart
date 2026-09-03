@@ -136,7 +136,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   style: TextStyle(
                     color: AppColors.coral,
                     fontSize: 10,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 1.1,
                   ),
                 ),
@@ -347,7 +347,7 @@ class _NoteCard extends StatelessWidget {
                   style: TextStyle(
                     color: color,
                     fontSize: 9,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -357,7 +357,7 @@ class _NoteCard extends StatelessWidget {
                 style: const TextStyle(
                   color: AppColors.muted,
                   fontSize: 9,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -383,7 +383,7 @@ class _NoteCard extends StatelessWidget {
               style: TextStyle(
                 color: AppColors.ink,
                 fontSize: 9,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
                 letterSpacing: 0.8,
               ),
             ),

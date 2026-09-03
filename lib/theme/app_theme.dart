@@ -31,20 +31,18 @@ abstract final class AppColors {
 }
 
 abstract final class AppTheme {
-  static ThemeData get light => withFont(null);
+  /// Bundled, so Android and the web no longer fall back to something else
+  /// and the app stops looking unlike its own screenshots.
+  static const fontFamily = 'Plus Jakarta Sans';
 
-  /// The theme names no font, so the app uses each platform's own.
-  ///
-  /// [fontFamily] exists for `tool/generate_screenshots.dart`: the test
-  /// environment ships no fonts at all, so the generator loads one and has
-  /// to be able to tell the theme about it. It threads through here rather
-  /// than being applied to the theme afterwards because `ButtonStyle`'s
-  /// `textStyle` replaces rather than merges, so a family applied to the
-  /// text theme alone never reaches a button label.
-  static ThemeData withFont(
-    String? fontFamily, {
-    List<String>? fontFamilyFallback,
-  }) {
+  static ThemeData get light => withFallback(null);
+
+  /// [fontFamilyFallback] exists for `tool/generate_screenshots.dart`: the
+  /// test environment can draw no emoji, so the harness supplies one. It
+  /// threads through here rather than being applied to the theme afterwards
+  /// because `ButtonStyle`'s `textStyle` replaces rather than merges, so a
+  /// family applied to the text theme alone never reaches a button label.
+  static ThemeData withFallback(List<String>? fontFamilyFallback) {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.forest,
       brightness: Brightness.light,

@@ -99,7 +99,7 @@ class _BriefScreenState extends State<BriefScreen> {
               style: const TextStyle(
                 color: AppColors.coral,
                 fontSize: 10,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
                 letterSpacing: 0.75,
               ),
             ),
@@ -134,7 +134,7 @@ class _BriefScreenState extends State<BriefScreen> {
                     style: TextStyle(
                       color: AppColors.coral,
                       fontSize: 9,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                       letterSpacing: 0.9,
                     ),
                   ),
