@@ -121,12 +121,7 @@ void main() {
     await tester.tap(find.byKey(const Key('submit_response')));
     await tester.pumpAndSettle();
 
-    // Coaching a response should not trigger speech on its own.
-    expect(voice.spoken, hasLength(1));
-
-    await tester.tap(find.byKey(const Key('continue_practice')));
-    await tester.pumpAndSettle();
-
+    // Sending advances the turn on its own now; the new line is spoken.
     expect(voice.spoken, hasLength(2));
     expect(voice.spoken.last, isNot(voice.spoken.first));
   });

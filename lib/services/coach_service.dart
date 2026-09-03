@@ -4,18 +4,40 @@ import 'dart:math';
 
 import 'package:http/http.dart' as http;
 
+import '../models/coaching_note.dart';
 import '../models/practice_response.dart';
+import '../models/practice_summary.dart';
 import '../models/scenario.dart';
 
+/// What the other person says back, and nothing else.
+///
+/// Separate from any judgement on purpose: PRD §7.3 says the simulation must
+/// not coach while it is running, because a narrator explaining your mistake
+/// mid-sentence is the opposite of the pressure the product exists to
+/// recreate.
+class EmployeeReply {
+  const EmployeeReply({required this.text, required this.source});
+
+  final String text;
+  final EvaluationSource source;
+}
+
+/// The coach: two distinct jobs, deliberately not one prompt.
 abstract interface class CoachService {
   bool get isAiEnabled;
 
-  Future<PracticeResponse> evaluate({
+  /// Continues the conversation in character.
+  Future<EmployeeReply> respond({
     required Scenario scenario,
-    required DialogueTurn turn,
     required int turnIndex,
     required List<PracticeResponse> history,
-    required String responseText,
+    required String managerResponse,
+  });
+
+  /// Reads the finished transcript once and scores it as a whole.
+  Future<PracticeSummary> evaluate({
+    required Scenario scenario,
+    required List<PracticeResponse> history,
   });
 }
 
@@ -35,58 +57,69 @@ CoachService createCoachService({http.Client? client}) {
 
 class RemoteCoachService implements CoachService {
   RemoteCoachService({required String baseUrl, required this.client})
-    : _endpoint = Uri.parse(
-        '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/evaluate',
-      ),
+    : _base = baseUrl.replaceFirst(RegExp(r'/+$'), ''),
       _sessionId = _makeSessionId();
 
   final http.Client client;
-  final Uri _endpoint;
+  final String _base;
   final String _sessionId;
 
   @override
   bool get isAiEnabled => true;
 
   @override
-  Future<PracticeResponse> evaluate({
+  Future<EmployeeReply> respond({
     required Scenario scenario,
-    required DialogueTurn turn,
     required int turnIndex,
     required List<PracticeResponse> history,
-    required String responseText,
+    required String managerResponse,
+  }) async {
+    final decoded = await _post('/simulation/respond', {
+      'sessionId': _sessionId,
+      'scenario': _scenarioJson(scenario),
+      'turn': {
+        'index': turnIndex,
+        'isLast': turnIndex == scenario.turns.length - 1,
+      },
+      'history': _historyJson(history),
+      'managerResponse': managerResponse,
+    }, timeout: const Duration(seconds: 15));
+
+    final reply = decoded['reply'];
+    if (reply is! String || reply.trim().isEmpty) {
+      throw const FormatException('Coach returned no reply.');
+    }
+    return EmployeeReply(text: reply.trim(), source: EvaluationSource.ai);
+  }
+
+  @override
+  Future<PracticeSummary> evaluate({
+    required Scenario scenario,
+    required List<PracticeResponse> history,
+  }) async {
+    // The whole transcript is being read, so this is slower than a turn and
+    // is allowed to be.
+    final decoded = await _post('/simulation/evaluate', {
+      'sessionId': _sessionId,
+      'scenario': _scenarioJson(scenario),
+      'history': _historyJson(history),
+    }, timeout: const Duration(seconds: 30));
+
+    return parseEvaluation(decoded, history: history);
+  }
+
+  Future<Map<String, dynamic>> _post(
+    String path,
+    Map<String, Object?> body, {
+    required Duration timeout,
   }) async {
     final response = await client
         .post(
-          _endpoint,
+          Uri.parse('$_base$path'),
           headers: const {'content-type': 'application/json'},
-          body: jsonEncode({
-            'sessionId': _sessionId,
-            'scenario': {
-              'id': scenario.id,
-              'title': scenario.title,
-              'context': scenario.context,
-              'goal': scenario.goal,
-              'watchFor': scenario.watchFor,
-              'personName': scenario.personName,
-              'personRole': scenario.personRole,
-            },
-            'turn': {
-              'index': turnIndex,
-              'employeeLine': turn.employeeLine,
-              'prompt': turn.prompt,
-              'isLast': turnIndex == scenario.turns.length - 1,
-            },
-            'history': [
-              for (final item in history)
-                {
-                  'managerResponse': item.text,
-                  'employeeReply': item.employeeReply,
-                },
-            ],
-            'managerResponse': responseText,
-          }),
+          body: jsonEncode(body),
         )
-        .timeout(const Duration(seconds: 15));
+        .timeout(timeout);
 
     if (response.statusCode != 200) {
       throw CoachServiceException(
@@ -98,13 +131,30 @@ class RemoteCoachService implements CoachService {
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('Coach returned an invalid response.');
     }
-
-    return PracticeResponse.fromJson(
-      decoded,
-      text: responseText,
-      source: EvaluationSource.ai,
-    );
+    return decoded;
   }
+
+  static Map<String, Object?> _scenarioJson(Scenario scenario) => {
+    'id': scenario.id,
+    'title': scenario.title,
+    'context': scenario.context,
+    'goal': scenario.goal,
+    'watchFor': scenario.watchFor,
+    'personName': scenario.personName,
+    'personRole': scenario.personRole,
+    'openingLine': scenario.openingLine,
+  };
+
+  static List<Map<String, Object?>> _historyJson(
+    List<PracticeResponse> history,
+  ) => [
+    for (var index = 0; index < history.length; index++)
+      {
+        'turnIndex': index,
+        'managerResponse': history[index].text,
+        'employeeReply': history[index].employeeReply,
+      },
+  ];
 
   static String _makeSessionId() {
     final random = Random.secure();
@@ -114,6 +164,52 @@ class RemoteCoachService implements CoachService {
       random.nextInt(1 << 32).toRadixString(36),
     ].join('-');
   }
+}
+
+/// Turns an `/simulation/evaluate` payload into a summary, dropping any note
+/// whose quote is not actually in the transcript.
+PracticeSummary parseEvaluation(
+  Map<String, dynamic> json, {
+  required List<PracticeResponse> history,
+}) {
+  int score(String key) {
+    final value = json[key];
+    if (value is! num) {
+      throw FormatException('Coach response is missing $key.');
+    }
+    return value.round().clamp(0, 100);
+  }
+
+  final managerTurns = [for (final item in history) item.text];
+
+  List<CoachingNote> notes(String key) {
+    final raw = json[key];
+    if (raw is! List) return const [];
+    return [
+      for (final item in raw)
+        if (CoachingNote.tryFromJson(item, turnCount: history.length)
+            case final note?)
+          // A critique of words nobody said would poison the one thing this
+          // report has to get right.
+          if (note.isGroundedIn(managerTurns)) note,
+    ].take(3).toList();
+  }
+
+  final summary = json['summary'];
+
+  return PracticeSummary.fromEvaluation(
+    score: score('overall_score'),
+    skills: {
+      PracticeSkill.clarity: score('clarity'),
+      PracticeSkill.empathy: score('empathy'),
+      PracticeSkill.directness: score('directness'),
+      PracticeSkill.confidence: score('confidence'),
+    },
+    summary: summary is String ? summary : '',
+    strengths: notes('strengths'),
+    improvements: notes('improvements'),
+    usedAi: true,
+  );
 }
 
 class ResilientCoachService implements CoachService {
@@ -126,33 +222,44 @@ class ResilientCoachService implements CoachService {
   bool get isAiEnabled => primary.isAiEnabled;
 
   @override
-  Future<PracticeResponse> evaluate({
+  Future<EmployeeReply> respond({
     required Scenario scenario,
-    required DialogueTurn turn,
     required int turnIndex,
     required List<PracticeResponse> history,
-    required String responseText,
+    required String managerResponse,
   }) async {
     try {
-      return await primary.evaluate(
+      return await primary.respond(
         scenario: scenario,
-        turn: turn,
         turnIndex: turnIndex,
         history: history,
-        responseText: responseText,
+        managerResponse: managerResponse,
       );
     } on Object {
-      return fallback.evaluate(
+      return fallback.respond(
         scenario: scenario,
-        turn: turn,
         turnIndex: turnIndex,
         history: history,
-        responseText: responseText,
+        managerResponse: managerResponse,
       );
+    }
+  }
+
+  @override
+  Future<PracticeSummary> evaluate({
+    required Scenario scenario,
+    required List<PracticeResponse> history,
+  }) async {
+    try {
+      return await primary.evaluate(scenario: scenario, history: history);
+    } on Object {
+      return fallback.evaluate(scenario: scenario, history: history);
     }
   }
 }
 
+/// The on-device coach. Keeps the app usable with no key and no network, and
+/// is what every remote failure degrades to.
 class OfflineCoachService implements CoachService {
   @override
   bool get isAiEnabled => false;
@@ -184,84 +291,131 @@ class OfflineCoachService implements CoachService {
   };
 
   @override
-  Future<PracticeResponse> evaluate({
+  Future<EmployeeReply> respond({
     required Scenario scenario,
-    required DialogueTurn turn,
     required int turnIndex,
     required List<PracticeResponse> history,
-    required String responseText,
+    required String managerResponse,
   }) async {
-    final closest = _closestChoice(turn.choices, responseText);
-    final employeeReply = turnIndex < scenario.turns.length - 1
-        ? scenario.turns[turnIndex + 1].employeeLine
-        : 'Okay. I understand what we’re agreeing to.';
+    final next = turnIndex + 1;
+    return EmployeeReply(
+      text: next < scenario.turns.length
+          ? scenario.turns[next].employeeLine
+          : 'Okay. I understand what we’re agreeing to.',
+      source: EvaluationSource.offline,
+    );
+  }
 
-    if (closest.$2 >= 0.2) {
-      final choice = closest.$1;
-      return PracticeResponse(
-        text: responseText,
-        scoreDelta: choice.scoreDelta,
-        feedback: choice.feedback,
-        clarity: choice.clarity,
-        empathy: choice.empathy,
-        directness: choice.directness,
-        confidence: choice.confidence,
-        source: EvaluationSource.offline,
-        employeeReply: employeeReply,
-      );
+  @override
+  Future<PracticeSummary> evaluate({
+    required Scenario scenario,
+    required List<PracticeResponse> history,
+  }) async {
+    final scored = [
+      for (var index = 0; index < history.length; index++)
+        (index, _scoreTurn(scenario, index, history[index].text)),
+    ];
+
+    int dimension(int Function(_TurnScore) read) {
+      if (scored.isEmpty) return 50;
+      final total = scored.fold<int>(0, (sum, item) => sum + read(item.$2));
+      return (50 + (total / scored.length) * 20).round().clamp(0, 100);
     }
 
-    final lower = responseText.toLowerCase();
-    final clarity = _signalScore(lower, const [
-      'need',
-      'expect',
-      'agree',
-      'deadline',
-      'impact',
-      'next step',
-      'by ',
-    ]);
-    final empathy = _signalScore(lower, const [
-      'understand',
-      'hear',
-      'see',
-      'appreciate',
-      'sorry',
-      'help',
-    ]);
-    final directness = _signalScore(lower, const [
-      'need',
-      'cannot',
-      'can’t',
-      'will not',
-      'expect',
-      'impact',
-      'tradeoff',
-    ]);
-    // Conviction reads as committing to something; hedging reads as giving
-    // ground before anyone has pushed.
-    final confidence = _hedgeScore(lower);
-    final scoreDelta =
-        (((clarity + empathy + directness + confidence) * 2.5).round()).clamp(
-          -6,
-          12,
-        );
+    final ranked = [...scored]
+      ..sort((a, b) => b.$2.total.compareTo(a.$2.total));
 
-    return PracticeResponse(
-      text: responseText,
-      scoreDelta: scoreDelta,
-      feedback: _feedbackFor(
-        clarity: clarity,
-        empathy: empathy,
-        directness: directness,
-        confidence: confidence,
-      ),
-      clarity: clarity,
-      empathy: empathy,
-      directness: directness,
-      confidence: confidence,
-      source: EvaluationSource.offline,
-      employeeReply: employeeReply,
+    return PracticeSummary.fromEvaluation(
+      score: dimension((score) => score.total ~/ 4),
+      skills: {
+        PracticeSkill.clarity: dimension((score) => score.clarity),
+        PracticeSkill.empathy: dimension((score) => score.empathy),
+        PracticeSkill.directness: dimension((score) => score.directness),
+        PracticeSkill.confidence: dimension((score) => score.confidence),
+      },
+      summary: '',
+      strengths: ranked.isEmpty
+          ? const []
+          : [_noteFor(scenario, history, ranked.first.$1, strength: true)],
+      improvements: ranked.length < 2
+          ? const []
+          : [_noteFor(scenario, history, ranked.last.$1, strength: false)],
+      usedAi: false,
+    );
+  }
+
+  /// The quote is whatever the manager actually typed; the suggestion is the
+  /// strongest authored wording for that turn, so even with no network the
+  /// report can still say "try this instead" and mean it.
+  CoachingNote _noteFor(
+    Scenario scenario,
+    List<PracticeResponse> history,
+    int turnIndex, {
+    required bool strength,
+  }) {
+    final score = _scoreTurn(scenario, turnIndex, history[turnIndex].text);
+    final best = turnIndex < scenario.turns.length
+        ? scenario.turns[turnIndex].choices.reduce(
+            (a, b) => a.scoreDelta >= b.scoreDelta ? a : b,
+          )
+        : null;
+
+    return CoachingNote(
+      turnIndex: turnIndex,
+      quote: history[turnIndex].text,
+      comment: strength ? _praiseFor(score) : _critiqueFor(score),
+      suggestion: strength ? null : best?.text,
+    );
+  }
+
+  _TurnScore _scoreTurn(Scenario scenario, int turnIndex, String text) {
+    final lower = text.toLowerCase();
+
+    // If the manager landed close to an authored choice, borrow its scoring:
+    // the authored content is better judgement than any keyword list.
+    if (turnIndex < scenario.turns.length) {
+      final (choice, similarity) = _closestChoice(
+        scenario.turns[turnIndex].choices,
+        text,
+      );
+      if (similarity >= 0.2) {
+        return _TurnScore(
+          clarity: choice.clarity,
+          empathy: choice.empathy,
+          directness: choice.directness,
+          confidence: choice.confidence,
+        );
+      }
+    }
+
+    return _TurnScore(
+      clarity: _signalScore(lower, const [
+        'need',
+        'expect',
+        'agree',
+        'deadline',
+        'impact',
+        'next step',
+        'by ',
+      ]),
+      empathy: _signalScore(lower, const [
+        'understand',
+        'hear',
+        'see',
+        'appreciate',
+        'sorry',
+        'help',
+      ]),
+      directness: _signalScore(lower, const [
+        'need',
+        'cannot',
+        'can’t',
+        'will not',
+        'expect',
+        'impact',
+        'tradeoff',
+      ]),
+      confidence: _hedgeScore(lower),
     );
   }
 
@@ -286,13 +440,11 @@ class OfflineCoachService implements CoachService {
     return (best, bestScore);
   }
 
-  Set<String> _tokens(String value) {
-    return value
-        .toLowerCase()
-        .split(RegExp(r'[^a-z0-9’]+'))
-        .where((word) => word.length > 1 && !_stopWords.contains(word))
-        .toSet();
-  }
+  Set<String> _tokens(String value) => value
+      .toLowerCase()
+      .split(RegExp(r'[^a-z0-9’]+'))
+      .where((word) => word.length > 1 && !_stopWords.contains(word))
+      .toSet();
 
   int _signalScore(String value, List<String> signals) {
     final matches = signals.where(value.contains).length;
@@ -310,7 +462,6 @@ class OfflineCoachService implements CoachService {
       'sort of',
       'kind of',
       'i guess',
-      'i think maybe',
       'if that’s ok',
       'if that works',
       'just wondering',
@@ -327,29 +478,47 @@ class OfflineCoachService implements CoachService {
     return committed > 0 ? 2 : -1;
   }
 
-  String _feedbackFor({
-    required int clarity,
-    required int empathy,
-    required int directness,
-    required int confidence,
-  }) {
-    if (confidence < 0 && clarity >= 1) {
-      return 'The point is there, but the hedging around it invites a negotiation you did not intend to open.';
+  String _praiseFor(_TurnScore score) {
+    if (score.empathy >= 1 && score.directness >= 1) {
+      return 'This held the expectation and the relationship at the same time, which is the hard part.';
     }
-    if (clarity >= 1 && empathy >= 1 && directness >= 1) {
-      return 'You balanced a clear message with acknowledgment and a concrete way forward.';
+    if (score.directness >= 1) {
+      return 'You named the issue instead of circling it.';
     }
-    if (clarity < 1) {
-      return 'Your intent is thoughtful. Name the specific issue and the next step so it is easier to act on.';
+    if (score.empathy >= 1) {
+      return 'You made room for their side before pressing on.';
     }
-    if (empathy < 1) {
-      return 'The message is direct. Add one sentence that shows you heard the pressure or impact on the other person.';
-    }
-    if (directness < 1) {
-      return 'You showed care and clarity. State the boundary or expectation more directly so it cannot be missed.';
-    }
-    return 'You showed care and clarity. State the boundary or expectation more directly so it cannot be missed.';
+    return 'You stayed in the conversation rather than backing out of it.';
   }
+
+  String _critiqueFor(_TurnScore score) {
+    if (score.confidence < 0) {
+      return 'The hedging here invites a negotiation you did not mean to open.';
+    }
+    if (score.clarity < 1) {
+      return 'The intent is right, but the specific issue and the next step are left for them to guess.';
+    }
+    if (score.empathy < 1) {
+      return 'Clear, but nothing here shows you heard the pressure they are under.';
+    }
+    return 'Warm and clear, and the expectation is still soft enough to be missed.';
+  }
+}
+
+class _TurnScore {
+  const _TurnScore({
+    required this.clarity,
+    required this.empathy,
+    required this.directness,
+    required this.confidence,
+  });
+
+  final int clarity;
+  final int empathy;
+  final int directness;
+  final int confidence;
+
+  int get total => clarity + empathy + directness + confidence;
 }
 
 class CoachServiceException implements Exception {

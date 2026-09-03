@@ -333,6 +333,11 @@ void main() {
       }
 
       sink.clear();
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('retry_scenario')),
+        240,
+        scrollable: find.byType(Scrollable).last,
+      );
       await tester.tap(find.byKey(const Key('retry_scenario')));
       await tester.pumpAndSettle();
 
@@ -511,8 +516,6 @@ void main() {
         _secret,
       );
       await tester.tap(find.byKey(const Key('submit_response')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('continue_practice')));
       await tester.pumpAndSettle();
 
       expect(sink.events, isNotEmpty, reason: 'the funnel should have fired');

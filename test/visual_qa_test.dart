@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
+import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/home_screen.dart';
 import 'package:rehearse/models/practice_record.dart';
@@ -51,7 +52,7 @@ void main() {
     history = PracticeHistory(store: InMemoryHistoryStore());
     addTearDown(history.dispose);
     final responses = scenario.turns
-        .map((turn) => PracticeResponse.fromChoice(turn.choices.first))
+        .map((turn) => PracticeResponse.fromChoice(turn.choices.first, turn))
         .toList();
 
     await render(tester, const HomeScreen(), 'rehearse-home-empty.png');
@@ -92,7 +93,7 @@ void main() {
       tester,
       ResultsScreen(
         scenario: scenario,
-        responses: responses,
+        summary: PracticeSummary.fromResponses(responses),
         mode: PracticeMode.guided,
       ),
       'rehearse-results-refined.png',

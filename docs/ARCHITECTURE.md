@@ -49,7 +49,8 @@ lib/
   models/
     scenario.dart          Scenario, DialogueTurn, ResponseChoice
     practice_response.dart PracticeResponse (one scored turn), PracticeMode
-    practice_summary.dart  scoring maths for a finished session
+    practice_summary.dart  the scored outcome of a finished session
+    coaching_note.dart     one quoted observation, and its grounding check
     practice_record.dart   one stored session
     subscription.dart      plans, offers, purchase outcomes
   screens/             onboarding, home, brief, practice, results, progress,
@@ -67,7 +68,8 @@ lib/
   theme/app_theme.dart   AppColors tokens + the Material 3 theme
   widgets/               shared UI + the four InheritedNotifier scopes
 server/
-  server.mjs           http server: GET /health, POST /evaluate
+  server.mjs           http server: GET /health, POST /simulation/respond,
+                       POST /simulation/evaluate
   coach.mjs            prompt construction and OpenAI Responses call
 ```
 
@@ -119,7 +121,7 @@ PracticeResponse                      one manager turn
         ▼
 PracticeSummary.fromResponses()       starts at 50; deltas sum for the score,
         │                             dimensions × 8; both clamped 0..100
-        ├──▶ ResultsScreen            headline, summary, ring, bars
+        ├──▶ ResultsScreen            headline, summary, ring, bars, notes
         └──▶ PracticeRecord           persisted
 ```
 
@@ -143,6 +145,10 @@ listing bars by hand, so the two cannot fall out of step.
 
 ## The coach
 
+Two jobs, two prompts, two endpoints — PRD §22 is explicit that one giant
+prompt should not do both, and the old combined call is exactly why feedback
+used to be a generic sentence.
+
 ```text
                     createCoachService()
                             │
@@ -154,36 +160,57 @@ listing bars by hand, so the two cannot fall out of step.
            │            │
       RemoteCoachService └── on ANY error ──▶ OfflineCoachService
            │
-      POST {baseUrl}/evaluate  (15s timeout)
+           ├── POST /simulation/respond    per turn, 15s
+           │     the employee answers in character, and never coaches
            │
-      Node proxy ──▶ OpenAI Responses API (strict json_schema)
+           └── POST /simulation/evaluate   once at the end, 30s
+                 the whole transcript, scored, with quoted critique
 ```
 
-`ResilientCoachService` catches **every** throwable from the primary, including
-a `FormatException` from a malformed payload. That is deliberate: a bad
-response degrades to offline scoring rather than interrupting a rehearsal. It
-also means remote failures are invisible in the UI beyond the
-`AI COACH` / `DEMO COACH` badge — worth remembering when debugging.
+### During the conversation
 
-`OfflineCoachService` first tries a Jaccard token overlap against the authored
-choices for the turn; above 0.2 similarity it borrows that choice's scoring.
-Below that it falls back to keyword signals for each dimension. Employee
-replies come from the next authored turn.
+`respond()` returns only what the other person says. **Nothing scores a turn
+while the conversation is running** (PRD §7.3): the consequence of a weak
+message is the reply it earns, not a note about it. Guided mode is the
+exception, and only because its feedback is authored rather than generated —
+it is a teaching mode.
 
-**The key never reaches the client.** `OPENAI_API_KEY` lives only in the server
-environment. The Flutter app knows a URL and nothing else.
+### At the end
 
-### Request shape
+`evaluate()` reads the transcript once and returns absolute 0-100 dimensions
+plus `strengths` and `improvements`, each carrying:
 
-`POST /evaluate` takes `{sessionId, scenario, turn, history, managerResponse}`
-and returns `{score_delta, feedback, clarity, empathy, directness, confidence,
-employee_reply}`.
+| Field | |
+|---|---|
+| `turnIndex` | which manager turn it refers to |
+| `quote` | the manager's own words, **verbatim** |
+| `comment` | why it worked, or why it did not |
+| `suggestion` | stronger wording — improvements only |
 
-One model call does both jobs — scoring and staying in character — inside
-`max_output_tokens: 350`. The `sessionId` is hashed to a `safety_identifier`
-and `store: false` is set, so no transcript is retained by the provider.
+> **Quotes are validated on both sides.** Models paraphrase, and a critique of
+> words nobody said would poison the one thing this report has to get right.
+> `groundNotes` in `server/coach.mjs` and `CoachingNote.isGroundedIn` both
+> normalise case, punctuation and smart quotes, then drop any note whose quote
+> cannot be found in a manager turn. A dropped note is better than a
+> fabricated one.
 
----
+### Three sources, one shape
+
+Every mode produces the same `PracticeSummary`, so the report renders one
+thing:
+
+| Mode | Score from | Quotes are | Suggestions are |
+|---|---|---|---|
+| Guided | authored per-turn deltas | the choice you picked | the strongest choice you did not |
+| Free-form, AI | the evaluation call | validated model output | model output |
+| Free-form, offline | keyword and similarity heuristics | what you typed | **the authored best choice for that turn** |
+
+That last row matters: with no key and no network the report still quotes you
+and still offers real alternative wording, because the authored content
+already contains the strongest version of each turn.
+
+**The key never reaches the client.** `OPENAI_API_KEY` lives only in the
+server environment. The Flutter app knows a URL and nothing else.
 
 ## Speech
 

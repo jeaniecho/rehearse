@@ -56,7 +56,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
   bool _startReported = false;
   int _turnIndex = 0;
   PracticeResponse? _selectedResponse;
-  bool _isEvaluating = false;
+
+  /// Rendered the moment it is sent, before the reply exists (PRD §28).
+  String? _pendingManagerLine;
+  bool _isThinking = false;
+  bool _isSummarizing = false;
+  String? _summaryError;
   bool _isListening = false;
   bool _speechInitialized = false;
   bool _voiceAvailable = false;
@@ -159,12 +164,22 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   void _select(ResponseChoice choice) {
     if (_selectedResponse != null) return;
-    setState(() => _selectedResponse = PracticeResponse.fromChoice(choice));
+    setState(
+      () => _selectedResponse = PracticeResponse.fromChoice(choice, _turn),
+    );
     _scrollToBottom();
   }
 
+  /// Sends a free-form turn.
+  ///
+  /// The manager's own words appear immediately (PRD §28) and the other
+  /// person answers when they answer. Nothing coaches in between — the
+  /// consequence of a weak message is the reply it earns, not a note about
+  /// it (PRD §7.3).
   Future<void> _submitFreeform() async {
     if (_isListening) await _stopListening();
+    if (_isThinking) return;
+
     final text = _responseController.text.trim();
     if (text.length < 3) {
       setState(() => _inputError = 'Write at least a few words to continue.');
@@ -173,31 +188,45 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
     _responseFocus.unfocus();
     setState(() {
-      _isEvaluating = true;
+      _pendingManagerLine = text;
+      _isThinking = true;
       _inputError = null;
+      _responseController.clear();
     });
+    _scrollToBottom();
 
+    EmployeeReply reply;
     try {
-      final evaluation = await _coachService.evaluate(
+      reply = await _coachService.respond(
         scenario: widget.scenario,
-        turn: _turn,
         turnIndex: _turnIndex,
         history: List.unmodifiable(_responses),
-        responseText: text,
+        managerResponse: text,
       );
-      if (!mounted) return;
-      setState(() {
-        _selectedResponse = evaluation;
-        _isEvaluating = false;
-      });
-      _scrollToBottom();
     } on Object {
       if (!mounted) return;
+      // The transcript is never lost: put the words back so nothing has to
+      // be retyped.
       setState(() {
-        _isEvaluating = false;
-        _inputError = 'Your coach is unavailable. Please try again.';
+        _isThinking = false;
+        _pendingManagerLine = null;
+        _responseController.text = text;
+        _inputError = 'Couldn’t continue the conversation. Try again.';
       });
+      return;
     }
+
+    if (!mounted) return;
+    final response = PracticeResponse.spoken(
+      text: text,
+      employeeReply: reply.text,
+      source: reply.source,
+    );
+    setState(() {
+      _pendingManagerLine = null;
+      _isThinking = false;
+    });
+    _commit(response);
   }
 
   Future<void> _toggleListening() async {
@@ -281,7 +310,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void _continue() {
     final response = _selectedResponse;
     if (response == null) return;
+    setState(() => _selectedResponse = null);
+    unawaited(_commit(response));
+  }
 
+  /// Records a finished turn, then either moves on or closes the session.
+  Future<void> _commit(PracticeResponse response) async {
     _responses.add(response);
     _analytics?.simulationMessageSent(
       widget.scenario,
@@ -291,38 +325,73 @@ class _PracticeScreenState extends State<PracticeScreen> {
       source: response.source,
     );
 
-    if (_turnIndex == widget.scenario.turns.length - 1) {
-      _reachedReport = true;
-      _analytics?.simulationCompleted(
-        widget.scenario,
-        mode: widget.mode,
-        isRetry: widget.isRetry,
-        turnCount: _responses.length,
-        durationSeconds: _elapsedSeconds,
-        summary: PracticeSummary.fromResponses(_responses),
-      );
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (_) => ResultsScreen(
-            scenario: widget.scenario,
-            responses: List.unmodifiable(_responses),
-            mode: widget.mode,
-            isRetry: widget.isRetry,
-          ),
-        ),
-      );
+    if (_turnIndex < widget.scenario.turns.length - 1) {
+      setState(() {
+        _turnIndex += 1;
+        _responseController.clear();
+        _inputError = null;
+        _speechError = null;
+      });
+      _speakEmployeeLine();
+      _scrollToBottom();
       return;
     }
 
+    await _finish();
+  }
+
+  /// Scores the finished conversation.
+  ///
+  /// Guided mode already has a judgement for every turn, because the wording
+  /// was authored. Free-form mode has none until now — this is the single
+  /// call that reads the whole transcript.
+  Future<void> _finish() async {
     setState(() {
-      _turnIndex += 1;
-      _selectedResponse = null;
-      _responseController.clear();
-      _inputError = null;
-      _speechError = null;
+      _isSummarizing = true;
+      _summaryError = null;
     });
-    _speakEmployeeLine();
     _scrollToBottom();
+    await _speechOutputService.stop();
+
+    PracticeSummary summary;
+    try {
+      summary = widget.mode == PracticeMode.guided
+          ? PracticeSummary.fromResponses(_responses)
+          : await _coachService.evaluate(
+              scenario: widget.scenario,
+              history: List.unmodifiable(_responses),
+            );
+    } on Object {
+      if (!mounted) return;
+      // The transcript survives (PRD §26). Nothing has to be replayed.
+      setState(() {
+        _isSummarizing = false;
+        _summaryError =
+            'Couldn’t put your coaching report together. Your conversation is safe.';
+      });
+      return;
+    }
+
+    if (!mounted) return;
+    _reachedReport = true;
+    _analytics?.simulationCompleted(
+      widget.scenario,
+      mode: widget.mode,
+      isRetry: widget.isRetry,
+      turnCount: _responses.length,
+      durationSeconds: _elapsedSeconds,
+      summary: summary,
+    );
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => ResultsScreen(
+          scenario: widget.scenario,
+          summary: summary,
+          mode: widget.mode,
+          isRetry: widget.isRetry,
+        ),
+      ),
+    );
   }
 
   void _scrollToBottom() {
@@ -506,32 +575,53 @@ class _PracticeScreenState extends State<PracticeScreen> {
                         ? _replayEmployeeLine
                         : null,
                   ),
-                  if (_selectedResponse != null) ...[
+                  // Guided mode previews the chosen line with its authored
+                  // note; free-form mode never coaches mid-conversation.
+                  if (_selectedResponse case final selected?) ...[
                     const SizedBox(height: 14),
-                    _YourMessage(text: _selectedResponse!.text),
-                    const SizedBox(height: 16),
-                    _InlineCoach(response: _selectedResponse!),
+                    _YourMessage(text: selected.text),
+                    if (selected.feedback.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      _InlineCoach(response: selected),
+                    ],
+                  ],
+                  if (_pendingManagerLine case final pending?) ...[
+                    const SizedBox(height: 14),
+                    _YourMessage(text: pending),
+                  ],
+                  if (_isThinking) ...[
+                    const SizedBox(height: 14),
+                    _Typing(scenario: widget.scenario),
+                  ],
+                  if (_isSummarizing) ...[
+                    const SizedBox(height: 22),
+                    const _Summarizing(),
+                  ],
+                  if (_summaryError case final error?) ...[
+                    const SizedBox(height: 22),
+                    _SummaryFailed(message: error, onRetry: _finish),
                   ],
                 ],
               ),
             ),
-            _ResponsePanel(
-              mode: widget.mode,
-              turn: _turn,
-              selectedResponse: _selectedResponse,
-              isLastTurn: _turnIndex == widget.scenario.turns.length - 1,
-              controller: _responseController,
-              focusNode: _responseFocus,
-              isEvaluating: _isEvaluating,
-              inputError: _inputError,
-              speechError: _speechError,
-              isListening: _isListening,
-              aiEnabled: _coachService.isAiEnabled,
-              onSelect: _select,
-              onSubmit: _submitFreeform,
-              onToggleListening: _toggleListening,
-              onContinue: _continue,
-            ),
+            if (!_isSummarizing && _summaryError == null)
+              _ResponsePanel(
+                mode: widget.mode,
+                turn: _turn,
+                selectedResponse: _selectedResponse,
+                isLastTurn: _turnIndex == widget.scenario.turns.length - 1,
+                controller: _responseController,
+                focusNode: _responseFocus,
+                isBusy: _isThinking || _isSummarizing,
+                inputError: _inputError,
+                speechError: _speechError,
+                isListening: _isListening,
+                aiEnabled: _coachService.isAiEnabled,
+                onSelect: _select,
+                onSubmit: _submitFreeform,
+                onToggleListening: _toggleListening,
+                onContinue: _continue,
+              ),
           ],
         ),
       ),
@@ -794,6 +884,153 @@ class _InlineCoach extends StatelessWidget {
   }
 }
 
+/// The other person composing a reply. The only thing on screen between
+/// sending and being answered, because nothing coaches in between.
+class _Typing extends StatelessWidget {
+  const _Typing({required this.scenario});
+
+  final Scenario scenario;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      key: const Key('employee_typing'),
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: scenario.tint,
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            scenario.personInitials,
+            style: const TextStyle(
+              color: AppColors.ink,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(18),
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(18),
+            ),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var dot = 0; dot < 3; dot++) ...[
+                if (dot != 0) const SizedBox(width: 5),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: AppColors.muted,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// PRD §28 asks for an intentional transition while the report is built,
+/// rather than a spinner over a dead screen.
+class _Summarizing extends StatelessWidget {
+  const _Summarizing();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('summarizing'),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.mint,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: AppColors.forest,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              'Reading the whole conversation back…',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppColors.forest,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The report failed, not the conversation. PRD §26: never make someone
+/// replay a session they already had.
+class _SummaryFailed extends StatelessWidget {
+  const _SummaryFailed({required this.message, required this.onRetry});
+
+  final String message;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('summary_failed'),
+      padding: const EdgeInsets.all(19),
+      decoration: BoxDecoration(
+        color: AppColors.peach,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(
+              color: AppColors.ink,
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          FilledButton.icon(
+            key: const Key('retry_summary'),
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry feedback'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(46),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ResponsePanel extends StatelessWidget {
   const _ResponsePanel({
     required this.mode,
@@ -802,7 +1039,7 @@ class _ResponsePanel extends StatelessWidget {
     required this.isLastTurn,
     required this.controller,
     required this.focusNode,
-    required this.isEvaluating,
+    required this.isBusy,
     required this.inputError,
     required this.speechError,
     required this.isListening,
@@ -819,7 +1056,7 @@ class _ResponsePanel extends StatelessWidget {
   final bool isLastTurn;
   final TextEditingController controller;
   final FocusNode focusNode;
-  final bool isEvaluating;
+  final bool isBusy;
   final String? inputError;
   final String? speechError;
   final bool isListening;
@@ -874,7 +1111,7 @@ class _ResponsePanel extends StatelessWidget {
                 turn: turn,
                 controller: controller,
                 focusNode: focusNode,
-                isEvaluating: isEvaluating,
+                isBusy: isBusy,
                 inputError: inputError,
                 speechError: speechError,
                 isListening: isListening,
@@ -919,7 +1156,7 @@ class _FreeformComposer extends StatelessWidget {
     required this.turn,
     required this.controller,
     required this.focusNode,
-    required this.isEvaluating,
+    required this.isBusy,
     required this.inputError,
     required this.speechError,
     required this.isListening,
@@ -932,7 +1169,7 @@ class _FreeformComposer extends StatelessWidget {
   final DialogueTurn turn;
   final TextEditingController controller;
   final FocusNode focusNode;
-  final bool isEvaluating;
+  final bool isBusy;
   final String? inputError;
   final String? speechError;
   final bool isListening;
@@ -990,7 +1227,7 @@ class _FreeformComposer extends StatelessWidget {
           key: const Key('freeform_response'),
           controller: controller,
           focusNode: focusNode,
-          enabled: !isEvaluating,
+          enabled: !isBusy,
           readOnly: isListening,
           minLines: 1,
           maxLines: 3,
@@ -1012,7 +1249,7 @@ class _FreeformComposer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(11),
                 child: IconButton(
                   key: const Key('speech_input'),
-                  onPressed: isEvaluating ? null : onToggleListening,
+                  onPressed: isBusy ? null : onToggleListening,
                   tooltip: isListening ? 'Stop listening' : 'Start speaking',
                   icon: Icon(
                     isListening ? Icons.stop_rounded : Icons.mic_rounded,
@@ -1079,8 +1316,8 @@ class _FreeformComposer extends StatelessWidget {
         const SizedBox(height: 9),
         FilledButton.icon(
           key: const Key('submit_response'),
-          onPressed: isEvaluating ? null : onSubmit,
-          icon: isEvaluating
+          onPressed: isBusy ? null : onSubmit,
+          icon: isBusy
               ? const SizedBox(
                   width: 17,
                   height: 17,
@@ -1090,7 +1327,7 @@ class _FreeformComposer extends StatelessWidget {
                   ),
                 )
               : const Icon(Icons.arrow_upward_rounded),
-          label: Text(isEvaluating ? 'Coach is listening…' : 'Send response'),
+          label: Text(isBusy ? 'Sending…' : 'Send response'),
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
         ),
       ],

@@ -80,9 +80,7 @@ void main() {
     expect(subscription.canStartPractice, isTrue);
   });
 
-  testWidgets('evaluates a typed response with the private demo coach', (
-    tester,
-  ) async {
+  testWidgets('a free-form turn is answered, not marked', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(() {
@@ -101,19 +99,54 @@ void main() {
       ),
     );
 
-    await tester.enterText(
-      find.byKey(const Key('freeform_response')),
-      'I see how much you have taken on. We still need to discuss the missed handoffs and agree on a next step.',
-    );
+    const said =
+        'I see how much you have taken on. We still need to discuss the '
+        'missed handoffs and agree on a next step.';
+    await tester.enterText(find.byKey(const Key('freeform_response')), said);
     await tester.tap(find.byKey(const Key('submit_response')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('coach_feedback')), findsOneWidget);
-    expect(find.text('OFFLINE COACH'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('continue_practice')));
-    await tester.pumpAndSettle();
+    // The reply is the consequence. Nothing narrates the manager's technique
+    // mid-conversation (PRD §7.3).
+    expect(find.text(said), findsOneWidget);
+    expect(find.byKey(const Key('coach_feedback')), findsNothing);
+    expect(find.byKey(const Key('continue_practice')), findsNothing);
+    expect(find.text(scenarios.first.turns[1].employeeLine), findsOneWidget);
     expect(find.text('TURN 2 OF 3'), findsOneWidget);
+  });
+
+  testWidgets('a free-form conversation ends in a coaching report', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: PracticeScreen(
+          scenario: scenarios.first,
+          mode: PracticeMode.freestyle,
+          coachService: OfflineCoachService(),
+        ),
+      ),
+    );
+
+    for (var turn = 0; turn < scenarios.first.turns.length; turn++) {
+      await tester.enterText(
+        find.byKey(const Key('freeform_response')),
+        'I need the handoff by Friday. Which task moves to make room for it?',
+      );
+      await tester.tap(find.byKey(const Key('submit_response')));
+      await tester.pumpAndSettle();
+    }
+
+    expect(find.text('COACHING REPORT'), findsOneWidget);
+    expect(find.text('Private demo scoring'), findsOneWidget);
   });
 
   testWidgets('adds live speech after existing typed text', (tester) async {

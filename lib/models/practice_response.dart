@@ -21,9 +21,19 @@ class PracticeResponse {
     required this.confidence,
     required this.source,
     this.employeeReply,
+    this.suggestion,
   });
 
-  factory PracticeResponse.fromChoice(ResponseChoice choice) {
+  /// [turn] is needed so a weak choice can point at the strongest wording
+  /// that was on offer — the guided-mode equivalent of "try this instead".
+  factory PracticeResponse.fromChoice(
+    ResponseChoice choice,
+    DialogueTurn turn,
+  ) {
+    final best = turn.choices.reduce(
+      (a, b) => a.scoreDelta >= b.scoreDelta ? a : b,
+    );
+
     return PracticeResponse(
       text: choice.text,
       scoreDelta: choice.scoreDelta,
@@ -33,6 +43,27 @@ class PracticeResponse {
       directness: choice.directness,
       confidence: choice.confidence,
       source: EvaluationSource.guided,
+      suggestion: identical(best, choice) ? null : best.text,
+    );
+  }
+
+  /// A free-form turn. The numbers stay neutral because nothing has judged
+  /// it yet — the whole conversation is scored once, at the end.
+  factory PracticeResponse.spoken({
+    required String text,
+    required String employeeReply,
+    required EvaluationSource source,
+  }) {
+    return PracticeResponse(
+      text: text,
+      scoreDelta: 0,
+      feedback: '',
+      clarity: 0,
+      empathy: 0,
+      directness: 0,
+      confidence: 0,
+      source: source,
+      employeeReply: employeeReply,
     );
   }
 
@@ -79,6 +110,10 @@ class PracticeResponse {
   final int confidence;
   final EvaluationSource source;
   final String? employeeReply;
+
+  /// Stronger wording for this turn, when the coach or the authored content
+  /// has one to offer.
+  final String? suggestion;
 }
 
 enum PracticeMode { freestyle, guided }

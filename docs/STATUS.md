@@ -4,9 +4,9 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-03, after onboarding.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (195 passing),
-> `cd server && npm test` (3 passing), `flutter build web --release` and
+> **Last audited:** 2026-09-03, after splitting the coach.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (207 passing),
+> `cd server && npm test` (10 passing), `flutter build web --release` and
 > `flutter build apk --debug` (both succeed).
 
 ---
@@ -25,18 +25,12 @@ needs App Store Connect and Play Console configuration. See
 transcript content" rule enforced by the type system rather than by
 discipline. See [`ANALYTICS.md`](ANALYTICS.md).
 
-**Two PRD §34 acceptance criteria remain unmet**, and both trace back to the
-coach: *user can select difficulty*, and *feedback references actual user
-wording*. A third — *evaluation contains the four required scores* — is now
-met: the rubric is clarity, empathy, directness, and confidence.
+**One PRD §34 acceptance criterion remains unmet**: *user can select
+difficulty*. The other two closed with the coach rework — the rubric is now
+clarity, empathy, directness and confidence, and feedback quotes the manager's
+own words with stronger wording to try instead.
 
-Both remaining gaps have the same root cause. `server/coach.mjs` runs one
-prompt that scores the manager *and* plays the employee, so there is no budget
-for a quoted critique and nowhere for a difficulty setting to act. Splitting
-it into `/simulation/respond` and `/simulation/evaluate` (PRD §22) unblocks
-both.
-
-Nothing else is a missing feature. Beyond the coach, what is left is
+Nothing else is a missing feature. Beyond difficulty, what is left is
 verification against live services — no sandbox purchase, no real analytics
 event — and the release checklist.
 
@@ -49,11 +43,11 @@ event — and the release checklist.
 - Curated scenario library — 7 scenarios, guarded by `test/scenarios_test.dart`.
 - Scenario briefing screen with context, goal, and the trap to watch for.
 - Conversation UI: chat layout, progress, auto-scroll, safe areas, disabled
-  send while evaluating, transcript preserved on error.
+  send while a reply is in flight, transcript preserved on error.
 - Guided mode (authored branching choices) and free-form mode (typed or
   dictated).
 - Server-side LLM proxy. **No provider key ever reaches the client.**
-- Structured JSON schema, validated on both sides.
+- Structured JSON schemas, validated on both sides.
 - Graceful degradation: `ResilientCoachService` falls back to an on-device
   heuristic coach, so the app works with no key and no network.
 - Deterministic session end (fixed turn count) and a coaching report.
@@ -82,19 +76,26 @@ event — and the release checklist.
 - **App icon and splash** on iOS, Android (adaptive + themed), and web, drawn
   in Dart from the brand tokens. Both native splashes match Flutter's own
   launch state, so the handoff is invisible.
+- **Simulation and evaluation are separate model tasks** on separate
+  endpoints. Nothing coaches mid-conversation; the whole transcript is scored
+  once at the end.
+- **Quote-based critique**: every note carries the manager's own words, a
+  reason, and — for improvements — stronger wording. Fabricated quotes are
+  dropped by both the server and the client.
+- **Optimistic send** and a typing indicator, so the manager's message appears
+  the instant it is sent (PRD §28).
+- **"Retry feedback"** when the evaluation call fails, without replaying the
+  conversation (PRD §26).
 
 ### Partially complete
 
 | Item | What exists | What the PRD wants |
 |---|---|---|
 | **Difficulty** | `ScenarioDifficulty` is a fixed property of each scenario, rendered as a pill on the briefing | A **user choice before the session** (Calm / Defensive / Very Defensive) that materially changes wording, resistance, and escalation. PRD §7.2: "This must not be cosmetic." |
-| **Evaluation content** | one generic sentence per turn; report picks best/worst by score | exact user quote → why it was weak → suggested stronger wording (PRD §5.4, §10) |
-| **AI architecture** | one `/evaluate` call does simulation *and* scoring in a single 350-token prompt | separate simulation and evaluation prompts. PRD §22: "Do not use one giant prompt for everything." |
 | **Conversation length** | fixed 3 turns | 4–7 manager turns, with the model able to declare resolved or stalled |
-| **Retry** | restarts the scenario from turn 1 | highlight the weak moment first, then retry (P0 fallback, PRD §11) |
+| **Retry** | restarts the scenario from turn 1; the report names the weak turn but does not scroll to it | highlight the weak moment in a transcript, then retry (P1, PRD §12) |
 | **Scenario coverage** | 7 of the 8 seeded categories | delegation is missing; boundary and saying-no are collapsed into one scenario (see §4) |
-| **Malformed AI output** | falls back to the offline coach | server-side repair/retry once, then a controlled error (PRD §26) |
-| **Error states** | inline messages, transcript preserved | "Retry feedback" without replaying the conversation |
+| **Malformed AI output** | falls back to the offline coach; a fabricated quote is dropped on both sides | server-side repair/retry once (PRD §26) — currently it degrades rather than repairs |
 | **Empty states / transitions** | present on home and progress | haptics and an animated score reveal are not built |
 
 ### Missing
@@ -103,8 +104,6 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 
 - Three PRD §16 events cannot fire yet because the feature does not exist:
   `difficulty_selected`, `reminder_created`, `notification_opened`.
-- **Optimistic message rendering.** The manager's own message does not appear
-  until the coach responds — PRD §28 wants it rendered immediately.
 - **Session outcome** (success / partial / unresolved / escalated).
 - **Simulation state** (trust, tension, clarity, goal progress).
 - **Employee background** field — the prompt has name and role only.
@@ -116,8 +115,8 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 
 ### Broken
 
-Nothing. Analysis is clean, all 195 Flutter tests and 3 server tests pass, and
-both the web and Android builds succeed.
+Nothing. Analysis is clean, all 207 Flutter tests and 10 server tests pass,
+and both the web and Android builds succeed.
 
 The two known **defects** are cosmetic but real, and both are documented in
 §6 rather than here because they are quality issues rather than breakage.
@@ -130,16 +129,16 @@ The two known **defects** are cosmetic but real, and both are documented in
 |---|---|
 | **M0** Audit existing repo | ✅ this document |
 | **M1** Local vertical slice | 🟡 complete except difficulty selection |
-| **M2** Real AI simulation | 🟡 works, but one combined prompt and no personality input |
-| **M3** Evaluation + retry | 🟡 scores and retry exist; quote-based critique does not |
+| **M2** Real AI simulation | 🟡 separate in-character prompt; no personality input yet |
+| **M3** Evaluation + retry | 🟢 four scores, quoted critique with suggested wording, retry |
 | **M4** Monetization + analytics | 🟡 both built and tested; neither verified against a live service |
 | **M5** Polish + reliability | 🟢 ahead of schedule — this is the strongest area |
 | **M6** Release + submission | 🟡 bundle id, version, icon, and splash done; privacy policy, metadata, signing, and crash reporting not started |
 | **M7–M9** Launch, growth, submission package | ❌ not started |
 
-M2 and M3 are what the two open acceptance criteria sit in. Beyond them the
-risk is that none of M4 has been observed against a live service, and that M6
-is mostly untouched.
+M2 is where the last open acceptance criterion sits. Beyond it the risk is
+that none of M4 has been observed against a live service, and that M6 is
+mostly untouched.
 
 ---
 
@@ -213,12 +212,12 @@ directness; a test fails below 25%). Records written before the change keep
 their directness and carry a null confidence, so averages are computed from
 what was actually measured instead of a fabricated neutral.
 
-**One prompt does two jobs.** `server/coach.mjs` asks a single model call to
-score the manager *and* reply in character, inside `max_output_tokens: 350`.
-This is the root cause of generic feedback: there is no budget for a quoted
-critique, and the developer prompt has to tell the model both to coach and to
-stay in character. Splitting it into `/simulation/respond` and
-`/simulation/evaluate` is the highest-leverage change inside the loop.
+**Free-form mode no longer coaches mid-conversation.** PRD §7.3 says the
+simulation must not explain itself while it runs, so the per-turn coach note
+is gone from free-form: the consequence of a weak message is the reply it
+earns. Guided mode kept its note, because that feedback is authored rather
+than generated and the mode exists to teach. This was a visible product
+change, not just a refactor.
 
 ---
 
@@ -259,15 +258,13 @@ Ordered by what moves the submission, not by what is most interesting.
    One `--dart-define` ([`ANALYTICS.md`](ANALYTICS.md) §Setup). Do it at the
    same time as the sandbox purchase so the monetization funnel is verified
    in one pass.
-3. **Split the prompt, add quote-based critique.** This is what makes the
-   feedback "actually useful" (PRD §35) and what the two-minute demo has to
-   show. Do it with the dimension change in one pass.
-4. **Difficulty selection.** Make the existing enum a pre-session choice that
-   reaches the simulation prompt.
-5. **Release checklist** — privacy policy, store metadata, screenshots,
+3. **Difficulty selection.** The last unmet acceptance criterion. The
+   simulation prompt is now a separate call with nothing else competing for
+   its tokens, so a personality has somewhere to act.
+4. **Release checklist** — privacy policy, store metadata, screenshots,
    signing, crash reporting. This is all that is left of M6, and it gates
    submission.
-6. Contrast fixes and dark theme, if there is time before submission.
+5. Contrast fixes and dark theme, if there is time before submission.
 
 ---
 
@@ -286,7 +283,7 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 195 Flutter + 3 server
+Tests            : 207 Flutter + 10 server
 TODO/FIXME       : none
 ```
 

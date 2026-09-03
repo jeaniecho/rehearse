@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 
-import { evaluateWithOpenAI } from "./coach.mjs";
+import { evaluateWithOpenAI, respondWithOpenAI } from "./coach.mjs";
 
 const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? "127.0.0.1";
@@ -27,14 +27,31 @@ async function readJson(request) {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
-function validatePayload(payload) {
+function validRespond(payload) {
   if (!payload || typeof payload !== "object") return false;
   if (!payload.scenario || typeof payload.scenario !== "object") return false;
-  if (!payload.turn || typeof payload.turn !== "object") return false;
   if (typeof payload.managerResponse !== "string") return false;
   const length = payload.managerResponse.trim().length;
   return length >= 3 && length <= 2000;
 }
+
+function validEvaluate(payload) {
+  if (!payload || typeof payload !== "object") return false;
+  if (!payload.scenario || typeof payload.scenario !== "object") return false;
+  if (!Array.isArray(payload.history) || payload.history.length === 0) {
+    return false;
+  }
+  return payload.history.every(
+    (turn) => turn && typeof turn.managerResponse === "string",
+  );
+}
+
+// Simulation and evaluation are separate model tasks with separate prompts
+// (PRD §22), so they are separate endpoints too.
+const routes = {
+  "/simulation/respond": { validate: validRespond, run: respondWithOpenAI },
+  "/simulation/evaluate": { validate: validEvaluate, run: evaluateWithOpenAI },
+};
 
 const server = createServer(async (request, response) => {
   if (request.method === "OPTIONS") {
@@ -46,23 +63,24 @@ const server = createServer(async (request, response) => {
     sendJson(response, 200, {
       ok: true,
       model: process.env.OPENAI_MODEL ?? "gpt-5.6-sol",
+      routes: Object.keys(routes),
     });
     return;
   }
 
-  if (request.method !== "POST" || request.url !== "/evaluate") {
+  const route = request.method === "POST" ? routes[request.url] : undefined;
+  if (!route) {
     sendJson(response, 404, { error: "Not found." });
     return;
   }
 
   try {
     const payload = await readJson(request);
-    if (!validatePayload(payload)) {
+    if (!route.validate(payload)) {
       sendJson(response, 400, { error: "Invalid coaching request." });
       return;
     }
-    const evaluation = await evaluateWithOpenAI(payload);
-    sendJson(response, 200, evaluation);
+    sendJson(response, 200, await route.run(payload));
   } catch (error) {
     console.error(error);
     const configurationError =

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_record.dart';
 import 'package:rehearse/models/practice_response.dart';
+import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/models/subscription.dart';
 import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/home_screen.dart';
@@ -601,10 +602,10 @@ void main() {
         tester,
         ResultsScreen(
           scenario: scenarios.first,
-          responses: [
+          summary: PracticeSummary.fromResponses([
             for (final turn in scenarios.first.turns)
-              PracticeResponse.fromChoice(turn.choices.first),
-          ],
+              PracticeResponse.fromChoice(turn.choices.first, turn),
+          ]),
         ),
         subscription: subscription,
       );
@@ -622,10 +623,10 @@ void main() {
         tester,
         ResultsScreen(
           scenario: scenarios.first,
-          responses: [
+          summary: PracticeSummary.fromResponses([
             for (final turn in scenarios.first.turns)
-              PracticeResponse.fromChoice(turn.choices.first),
-          ],
+              PracticeResponse.fromChoice(turn.choices.first, turn),
+          ]),
         ),
         subscription: subscription,
       );

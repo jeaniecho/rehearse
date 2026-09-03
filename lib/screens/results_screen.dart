@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/coaching_note.dart';
 import '../models/practice_record.dart';
 import '../models/practice_response.dart';
 import '../models/practice_summary.dart';
@@ -15,14 +16,17 @@ import 'practice_screen.dart';
 class ResultsScreen extends StatefulWidget {
   const ResultsScreen({
     required this.scenario,
-    required this.responses,
+    required this.summary,
     this.mode = PracticeMode.guided,
     this.isRetry = false,
     super.key,
   });
 
   final Scenario scenario;
-  final List<PracticeResponse> responses;
+
+  /// Already scored. The report never recomputes it, so what is shown and
+  /// what is stored cannot disagree.
+  final PracticeSummary summary;
   final PracticeMode mode;
 
   /// Carried through from the rehearsal so the retry funnel stays intact
@@ -34,9 +38,7 @@ class ResultsScreen extends StatefulWidget {
 }
 
 class _ResultsScreenState extends State<ResultsScreen> {
-  late final PracticeSummary _summary = PracticeSummary.fromResponses(
-    widget.responses,
-  );
+  PracticeSummary get _summary => widget.summary;
   bool _recorded = false;
 
   @override
@@ -76,12 +78,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
       subscription?.recordCompletedSession();
     });
   }
-
-  PracticeResponse get _strongest =>
-      widget.responses.reduce((a, b) => a.scoreDelta >= b.scoreDelta ? a : b);
-
-  PracticeResponse get _weakest =>
-      widget.responses.reduce((a, b) => a.scoreDelta <= b.scoreDelta ? a : b);
 
   void _retry() {
     Navigator.of(context).pushReplacement(
@@ -183,26 +179,41 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 14),
-            _CoachCard(
-              icon: Icons.auto_awesome_rounded,
-              eyebrow: 'KEEP DOING',
-              title: 'A move that worked',
-              body: _strongest.feedback,
-              color: AppColors.forest,
-              background: AppColors.mint,
-            ),
-            const SizedBox(height: 12),
-            _CoachCard(
-              icon: Icons.north_east_rounded,
-              eyebrow: 'TRY NEXT TIME',
-              title: 'Make the message easier to act on',
-              body: _weakest.scoreDelta >= 8
-                  ? widget.scenario.watchFor
-                  : _weakest.feedback,
-              color: AppColors.coral,
-              background: AppColors.peach,
-            ),
+            for (final note in _summary.strengths) ...[
+              const SizedBox(height: 12),
+              _NoteCard(
+                note: note,
+                eyebrow: 'KEEP DOING',
+                icon: Icons.check_circle_rounded,
+                color: AppColors.forest,
+                background: AppColors.mint,
+              ),
+            ],
+            for (final note in _summary.improvements) ...[
+              const SizedBox(height: 12),
+              _NoteCard(
+                note: note,
+                eyebrow: 'TRY NEXT TIME',
+                icon: Icons.north_east_rounded,
+                color: AppColors.coral,
+                background: AppColors.peach,
+              ),
+            ],
+            if (_summary.strengths.isEmpty &&
+                _summary.improvements.isEmpty) ...[
+              const SizedBox(height: 12),
+              _NoteCard(
+                note: CoachingNote(
+                  turnIndex: 0,
+                  quote: '',
+                  comment: widget.scenario.watchFor,
+                ),
+                eyebrow: 'WATCH FOR',
+                icon: Icons.visibility_outlined,
+                color: AppColors.coral,
+                background: AppColors.peach,
+              ),
+            ],
             const SizedBox(height: 26),
             Row(
               children: [
@@ -240,20 +251,22 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 }
 
-class _CoachCard extends StatelessWidget {
-  const _CoachCard({
-    required this.icon,
+/// One observation, anchored to what the manager actually said.
+///
+/// The quote is the whole point: a critique you can match to a moment you
+/// remember is the difference between advice and coaching.
+class _NoteCard extends StatelessWidget {
+  const _NoteCard({
+    required this.note,
     required this.eyebrow,
-    required this.title,
-    required this.body,
+    required this.icon,
     required this.color,
     required this.background,
   });
 
-  final IconData icon;
+  final CoachingNote note;
   final String eyebrow;
-  final String title;
-  final String body;
+  final IconData icon;
   final Color color;
   final Color background;
 
@@ -265,24 +278,15 @@ class _CoachCard extends StatelessWidget {
         color: background,
         borderRadius: BorderRadius.circular(22),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 39,
-            height: 39,
-            decoration: BoxDecoration(
-              color: AppColors.surface.withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+          Row(
+            children: [
+              Icon(icon, color: color, size: 17),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
                   eyebrow,
                   style: TextStyle(
                     color: color,
@@ -291,28 +295,90 @@ class _CoachCard extends StatelessWidget {
                     letterSpacing: 0.8,
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppColors.ink,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
+              ),
+              Text(
+                'TURN ${note.turnIndex + 1}',
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 13,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          if (note.quote.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _Quote(text: note.quote, accent: color),
+          ],
+          const SizedBox(height: 12),
+          Text(
+            note.comment,
+            style: const TextStyle(
+              color: AppColors.ink,
+              fontSize: 14,
+              height: 1.45,
             ),
           ),
+          if (note.suggestion case final suggestion?) ...[
+            const SizedBox(height: 14),
+            const Text(
+              'STRONGER',
+              style: TextStyle(
+                color: AppColors.ink,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: 7),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                suggestion,
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 14,
+                  height: 1.45,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// What you said, set off so it reads as a quotation rather than as more
+/// coaching prose.
+class _Quote extends StatelessWidget {
+  const _Quote({required this.text, required this.accent});
+
+  final String text;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(left: 13),
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: accent, width: 3)),
+      ),
+      child: Text(
+        '“$text”',
+        style: const TextStyle(
+          color: AppColors.ink,
+          fontSize: 14,
+          height: 1.45,
+          fontStyle: FontStyle.italic,
+        ),
       ),
     );
   }

@@ -22,8 +22,8 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 195 tests
-cd server && npm test           # 3 tests
+flutter test                    # 207 tests
+cd server && npm test           # 10 tests
 ```
 
 ```bash
@@ -104,6 +104,11 @@ From `ROADMAP.md` §0, and they hold:
   silent and hides the control. Nothing in the loop may depend on it.
 - **Never write to a `ChangeNotifier` during build.** Defer with
   `addPostFrameCallback` — see `ResultsScreen`.
+- **Nothing coaches mid-conversation in free-form mode** (PRD §7.3). The
+  employee's reply is the consequence. Guided mode is the exception because
+  its feedback is authored.
+- **Never show a quote the manager did not say.** Both the server and
+  `CoachingNote.isGroundedIn` drop ungrounded notes; do not weaken either.
 - **Scoring lives in `PracticeSummary`**, so the report and the stored record
   cannot disagree. Do not recompute it in a widget. The rubric is PRD §10's
   four dimensions: clarity, empathy, directness, confidence.
@@ -135,5 +140,5 @@ lib/services   coach (remote/offline/resilient), speech in/out, history,
                settings, subscription + RevenueCat, analytics + PostHog
 lib/theme      AppColors tokens, Material 3 theme, and the brand mark painter
 lib/widgets    shared UI + the four InheritedNotifier scopes
-server         Node proxy: GET /health, POST /evaluate
+server         Node proxy: /health, /simulation/respond, /simulation/evaluate
 ```

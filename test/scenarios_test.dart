@@ -118,7 +118,7 @@ void main() {
         ) {
           return PracticeSummary.fromResponses([
             for (final turn in scenario.turns)
-              PracticeResponse.fromChoice(pick(turn.choices)),
+              PracticeResponse.fromChoice(pick(turn.choices), turn),
           ]);
         }
 
