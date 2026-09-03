@@ -54,7 +54,9 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                const BrandMark(),
+                // Flexible so the wordmark yields to the progress button
+                // rather than pushing it off the edge at a large text scale.
+                const Flexible(child: BrandMark()),
                 const Spacer(),
                 IconButton.filledTonal(
                   key: const Key('open_progress'),
@@ -99,12 +101,16 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                Text(
-                  '${scenarios.length} scenarios',
-                  style: const TextStyle(
-                    color: AppColors.forest,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                const SizedBox(width: 12),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    '${scenarios.length} scenarios',
+                    style: const TextStyle(
+                      color: AppColors.forest,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],

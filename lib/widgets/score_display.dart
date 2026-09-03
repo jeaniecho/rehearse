@@ -31,54 +31,66 @@ class ScoreRing extends StatelessWidget {
   final Color captionColor;
   final Color trackColor;
 
+  /// The ring is a fixed graphic, so unbounded text scaling would push the
+  /// numerals straight out of the circle. Grow the whole ring with the text
+  /// instead, and cap both together.
+  static const _maxTextScale = 1.4;
+
   @override
   Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final factor = (scaler.scale(100) / 100).clamp(1.0, _maxTextScale);
+    final size = diameter * factor;
+
     return Center(
       child: Semantics(
         label: '$caption: $score out of 100',
         excludeSemantics: true,
-        child: SizedBox(
-          width: diameter,
-          height: diameter,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox.expand(
-                child: CircularProgressIndicator(
-                  value: score / 100,
-                  strokeWidth: diameter * 0.077,
-                  strokeCap: StrokeCap.round,
-                  color: AppColors.coral,
-                  backgroundColor: trackColor,
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: _maxTextScale,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox.expand(
+                  child: CircularProgressIndicator(
+                    value: score / 100,
+                    strokeWidth: diameter * 0.077,
+                    strokeCap: StrokeCap.round,
+                    color: AppColors.coral,
+                    backgroundColor: trackColor,
+                  ),
                 ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$score',
-                    style: TextStyle(
-                      color: valueColor,
-                      fontSize: diameter * 0.324,
-                      height: 1,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.5,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$score',
+                      style: TextStyle(
+                        color: valueColor,
+                        fontSize: diameter * 0.324,
+                        height: 1,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    caption,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: captionColor,
-                      fontSize: 8,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.6,
+                    const SizedBox(height: 5),
+                    Text(
+                      caption,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: captionColor,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.6,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

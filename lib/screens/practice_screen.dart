@@ -339,28 +339,34 @@ class _PracticeScreenState extends State<PracticeScreen> {
               ),
             ),
             const SizedBox(width: 9),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.scenario.personName,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.scenario.personName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-                Text(
-                  widget.mode == PracticeMode.freestyle
-                      ? 'SPEAK FREELY'
-                      : 'GUIDED PRACTICE',
-                  style: const TextStyle(
-                    color: AppColors.coral,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.8,
+                  Text(
+                    widget.mode == PracticeMode.freestyle
+                        ? 'SPEAK FREELY'
+                        : 'GUIDED PRACTICE',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.coral,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.8,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

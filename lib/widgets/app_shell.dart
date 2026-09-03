@@ -92,13 +92,19 @@ class BrandMark extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        Text(
-          'rehearse',
-          style: TextStyle(
-            color: color,
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.7,
+        // Flexible so the wordmark shortens rather than overflowing an app
+        // bar that also carries actions at a large text scale.
+        Flexible(
+          child: Text(
+            'rehearse',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: color,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.7,
+            ),
           ),
         ),
       ],

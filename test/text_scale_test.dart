@@ -1,0 +1,126 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:rehearse/data/scenarios.dart';
+import 'package:rehearse/models/practice_record.dart';
+import 'package:rehearse/models/practice_response.dart';
+import 'package:rehearse/screens/brief_screen.dart';
+import 'package:rehearse/screens/home_screen.dart';
+import 'package:rehearse/screens/practice_screen.dart';
+import 'package:rehearse/screens/progress_screen.dart';
+import 'package:rehearse/screens/results_screen.dart';
+import 'package:rehearse/services/coach_service.dart';
+import 'package:rehearse/services/practice_history.dart';
+import 'package:rehearse/services/speech_output_service.dart';
+import 'package:rehearse/theme/app_theme.dart';
+import 'package:rehearse/widgets/practice_history_scope.dart';
+
+/// A manager with larger system text should still be able to use the app.
+/// Flutter reports an overflow as a test failure, so simply laying every
+/// screen out at an accessibility text size is the assertion.
+void main() {
+  final scenario = scenarios.first;
+
+  Future<void> layOut(
+    WidgetTester tester,
+    Widget screen, {
+    required double textScale,
+  }) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final history = PracticeHistory(store: InMemoryHistoryStore());
+    addTearDown(history.dispose);
+    for (var day = 0; day < 4; day++) {
+      await history.add(
+        PracticeRecord(
+          scenarioId: scenarios[day % scenarios.length].id,
+          completedAt: DateTime.now().subtract(Duration(days: day)),
+          mode: PracticeMode.freestyle,
+          score: 55 + day * 9,
+          clarity: 61,
+          empathy: 78,
+          courage: 47,
+          usedAi: true,
+        ),
+      );
+    }
+
+    await tester.pumpWidget(
+      PracticeHistoryScope(
+        history: history,
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+            child: screen,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  for (final textScale in [1.0, 1.3, 1.6]) {
+    group('at ${textScale}x text', () {
+      testWidgets('home', (tester) async {
+        await layOut(tester, const HomeScreen(), textScale: textScale);
+      });
+
+      testWidgets('briefing', (tester) async {
+        await layOut(
+          tester,
+          BriefScreen(scenario: scenario),
+          textScale: textScale,
+        );
+      });
+
+      testWidgets('practice', (tester) async {
+        await layOut(
+          tester,
+          PracticeScreen(
+            scenario: scenario,
+            mode: PracticeMode.freestyle,
+            coachService: OfflineCoachService(),
+            speechOutputService: _SilentVoice(),
+          ),
+          textScale: textScale,
+        );
+      });
+
+      testWidgets('coaching report', (tester) async {
+        await layOut(
+          tester,
+          ResultsScreen(
+            scenario: scenario,
+            responses: [
+              for (final turn in scenario.turns)
+                PracticeResponse.fromChoice(turn.choices.first),
+            ],
+          ),
+          textScale: textScale,
+        );
+      });
+
+      testWidgets('progress', (tester) async {
+        await layOut(tester, const ProgressScreen(), textScale: textScale);
+      });
+    });
+  }
+}
+
+class _SilentVoice implements SpeechOutputService {
+  @override
+  Future<bool> initialize({
+    required SpeakingStateCallback onSpeakingChanged,
+  }) async => false;
+
+  @override
+  Future<void> speak(String text) async {}
+
+  @override
+  Future<void> stop() async {}
+}
