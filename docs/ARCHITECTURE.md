@@ -1,7 +1,7 @@
 # Rehearse — architecture
 
-How the code is actually put together, as of commit `7c7f191`. For what is
-missing, see [`STATUS.md`](STATUS.md).
+How the code is actually put together. For what is missing, see
+[`STATUS.md`](STATUS.md).
 
 The guiding constraint: **the app must work with no API key and no network.**
 Every remote capability has a local fallback, and the demo never depends on one.
@@ -12,11 +12,16 @@ Every remote capability has a local fallback, and the demo never depends on one.
 
 ```text
 HomeScreen ──▶ BriefScreen ──▶ PracticeScreen ──▶ ResultsScreen
-    │            pick mode        3 turns            score + coaching
+    │            pick mode  │     3 turns          score + coaching
+    │                       │                              │
+    │              out of free rehearsals?                 │
+    │                       │                              │
+    │                  PaywallScreen                       │
     │                                                      │
     └──────────────── popUntil(isFirst) ◀──────────────────┘
                                                            │
-                                                    PracticeHistory.add()
+                                       PracticeHistory.add() + one free
+                                       rehearsal spent
 ```
 
 `ProgressScreen` hangs off the home header. Navigation is imperative
@@ -30,7 +35,7 @@ router package.
 ```text
 lib/
   main.dart            runApp
-  app.dart             owns PracticeHistory + AppSettings, installs both scopes
+  app.dart             owns the three notifiers and installs their scopes
   data/
     scenarios.dart     all authored content — 7 const Scenario values
   models/
@@ -38,15 +43,18 @@ lib/
     practice_response.dart PracticeResponse (one scored turn), PracticeMode
     practice_summary.dart  scoring maths for a finished session
     practice_record.dart   one stored session
-  screens/             home, brief, practice, results, progress
+    subscription.dart      plans, offers, purchase outcomes
+  screens/             home, brief, practice, results, progress, paywall
   services/
     coach_service.dart        remote + offline + resilient scoring
     speech_input_service.dart dictation
     speech_output_service.dart spoken replies
     practice_history.dart     stored sessions + momentum figures
-    app_settings.dart         device preferences
+    app_settings.dart         device preferences + the key/value store
+    subscription.dart         entitlement + the free allowance (the gate)
+    subscription_client.dart  RevenueCat, behind an interface
   theme/app_theme.dart   AppColors tokens + the Material 3 theme
-  widgets/               shared UI + the two InheritedNotifier scopes
+  widgets/               shared UI + the three InheritedNotifier scopes
 server/
   server.mjs           http server: GET /health, POST /evaluate
   coach.mjs            prompt construction and OpenAI Responses call
@@ -57,18 +65,19 @@ server/
 ## State management
 
 Plain `StatefulWidget` for screen-local state; `ChangeNotifier` exposed through
-`InheritedNotifier` for the two pieces of app-wide state. **No provider,
+`InheritedNotifier` for the three pieces of app-wide state. **No provider,
 riverpod, or bloc** — do not introduce one without a reason the PRD requires.
 
 ```text
-RehearseApp (StatefulWidget, owns both notifiers, calls load() in initState)
-  └── PracticeHistoryScope   (InheritedNotifier<PracticeHistory>)
-        └── AppSettingsScope (InheritedNotifier<AppSettings>)
-              └── MaterialApp
+RehearseApp (StatefulWidget, owns the notifiers, calls load() in initState)
+  └── PracticeHistoryScope     (InheritedNotifier<PracticeHistory>)
+        └── AppSettingsScope   (InheritedNotifier<AppSettings>)
+              └── SubscriptionScope (InheritedNotifier<Subscription>)
+                    └── MaterialApp
 ```
 
-Both scopes sit **above** `MaterialApp`, so pushed routes still find them by
-walking up through the `Navigator`.
+All three scopes sit **above** `MaterialApp`, so pushed routes still find them
+by walking up through the `Navigator`.
 
 Each scope offers two accessors, and the difference matters:
 
@@ -176,6 +185,49 @@ because Android treats 1.0 as normal and iOS treats 0.5 as normal.
 
 ---
 
+## Monetization
+
+```text
+                  createSubscriptionClient()
+                            │
+            REHEARSE_REVENUECAT_<PLATFORM>_KEY set?
+                    │                   │
+                   yes                  no (includes web)
+                    │                   │
+    RevenueCatSubscriptionClient        └──▶ UnconfiguredSubscriptionClient
+                    │                            configure() == false
+                    ▼
+              Subscription  ── the gate: canStartPractice
+                    │
+        ┌───────────┴───────────┐
+   entitlement `pro`      free sessions used
+   (store, live)          (local, monotonic)
+```
+
+`Subscription` owns the single question the UI asks — *may this person start
+another rehearsal?* — because the answer depends on both halves.
+
+Three rules:
+
+1. **An unconfigured build never gates.** No key, or a failed `configure()`,
+   means unlimited free rehearsals and no paywall anywhere. This keeps the
+   demo runnable and satisfies PRD §26.
+2. **The free counter is not the practice history.** It lives under its own
+   settings key, so clearing your history — a privacy action — cannot hand
+   back free sessions.
+3. **Only a completed rehearsal counts.** `ResultsScreen` spends the session
+   when the report is reached, so abandoning one costs nothing.
+
+Prices and packages are never hardcoded; they come from the current RevenueCat
+offering. Paywall copy can also come from **offering metadata**
+(`headline`, `subhead`, `cta`), which makes wording experiments a dashboard
+change rather than a release. Absent that, the paywall falls back to the
+weakest skill in the person's own history — see
+[`REVENUECAT.md`](REVENUECAT.md).
+
+Restore lives on the progress screen as well as the paywall, because the app
+stores require it to be reachable without an upgrade prompt in the way.
+
 ## Persistence
 
 `shared_preferences`, wrapped so tests never touch a platform channel.
@@ -184,6 +236,7 @@ because Android treats 1.0 as normal and iOS treats 0.5 as normal.
 |---|---|---|
 | `PracticeHistory` | `PracticeHistoryStore` | `rehearse.practice_history` (string list of JSON) |
 | `AppSettings` | `SettingsStore` | `rehearse.spoken_replies` (bool) |
+| `Subscription` | `SettingsStore` | `rehearse.free_sessions_used` (int) |
 
 Each has a `SharedPreferences…` implementation and an `InMemory…` one.
 
@@ -231,6 +284,7 @@ Two shared widgets carry accessibility rules worth preserving:
 | `spoken_replies_test.dart` | when the character speaks, mute, persistence |
 | `text_scale_test.dart` | every screen at 1.0×, 1.3×, 1.6× |
 | `coach_service_test.dart` | remote parsing and offline scoring |
+| `subscription_test.dart` | the gate, purchase and restore outcomes, and the paywall |
 | `visual_qa_test.dart` | renders each screen to `/tmp/rehearse-*.png` |
 
 Two of these are unusual and deliberate:

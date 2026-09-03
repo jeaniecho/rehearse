@@ -5,11 +5,17 @@ import 'package:rehearse/models/practice_record.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/home_screen.dart';
+import 'package:rehearse/screens/paywall_screen.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/screens/progress_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
+import 'package:rehearse/models/subscription.dart';
+import 'package:rehearse/services/app_settings.dart';
 import 'package:rehearse/services/practice_history.dart';
+import 'package:rehearse/services/subscription.dart';
+import 'package:rehearse/services/subscription_client.dart';
+import 'package:rehearse/widgets/subscription_scope.dart';
 import 'package:rehearse/services/speech_output_service.dart';
 import 'package:rehearse/theme/app_theme.dart';
 import 'package:rehearse/widgets/practice_history_scope.dart';
@@ -49,14 +55,24 @@ void main() {
       );
     }
 
+    final subscription = Subscription(
+      client: _OfferingClient(),
+      store: InMemorySettingsStore(),
+    );
+    addTearDown(subscription.dispose);
+    await subscription.load();
+
     await tester.pumpWidget(
       PracticeHistoryScope(
         history: history,
-        child: MaterialApp(
-          theme: AppTheme.light,
-          home: MediaQuery(
-            data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-            child: screen,
+        child: SubscriptionScope(
+          subscription: subscription,
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: MediaQuery(
+              data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+              child: screen,
+            ),
           ),
         ),
       ),
@@ -108,8 +124,46 @@ void main() {
       testWidgets('progress', (tester) async {
         await layOut(tester, const ProgressScreen(), textScale: textScale);
       });
+
+      testWidgets('paywall', (tester) async {
+        await layOut(tester, const PaywallScreen(), textScale: textScale);
+      });
     });
   }
+}
+
+/// A store with a realistic offering, so the paywall lays out with prices
+/// rather than its unavailable state.
+class _OfferingClient implements SubscriptionClient {
+  @override
+  Future<bool> configure({required ProStatusCallback onProChanged}) async =>
+      true;
+
+  @override
+  Future<SubscriptionOffer?> loadOffer() async => const SubscriptionOffer(
+    id: 'default',
+    plans: [
+      SubscriptionPlan(
+        id: 'annual',
+        period: SubscriptionPeriod.annual,
+        priceLabel: r'$44.99',
+        perMonthLabel: r'$3.75',
+        trialLabel: '7 days free',
+      ),
+      SubscriptionPlan(
+        id: 'monthly',
+        period: SubscriptionPeriod.monthly,
+        priceLabel: r'$8.99',
+      ),
+    ],
+  );
+
+  @override
+  Future<PurchaseOutcome> purchase(String planId) async =>
+      PurchaseOutcome.purchased;
+
+  @override
+  Future<PurchaseOutcome> restore() async => PurchaseOutcome.nothingToRestore;
 }
 
 class _SilentVoice implements SpeechOutputService {

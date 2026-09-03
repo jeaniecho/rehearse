@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_display.dart';
+import '../widgets/subscription_scope.dart';
 import 'practice_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
@@ -49,6 +50,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
     if (history == null) return;
 
     _recorded = true;
+    // Only a finished rehearsal spends a free session, so abandoning one
+    // costs nothing.
+    final subscription = SubscriptionScope.maybeOf(context);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       history.add(
@@ -59,6 +64,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
           summary: _summary,
         ),
       );
+      subscription?.recordCompletedSession();
     });
   }
 

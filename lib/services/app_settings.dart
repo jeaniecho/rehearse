@@ -6,6 +6,10 @@ abstract interface class SettingsStore {
   Future<bool?> readBool(String key);
 
   Future<void> writeBool(String key, bool value);
+
+  Future<int?> readInt(String key);
+
+  Future<void> writeInt(String key, int value);
 }
 
 class SharedPreferencesSettingsStore implements SettingsStore {
@@ -22,18 +26,44 @@ class SharedPreferencesSettingsStore implements SettingsStore {
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool(key, value);
   }
+
+  @override
+  Future<int?> readInt(String key) async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getInt(key);
+  }
+
+  @override
+  Future<void> writeInt(String key, int value) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setInt(key, value);
+  }
 }
 
 class InMemorySettingsStore implements SettingsStore {
-  InMemorySettingsStore([Map<String, bool>? values]) : _values = {...?values};
+  InMemorySettingsStore([Map<String, Object>? values]) : _values = {...?values};
 
-  final Map<String, bool> _values;
+  final Map<String, Object> _values;
 
   @override
-  Future<bool?> readBool(String key) async => _values[key];
+  Future<bool?> readBool(String key) async {
+    final value = _values[key];
+    return value is bool ? value : null;
+  }
 
   @override
   Future<void> writeBool(String key, bool value) async {
+    _values[key] = value;
+  }
+
+  @override
+  Future<int?> readInt(String key) async {
+    final value = _values[key];
+    return value is int ? value : null;
+  }
+
+  @override
+  Future<void> writeInt(String key, int value) async {
     _values[key] = value;
   }
 }

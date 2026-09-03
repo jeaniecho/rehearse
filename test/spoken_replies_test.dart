@@ -265,4 +265,11 @@ class _BrokenSettingsStore implements SettingsStore {
   @override
   Future<void> writeBool(String key, bool value) async =>
       throw StateError('unavailable');
+
+  @override
+  Future<int?> readInt(String key) async => throw StateError('unavailable');
+
+  @override
+  Future<void> writeInt(String key, int value) async =>
+      throw StateError('unavailable');
 }

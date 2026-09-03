@@ -6,6 +6,8 @@ import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
 import 'package:rehearse/services/practice_history.dart';
+import 'package:rehearse/services/app_settings.dart';
+import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/services/speech_input_service.dart';
 import 'package:rehearse/theme/app_theme.dart';
 
@@ -15,7 +17,11 @@ void main() {
   ) async {
     final history = PracticeHistory(store: InMemoryHistoryStore());
     addTearDown(history.dispose);
-    await tester.pumpWidget(RehearseApp(history: history));
+    final subscription = Subscription(store: InMemorySettingsStore());
+    addTearDown(subscription.dispose);
+    await tester.pumpWidget(
+      RehearseApp(history: history, subscription: subscription),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Say the hard thing.\nBetter.'), findsOneWidget);
@@ -61,6 +67,11 @@ void main() {
     expect(history.records.single.scenarioId, scenarios.first.id);
     expect(history.records.single.score, 88);
     expect(history.records.single.mode, PracticeMode.guided);
+
+    // Nothing is configured in a test build, so the loop stays unmetered.
+    expect(subscription.isConfigured, isFalse);
+    expect(subscription.freeSessionsUsed, 0);
+    expect(subscription.canStartPractice, isTrue);
   });
 
   testWidgets('evaluates a typed response with the private demo coach', (

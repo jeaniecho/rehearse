@@ -86,7 +86,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   /// A device with no usable voice just stays quiet — spoken replies are an
-  /// enhancement, never a prerequisite for practising.
+  /// enhancement, never a prerequisite for practicing.
   Future<void> _prepareVoice() async {
     final available = await _speechOutputService.initialize(
       onSpeakingChanged: _handleSpeakingChanged,

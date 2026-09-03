@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import '../data/scenarios.dart';
 import '../models/scenario.dart';
 import '../services/practice_history.dart';
+import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/practice_history_scope.dart';
+import '../widgets/subscription_scope.dart';
 import 'brief_screen.dart';
+import 'paywall_screen.dart';
 import 'progress_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -44,6 +47,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PracticeHistoryScope.of(context);
+    final subscription = SubscriptionScope.maybeOf(context);
     final recommended = recommendedScenario(history);
 
     return Scaffold(
@@ -58,6 +62,15 @@ class HomeScreen extends StatelessWidget {
                 // rather than pushing it off the edge at a large text scale.
                 const Flexible(child: BrandMark()),
                 const Spacer(),
+                if (subscription?.isPro ?? false) ...[
+                  const MetaPill(
+                    icon: Icons.workspace_premium_outlined,
+                    label: 'PRO',
+                    color: AppColors.forest,
+                    backgroundColor: AppColors.mint,
+                  ),
+                  const SizedBox(width: 10),
+                ],
                 IconButton.filledTonal(
                   key: const Key('open_progress'),
                   tooltip: 'Your progress',
@@ -76,6 +89,10 @@ class HomeScreen extends StatelessWidget {
               history: history,
               onStart: () => _openScenario(context, recommended),
             ),
+            if (subscription != null && subscription.showsFreeAllowance) ...[
+              const SizedBox(height: 14),
+              _FreeAllowanceStrip(subscription: subscription),
+            ],
             const SizedBox(height: 14),
             _MomentumCard(
               history: history,
@@ -266,6 +283,65 @@ class _HeroCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A quiet running total, so the paywall is never the moment someone first
+/// learns the free practice was finite.
+class _FreeAllowanceStrip extends StatelessWidget {
+  const _FreeAllowanceStrip({required this.subscription});
+
+  final Subscription subscription;
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = subscription.freeSessionsRemaining;
+    final spent = remaining == 0;
+
+    return Container(
+      key: const Key('free_allowance'),
+      padding: const EdgeInsets.fromLTRB(15, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: spent ? AppColors.peach : AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: spent ? AppColors.peach : AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            spent ? Icons.lock_outline_rounded : Icons.bolt_rounded,
+            size: 17,
+            color: spent ? AppColors.ink : AppColors.coral,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              spent
+                  ? 'You’ve used your free rehearsals.'
+                  : remaining == 1
+                  ? '1 free rehearsal left.'
+                  : '$remaining free rehearsals left.',
+              style: const TextStyle(
+                color: AppColors.ink,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          TextButton(
+            key: const Key('open_paywall'),
+            onPressed: () => PaywallScreen.show(context),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.forest,
+              minimumSize: const Size(0, 36),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            child: const Text('Go Pro'),
           ),
         ],
       ),

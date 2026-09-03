@@ -1,5 +1,27 @@
 import 'practice_response.dart';
 
+/// The three things a hard message needs to land.
+enum PracticeSkill { clarity, empathy, courage }
+
+extension PracticeSkillLabel on PracticeSkill {
+  String get label => switch (this) {
+    PracticeSkill.clarity => 'Clarity',
+    PracticeSkill.empathy => 'Empathy',
+    PracticeSkill.courage => 'Courage',
+  };
+
+  /// What this skill running low actually looks like in a conversation.
+  /// Used to make coaching and the paywall specific to the person reading.
+  String get weaknessDescription => switch (this) {
+    PracticeSkill.clarity =>
+      'You tend to leave the expectation vague once the conversation gets uncomfortable.',
+    PracticeSkill.empathy =>
+      'You get to the point, but the other person rarely feels heard first.',
+    PracticeSkill.courage =>
+      'You tend to soften the expectation when the other person pushes back.',
+  };
+}
+
 /// The scored outcome of one completed rehearsal.
 ///
 /// A conversation starts at a neutral 50 and each turn moves the running

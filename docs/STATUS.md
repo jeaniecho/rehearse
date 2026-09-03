@@ -4,9 +4,10 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-03, at commit `7c7f191`.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (106 passing),
-> `cd server && npm test` (3 passing), `flutter build web --release` (succeeds).
+> **Last audited:** 2026-09-03, after the RevenueCat integration.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (144 passing),
+> `cd server && npm test` (3 passing), `flutter build web --release` and
+> `flutter build apk --debug` (both succeed).
 
 ---
 
@@ -14,11 +15,13 @@
 
 The **practice loop runs end to end and is genuinely polished**: seven curated
 scenarios, a briefing, a three-turn conversation in guided or free-form mode,
-AI or offline scoring, and a coaching report. Around it, **almost none of the
-commercial P0 exists** — there is no RevenueCat, no analytics, no onboarding,
-no free-session limit, and no paywall. The contest is a RevenueCat contest.
-Every hour spent on the loop from here is an hour not spent on the thing the
-submission is actually judged on.
+AI or offline scoring, and a coaching report. **Monetization is now built**:
+RevenueCat, a three-rehearsal free limit, and a contextual paywall, all
+covered by tests — but it has never completed a sandbox purchase, because that
+needs App Store Connect and Play Console configuration. See
+[`REVENUECAT.md`](REVENUECAT.md).
+
+What is still missing from the commercial P0: **analytics and onboarding**.
 
 Two structural gaps inside the loop matter more than their size suggests:
 **difficulty is a label, not a behaviour**, and **simulation and evaluation
@@ -49,6 +52,14 @@ share one prompt**, which is why feedback is a generic sentence instead of
 - Production bundle id `app.rehearse.rehearse` on both platforms; version
   `1.0.0+1`.
 - Layout verified at 1.0×/1.3×/1.6× text scale by `test/text_scale_test.dart`.
+- **RevenueCat**: SDK, `pro` entitlement, offerings fetched dynamically,
+  paywall, purchase, restore (on the paywall and the progress screen), live
+  entitlement refresh, and correct handling of cancelled purchases and
+  unavailable offerings.
+- **Free-session limit**: 3 completed rehearsals, lifetime, counted separately
+  from practice history so clearing history cannot hand sessions back.
+- **Contextual paywall** that opens on the weakest skill the person's own
+  history shows, with copy overridable from offering metadata.
 
 ### Partially complete
 
@@ -69,11 +80,8 @@ share one prompt**, which is why feedback is a generic sentence instead of
 
 Everything below is **P0 in the PRD** unless marked otherwise.
 
-- **RevenueCat.** No SDK, no `pro` entitlement, no offerings, no paywall, no
-  purchase, no restore, no entitlement refresh. *Nothing.*
-- **Free-session limit.** No session counting, so no funnel and nothing to
-  paywall.
-- **Analytics.** No SDK and no events. The PRD lists ~20 required events.
+- **Analytics.** No SDK and no events. The PRD lists ~20 required events. This
+  is now the largest missing P0.
 - **Onboarding.** App opens straight onto the home screen.
 - **Optimistic message rendering.** The manager's own message does not appear
   until the coach responds — PRD §28 wants it rendered immediately.
@@ -90,8 +98,8 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 
 ### Broken
 
-Nothing. Analysis is clean, all 106 Flutter tests and 3 server tests pass, and
-the release build succeeds.
+Nothing. Analysis is clean, all 144 Flutter tests and 3 server tests pass, and
+both the web and Android builds succeed.
 
 The two known **defects** are cosmetic but real, and both are documented in
 §6 rather than here because they are quality issues rather than breakage.
@@ -103,16 +111,15 @@ The two known **defects** are cosmetic but real, and both are documented in
 | Milestone | State |
 |---|---|
 | **M0** Audit existing repo | ✅ this document |
-| **M1** Local vertical slice | 🟡 loop complete; onboarding, difficulty selection, and free-session UX missing |
+| **M1** Local vertical slice | 🟡 loop and free-session UX complete; onboarding and difficulty selection missing |
 | **M2** Real AI simulation | 🟡 works, but one combined prompt and no personality input |
 | **M3** Evaluation + retry | 🟡 scores and retry exist; quote-based critique does not |
-| **M4** Monetization + analytics | ❌ not started |
+| **M4** Monetization + analytics | 🟡 RevenueCat built and tested but never sandbox-purchased; analytics not started |
 | **M5** Polish + reliability | 🟢 ahead of schedule — this is the strongest area |
 | **M6** Release + submission | ❌ bundle id and version only |
 | **M7–M9** Launch, growth, submission package | ❌ not started |
 
-Polish is ahead of monetization by several days of work. That is the wrong
-shape for a RevenueCat contest.
+Analytics is now the one untouched P0.
 
 ---
 
@@ -201,25 +208,21 @@ palette-indirection change across the widget layer, not a one-line addition.
 
 Ordered by what moves the submission, not by what is most interesting.
 
-1. **RevenueCat end to end.** SDK, `pro` entitlement, offerings fetched
-   dynamically, paywall, purchase, restore, sandbox test. Nothing else on this
-   list changes the contest outcome as much, and it is the largest single
-   remaining unknown.
-2. **Free-session limit + contextual paywall.** Three completed simulations,
-   counted with the existing local-storage pattern. The paywall needs the
-   counter, so this comes before the paywall copy.
-3. **Analytics.** The funnel from PRD §17. Cheap once sessions are already
-   being recorded, and needed before any growth work has meaning.
-4. **Split the prompt, add quote-based critique.** This is what makes the
+1. **Finish RevenueCat in the dashboards and complete a sandbox purchase.**
+   Follow [`REVENUECAT.md`](REVENUECAT.md) §2–§6. The code is done; this is
+   store configuration plus one device test, and until it happens the
+   monetization is unproven.
+2. **Analytics.** The funnel from PRD §17. Cheap now that sessions and
+   entitlement are already tracked locally, and needed before any growth or
+   experiment work means anything.
+3. **Split the prompt, add quote-based critique.** This is what makes the
    feedback "actually useful" (PRD §35) and what the two-minute demo has to
    show. Do it with the dimension change in one pass.
-5. **Difficulty selection.** Make the existing enum a pre-session choice that
+4. **Difficulty selection.** Make the existing enum a pre-session choice that
    reaches the simulation prompt.
-6. **Onboarding**, three screens, copy already written in PRD §18.
-7. **App icon and launch screen.** An hour, and it is in every screenshot.
-8. Contrast fixes and dark theme, if there is time before submission.
-
-Items 1–3 are the difference between a practice app and a contest entry.
+5. **Onboarding**, three screens, copy already written in PRD §18.
+6. **App icon and launch screen.** An hour, and it is in every screenshot.
+7. Contrast fixes and dark theme, if there is time before submission.
 
 ---
 
@@ -231,8 +234,11 @@ State management : plain StatefulWidget + ChangeNotifier via InheritedNotifier
 Navigation       : imperative Navigator.push, no named routes or router package
 Backend          : Node http server in server/, OpenAI Responses API
 Persistence      : shared_preferences
-Dependencies     : http, speech_to_text, shared_preferences, flutter_tts
-Tests            : 106 Flutter + 3 server
+Monetization     : RevenueCat (purchases_flutter), entitlement `pro`,
+                   3 free completed rehearsals, keys via --dart-define
+Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
+                   purchases_flutter
+Tests            : 144 Flutter + 3 server
 TODO/FIXME       : none
 ```
 

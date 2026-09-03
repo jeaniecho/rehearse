@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/practice_record.dart';
+import '../models/practice_summary.dart';
 
 /// Where finished rehearsals are kept. Swapped for an in-memory store in
 /// tests so nothing touches platform channels.
@@ -139,6 +140,20 @@ class PracticeHistory extends ChangeNotifier {
   int get averageEmpathy => _average(_records.map((record) => record.empathy));
 
   int get averageCourage => _average(_records.map((record) => record.courage));
+
+  /// The skill that has scored lowest across every rehearsal, or null while
+  /// the scores are still tied or there is no history to read.
+  PracticeSkill? get weakestSkill {
+    if (_records.isEmpty) return null;
+    final averages = {
+      PracticeSkill.clarity: averageClarity,
+      PracticeSkill.empathy: averageEmpathy,
+      PracticeSkill.courage: averageCourage,
+    };
+    final lowest = averages.values.reduce((a, b) => a < b ? a : b);
+    if (lowest == averages.values.reduce((a, b) => a > b ? a : b)) return null;
+    return averages.entries.firstWhere((entry) => entry.value == lowest).key;
+  }
 
   /// Change in average score between the most recent [window] sessions and
   /// the [window] before them. Null until there is something to compare.

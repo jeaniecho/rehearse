@@ -11,6 +11,7 @@ conversations. Flutter app plus a small Node proxy to an LLM.
 | [`docs/PRD.md`](docs/PRD.md) | The product spec. Requirements, priorities, acceptance criteria. |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Day-by-day execution plan and milestones. |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the code is put together. |
+| [`docs/REVENUECAT.md`](docs/REVENUECAT.md) | Dashboard and store setup, and how the app behaves without keys. |
 
 `PRD.md` and `ROADMAP.md` are the plan of record — **do not edit them to match
 the code.** When reality diverges, record it in `STATUS.md`.
@@ -20,12 +21,18 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 106 tests
+flutter test                    # 144 tests
 cd server && npm test           # 3 tests
 ```
 
 ```bash
-flutter run                     # offline demo coach, no key needed
+flutter run                     # offline demo coach, unmetered, no keys needed
+```
+
+With monetization (see `docs/REVENUECAT.md`):
+
+```bash
+flutter run --dart-define=REHEARSE_REVENUECAT_IOS_KEY=appl_xxx --dart-define=REHEARSE_REVENUECAT_ANDROID_KEY=goog_xxx
 ```
 
 With the AI coach:
@@ -47,8 +54,8 @@ then serve `build/web` — `.claude/launch.json` has a config for it.
 
 From `ROADMAP.md` §0, and they hold:
 
-1. P0 beats P1. The contest is a **RevenueCat** contest; monetization and
-   analytics are P0 and are not built. Polish is already ahead of them.
+1. P0 beats P1. RevenueCat is built; **analytics is the remaining untouched
+   P0**, and no sandbox purchase has been completed yet.
 2. Working vertical slices beat architectural perfection.
 3. Do not rewrite working code to match the PRD more literally.
 4. Every day ends with a runnable app.
@@ -73,9 +80,14 @@ From `ROADMAP.md` §0, and they hold:
 
 - **No provider API key in the client, ever.** `OPENAI_API_KEY` lives only in
   the server environment. The app knows a URL and nothing else.
-- **The app must work with no key and no network.** `ResilientCoachService`
-  falls back to `OfflineCoachService`. Every remote capability needs a local
-  fallback, and the demo must never depend on one.
+- **The app must work with no keys and no network.** `ResilientCoachService`
+  falls back to `OfflineCoachService`, and an unconfigured `Subscription`
+  never gates. Every remote capability needs a local fallback, and the demo
+  must never depend on one.
+- **Never gate on a store that isn't there.** No RevenueCat key, or a failed
+  `configure()`, means unlimited free rehearsals — never a locked app.
+- **The free-session counter is not the practice history.** Clearing history
+  is a privacy action and must not hand back free sessions.
 - **Storage failures never interrupt a rehearsal.** Reads and writes are
   wrapped; a corrupt record is skipped, not thrown.
 - **Speech is an enhancement.** If the device has no voice, the app stays
@@ -100,10 +112,12 @@ From `ROADMAP.md` §0, and they hold:
 
 ```text
 lib/data       authored scenario content (7 scenarios)
-lib/models     Scenario, PracticeResponse, PracticeSummary, PracticeRecord
-lib/screens    home, brief, practice, results, progress
-lib/services   coach (remote/offline/resilient), speech in/out, history, settings
+lib/models     Scenario, PracticeResponse, PracticeSummary, PracticeRecord,
+               Subscription plans and outcomes
+lib/screens    home, brief, practice, results, progress, paywall
+lib/services   coach (remote/offline/resilient), speech in/out, history,
+               settings, subscription + RevenueCat client
 lib/theme      AppColors tokens + Material 3 theme
-lib/widgets    shared UI + the two InheritedNotifier scopes
+lib/widgets    shared UI + the three InheritedNotifier scopes
 server         Node proxy: GET /health, POST /evaluate
 ```

@@ -4,11 +4,15 @@ import '../data/scenarios.dart';
 import '../models/practice_record.dart';
 import '../models/practice_response.dart';
 import '../models/scenario.dart';
+import '../models/subscription.dart';
 import '../services/practice_history.dart';
+import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_display.dart';
+import '../widgets/subscription_scope.dart';
+import 'paywall_screen.dart';
 
 /// Everything the rehearsal history knows about you: how consistently you
 /// practice, which skill is carrying you, and every session so far.
@@ -83,6 +87,7 @@ class ProgressScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   _StreakBanner(history: history),
                   const SizedBox(height: 16),
+                  const _PlanCard(),
                   _SkillTrends(history: history),
                   const SizedBox(height: 16),
                   Text(
@@ -112,6 +117,143 @@ class ProgressScreen extends StatelessWidget {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+/// Plan state plus Restore. Restore lives here rather than only on the
+/// paywall because the stores require it to be reachable without an upgrade
+/// prompt in the way.
+class _PlanCard extends StatefulWidget {
+  const _PlanCard();
+
+  @override
+  State<_PlanCard> createState() => _PlanCardState();
+}
+
+class _PlanCardState extends State<_PlanCard> {
+  String? _notice;
+
+  Future<void> _restore(Subscription subscription) async {
+    final outcome = await subscription.restore();
+    if (!mounted) return;
+    setState(() => _notice = outcome.message);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final subscription = SubscriptionScope.maybeOf(context);
+    // An unconfigured build has no plan to talk about, so it says nothing.
+    if (subscription == null || !subscription.isConfigured) {
+      return const SizedBox.shrink();
+    }
+
+    final isPro = subscription.isPro;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Card(
+        key: const Key('plan_card'),
+        child: Padding(
+          padding: const EdgeInsets.all(19),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: isPro ? AppColors.mint : AppColors.canvas,
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Icon(
+                      isPro
+                          ? Icons.workspace_premium_rounded
+                          : Icons.bolt_rounded,
+                      color: isPro ? AppColors.forest : AppColors.muted,
+                      size: 19,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isPro ? 'Rehearse Pro' : 'Free',
+                          style: const TextStyle(
+                            color: AppColors.ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isPro
+                              ? 'Unlimited rehearsals.'
+                              : subscription.freeSessionsRemaining == 0
+                              ? 'No free rehearsals left.'
+                              : '${subscription.freeSessionsRemaining} of '
+                                    '${Subscription.freeSessionLimit} free '
+                                    'rehearsals left.',
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (_notice case final notice?) ...[
+                const SizedBox(height: 14),
+                Text(
+                  notice,
+                  key: const Key('plan_notice'),
+                  style: const TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 15),
+              Row(
+                children: [
+                  if (!isPro) ...[
+                    Expanded(
+                      child: FilledButton(
+                        key: const Key('upgrade_from_progress'),
+                        onPressed: () => PaywallScreen.show(context),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(44),
+                        ),
+                        child: const Text('Go Pro'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: OutlinedButton(
+                      key: const Key('restore_from_progress'),
+                      onPressed: subscription.isBusy
+                          ? null
+                          : () => _restore(subscription),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                      ),
+                      child: const Text('Restore purchases'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

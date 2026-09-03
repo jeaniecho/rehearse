@@ -4,6 +4,8 @@ import '../models/practice_response.dart';
 import '../models/scenario.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/subscription_scope.dart';
+import 'paywall_screen.dart';
 import 'practice_screen.dart';
 
 class BriefScreen extends StatefulWidget {
@@ -20,8 +22,19 @@ class _BriefScreenState extends State<BriefScreen> {
 
   Scenario get scenario => widget.scenario;
 
-  void _begin(BuildContext context) {
-    Navigator.of(context).push(
+  /// Browsing and reading a briefing is always free; the gate is at the
+  /// moment of starting, so nobody hits a paywall before they understand
+  /// what they would be practicing (PRD §14).
+  Future<void> _begin(BuildContext context) async {
+    final subscription = SubscriptionScope.maybeOf(context);
+
+    if (subscription != null && subscription.isPaywalled) {
+      final unlocked = await PaywallScreen.show(context);
+      if (!unlocked || !context.mounted) return;
+    }
+
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PracticeScreen(scenario: scenario, mode: _mode),
       ),
