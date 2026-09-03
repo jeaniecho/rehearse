@@ -4,8 +4,8 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-03, after difficulty selection.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (217 passing),
+> **Last audited:** 2026-09-03, after the release drafting.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (219 passing),
 > `cd server && npm test` (14 passing), `flutter build web --release` and
 > `flutter build apk --debug` (both succeed).
 
@@ -86,6 +86,12 @@ real model — and the **release checklist**.
   the instant it is sent (PRD §28).
 - **"Retry feedback"** when the evaluation call fails, without replaying the
   conversation (PRD §26).
+- **Crash reporting** (Sentry) behind the usual interface, configured not to
+  attach anything that could carry rehearsal text. It also reports the coach
+  falling back to offline, which is otherwise invisible in production.
+- **Release drafting**: privacy policy, store listing copy, both stores'
+  privacy questionnaires answered, and a screenshot generator that captures
+  the real screens at 1290×2796. See [`RELEASE.md`](RELEASE.md).
 - **Difficulty**: Calm / Defensive / Very defensive, chosen before a free-form
   rehearsal and remembered. Each level is a different set of behavioural
   instructions in the simulation prompt, asserted distinct by a server test.
@@ -110,15 +116,16 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 - **Session outcome** (success / partial / unresolved / escalated).
 - **Simulation state** (trust, tension, clarity, goal progress).
 - **Employee background** field — the prompt has name and role only.
-- **Crash reporting.**
-- **Privacy policy**, store metadata, screenshots, signing config.
+- **Signing**, both platforms. Android still signs with the debug key.
+- **Store records**, with the metadata from [`RELEASE.md`](RELEASE.md) §3
+  entered, and the privacy policy hosted at a public URL.
 - OneSignal reminders *(P1)*.
 - Session replay / "practice this moment again" *(P1)*.
 - Dark theme *(not in the PRD; see §6)*.
 
 ### Broken
 
-Nothing. Analysis is clean, all 217 Flutter tests and 14 server tests pass,
+Nothing. Analysis is clean, all 219 Flutter tests and 14 server tests pass,
 and both the web and Android builds succeed.
 
 The two known **defects** are cosmetic but real, and both are documented in
@@ -136,7 +143,7 @@ The two known **defects** are cosmetic but real, and both are documented in
 | **M3** Evaluation + retry | 🟢 four scores, quoted critique with suggested wording, retry |
 | **M4** Monetization + analytics | 🟡 both built and tested; neither verified against a live service |
 | **M5** Polish + reliability | 🟢 ahead of schedule — this is the strongest area |
-| **M6** Release + submission | 🟡 bundle id, version, icon, and splash done; privacy policy, metadata, signing, and crash reporting not started |
+| **M6** Release + submission | 🟡 everything draftable is drafted; signing, store records, and the hosted policy need accounts |
 | **M7–M9** Launch, growth, submission package | ❌ not started |
 
 The product loop is done. The remaining risk is entirely that **none of the
@@ -243,6 +250,12 @@ both affect the screenshots the submission is judged on.
 4.5:1 is the floor for body text. The forest-on-mint pair used for positive
 feedback passes at 7.63:1, so only the warm half of the palette is affected.
 
+**`fontFamily: 'SF Pro Display'` only exists on Apple platforms.** On Android
+and web the app silently falls back to the platform default, so it does not
+look quite like its own screenshots. Found while generating them. Bundling a
+licensed font would fix it and would also make widget tests render real text
+instead of boxes.
+
 **No dark theme.** `lib/app.dart` sets `theme:` only. `AppColors` are const
 values referenced directly by roughly forty widgets, so adding one is a
 palette-indirection change across the widget layer, not a one-line addition.
@@ -269,9 +282,10 @@ against live services; the rest is release and depth.
    simulation and the quoted critique is verified against fakes; none of it
    has met an actual model. This is where prompt quality gets judged, and
    ROADMAP §5's test matrix is the checklist.
-4. **Release checklist** — privacy policy, store metadata, screenshots,
-   signing, crash reporting. This is all that is left of M6, and it gates
-   submission.
+4. **Work through [`RELEASE.md`](RELEASE.md).** The copy, the policy, the
+   screenshots and the privacy answers are written; what is left needs an
+   Apple account, a Play account, a keystore, and somewhere to host the
+   policy.
 5. Contrast fixes and dark theme, if there is time before submission.
 6. Product depth the PRD lists but does not require for P0: a delegation
    scenario, 4–7 turn conversations, session outcomes, and simulation state.
@@ -293,7 +307,7 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 217 Flutter + 14 server
+Tests            : 219 Flutter + 14 server
 TODO/FIXME       : none
 ```
 

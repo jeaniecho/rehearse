@@ -294,6 +294,57 @@ void main() {
     });
   });
 
+  group('falling back', () {
+    test('a silent degradation is still reported', () async {
+      final reported = <String>[];
+      final service = ResilientCoachService(
+        primary: RemoteCoachService(
+          baseUrl: 'https://coach.example',
+          client: MockClient((_) async => http.Response('nope', 503)),
+        ),
+        fallback: OfflineCoachService(),
+        onFallback: (error, stackTrace, operation) => reported.add(operation),
+      );
+
+      await service.respond(
+        scenario: scenario,
+        difficulty: SimulationDifficulty.defensive,
+        turnIndex: 0,
+        history: const [],
+        managerResponse: _said,
+      );
+      await service.evaluate(scenario: scenario, history: [turn(_said)]);
+
+      // The person practising sees only a badge change; whoever runs the
+      // service should not have to find out from a review.
+      expect(reported, ['respond', 'evaluate']);
+    });
+
+    test('a working coach reports nothing', () async {
+      var reports = 0;
+      final service = ResilientCoachService(
+        primary: RemoteCoachService(
+          baseUrl: 'https://coach.example',
+          client: MockClient(
+            (_) async => http.Response(jsonEncode({'reply': 'Fine.'}), 200),
+          ),
+        ),
+        fallback: OfflineCoachService(),
+        onFallback: (_, _, _) => reports++,
+      );
+
+      await service.respond(
+        scenario: scenario,
+        difficulty: SimulationDifficulty.calm,
+        turnIndex: 0,
+        history: const [],
+        managerResponse: _said,
+      );
+
+      expect(reports, 0);
+    });
+  });
+
   group('guided mode', () {
     test('builds notes from the authored choices, with a stronger option', () {
       final weakest = scenario.turns.first.choices.reduce(

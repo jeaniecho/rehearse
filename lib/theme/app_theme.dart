@@ -17,6 +17,10 @@ abstract final class AppColors {
 }
 
 abstract final class AppTheme {
+  /// Only resolves on Apple platforms; elsewhere Flutter falls back to the
+  /// platform default. See `docs/STATUS.md` §6.
+  static const fontFamily = 'SF Pro Display';
+
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.forest,
@@ -30,7 +34,7 @@ abstract final class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.canvas,
-      fontFamily: 'SF Pro Display',
+      fontFamily: fontFamily,
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           color: AppColors.ink,
@@ -96,7 +100,11 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -107,7 +115,11 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontFamily: fontFamily,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );

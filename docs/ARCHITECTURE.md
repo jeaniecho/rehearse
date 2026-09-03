@@ -65,6 +65,7 @@ lib/
     subscription_client.dart  RevenueCat, behind an interface
     analytics.dart            the typed funnel
     analytics_sink.dart       PostHog, behind an interface
+    crash_reporter.dart       Sentry, behind an interface
   theme/app_theme.dart   AppColors tokens + the Material 3 theme
   widgets/               shared UI + the four InheritedNotifier scopes
 server/
@@ -325,6 +326,21 @@ are the contract — see [`ANALYTICS.md`](ANALYTICS.md).
 Entitlement is registered as super properties whenever it changes, so any
 funnel can be split by free versus Pro without threading state through each
 call.
+
+## Crashes
+
+`CrashReporter` wraps Sentry, and `main` runs the app inside it. With no DSN
+it runs the app and forgets errors, like every other remote capability here.
+
+Screenshots, view hierarchies and user-interaction breadcrumbs are all off:
+each of them can carry the text of a rehearsal, which is the one thing that
+must not leave the device except to the coach.
+
+It also reports something that is not a crash. `ResilientCoachService` takes
+an `onFallback` callback, so when the AI coach fails and the offline coach
+takes over, that is sent as a handled warning. The degradation is invisible in
+the app beyond a badge — right for the person practising, wrong for whoever
+runs the service.
 
 ## Persistence
 

@@ -8,6 +8,7 @@ import '../models/coaching_note.dart';
 import '../models/practice_response.dart';
 import '../models/practice_summary.dart';
 import '../models/scenario.dart';
+import 'crash_reporter.dart';
 
 /// What the other person says back, and nothing else.
 ///
@@ -42,17 +43,26 @@ abstract interface class CoachService {
   });
 }
 
-CoachService createCoachService({http.Client? client}) {
+CoachService createCoachService({http.Client? client, CrashReporter? crashes}) {
   const endpoint = String.fromEnvironment('REHEARSE_COACH_URL');
   final offline = OfflineCoachService();
   if (endpoint.trim().isEmpty) return offline;
 
+  final reporter = crashes ?? createCrashReporter();
   return ResilientCoachService(
     primary: RemoteCoachService(
       baseUrl: endpoint,
       client: client ?? http.Client(),
     ),
     fallback: offline,
+    // Falling back is invisible in the UI beyond a badge, which is right for
+    // the person practising and wrong for whoever is running the service. A
+    // coach that is quietly down in production should be noticed.
+    onFallback: (error, stackTrace, operation) => reporter.reportHandled(
+      error,
+      stackTrace: stackTrace,
+      context: 'coach.$operation',
+    ),
   );
 }
 
@@ -215,11 +225,21 @@ PracticeSummary parseEvaluation(
   );
 }
 
+typedef CoachFallbackCallback =
+    void Function(Object error, StackTrace stackTrace, String operation);
+
 class ResilientCoachService implements CoachService {
-  const ResilientCoachService({required this.primary, required this.fallback});
+  const ResilientCoachService({
+    required this.primary,
+    required this.fallback,
+    this.onFallback,
+  });
 
   final CoachService primary;
   final CoachService fallback;
+
+  /// Called when the primary fails and the offline coach takes over.
+  final CoachFallbackCallback? onFallback;
 
   @override
   bool get isAiEnabled => primary.isAiEnabled;
@@ -240,7 +260,8 @@ class ResilientCoachService implements CoachService {
         history: history,
         managerResponse: managerResponse,
       );
-    } on Object {
+    } on Object catch (error, stackTrace) {
+      onFallback?.call(error, stackTrace, 'respond');
       return fallback.respond(
         scenario: scenario,
         difficulty: difficulty,
@@ -258,7 +279,8 @@ class ResilientCoachService implements CoachService {
   }) async {
     try {
       return await primary.evaluate(scenario: scenario, history: history);
-    } on Object {
+    } on Object catch (error, stackTrace) {
+      onFallback?.call(error, stackTrace, 'evaluate');
       return fallback.evaluate(scenario: scenario, history: history);
     }
   }

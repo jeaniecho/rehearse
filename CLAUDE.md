@@ -13,6 +13,8 @@ conversations. Flutter app plus a small Node proxy to an LLM.
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the code is put together. |
 | [`docs/REVENUECAT.md`](docs/REVENUECAT.md) | Dashboard and store setup, and how the app behaves without keys. |
 | [`docs/ANALYTICS.md`](docs/ANALYTICS.md) | The tracking plan, and the rule that no event may carry free text. |
+| [`docs/RELEASE.md`](docs/RELEASE.md) | Submission checklist, store copy, and the privacy questionnaire answers. |
+| [`docs/PRIVACY.md`](docs/PRIVACY.md) | The privacy policy. Update it in the same commit as anything that changes what is sent. |
 
 `PRD.md` and `ROADMAP.md` are the plan of record — **do not edit them to match
 the code.** When reality diverges, record it in `STATUS.md`.
@@ -22,7 +24,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 217 tests
+flutter test                    # 219 tests
 cd server && npm test           # 14 tests
 ```
 
@@ -41,6 +43,12 @@ With the AI coach:
 ```bash
 cd server && OPENAI_API_KEY=... npm start
 flutter run --dart-define=REHEARSE_COACH_URL=http://127.0.0.1:8787
+```
+
+To regenerate the store screenshots:
+
+```bash
+flutter test tool/generate_screenshots.dart
 ```
 
 To regenerate the app icon and splash after changing the mark:
@@ -118,6 +126,9 @@ From `ROADMAP.md` §0, and they hold:
   onboarding copy and the rubric are asserted to match, in both directions.
 - **Do not let the UI promise what the app does not do.** Onboarding copy
   deviates from PRD §18 for exactly this reason; see `STATUS.md` §5.
+- **Anything that changes what leaves the device changes
+  `docs/PRIVACY.md`,** in the same commit. It is a published document that
+  describes the code.
 - **Never send transcript content to analytics** (PRD §16). No method on
   `Analytics` may take a `String` parameter — use an id or an enum. There are
   tests that will fail if this slips.
