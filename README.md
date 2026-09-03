@@ -9,6 +9,7 @@ specific feedback on clarity, empathy, and courage.
 - Three playable leadership scenarios: clear feedback, boundaries, and repair.
 - A briefing before each conversation with context, goal, and a common trap.
 - Guided choices or typed or spoken free-form answers for every scenario.
+- Spoken replies, so the other person's lines are heard rather than read.
 - AI-personalized scoring and in-character replies through a secure server.
 - Automatic offline coaching when the server is not configured or unavailable.
 - A final conversation score and skill-by-skill coaching report.
@@ -23,7 +24,8 @@ specific feedback on clarity, empathy, and courage.
 - `lib/data`: curated branching scenario content
 - `lib/models`: scenario, response, summary, and history-record models
 - `lib/screens`: home, briefing, simulation, coaching report, and progress
-- `lib/services`: remote and offline coaching, plus the local practice history
+- `lib/services`: remote and offline coaching, speech in and out, and the
+  local practice history and preferences
 - `lib/theme`: visual tokens and Material theme
 - `lib/widgets`: shared layout and brand components
 - `server`: lightweight OpenAI Responses API proxy and tests
@@ -44,6 +46,10 @@ Tap the microphone in free-form mode to dictate a response; the system speech
 service may require network access depending on the device. Typing remains
 available when speech recognition is unsupported or permission is declined.
 Guided mode is always available.
+
+The other person's lines are read aloud by the system voice. Tap their message
+to replay it, or the speaker button in the header to mute — the choice is
+remembered. A device without a usable voice simply stays quiet.
 
 ## Enable the AI coach
 
@@ -78,4 +84,5 @@ flutter test
 cd server && npm test
 ```
 
-The next product step is optional spoken character replies.
+The next product step is a dark theme and a contrast pass on the coaching
+cards.

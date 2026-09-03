@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 
 import '../models/practice_response.dart';
 import '../models/scenario.dart';
+import '../services/app_settings.dart';
 import '../services/coach_service.dart';
 import '../services/speech_input_service.dart';
+import '../services/speech_output_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_settings_scope.dart';
 import '../widgets/app_shell.dart';
 import 'results_screen.dart';
 
@@ -16,6 +19,7 @@ class PracticeScreen extends StatefulWidget {
     this.mode = PracticeMode.guided,
     this.coachService,
     this.speechInputService,
+    this.speechOutputService,
     super.key,
   });
 
@@ -23,6 +27,7 @@ class PracticeScreen extends StatefulWidget {
   final PracticeMode mode;
   final CoachService? coachService;
   final SpeechInputService? speechInputService;
+  final SpeechOutputService? speechOutputService;
 
   @override
   State<PracticeScreen> createState() => _PracticeScreenState();
@@ -35,14 +40,23 @@ class _PracticeScreenState extends State<PracticeScreen> {
   final List<PracticeResponse> _responses = [];
   late final CoachService _coachService;
   late final SpeechInputService _speechInputService;
+  late final SpeechOutputService _speechOutputService;
+  AppSettings? _settings;
   int _turnIndex = 0;
   PracticeResponse? _selectedResponse;
   bool _isEvaluating = false;
   bool _isListening = false;
   bool _speechInitialized = false;
+  bool _voiceAvailable = false;
+  bool _isSpeaking = false;
+  String? _spokenLine;
   String? _inputError;
   String? _speechError;
   String _speechPrefix = '';
+
+  /// Voice is on unless the manager has muted it. Without a settings scope
+  /// (a screen pumped on its own) it simply stays on.
+  bool get _voiceEnabled => _settings?.spokenRepliesEnabled ?? true;
 
   DialogueTurn get _turn => widget.scenario.turns[_turnIndex];
 
@@ -60,6 +74,64 @@ class _PracticeScreenState extends State<PracticeScreen> {
     _coachService = widget.coachService ?? createCoachService();
     _speechInputService =
         widget.speechInputService ?? DeviceSpeechInputService();
+    _speechOutputService =
+        widget.speechOutputService ?? DeviceSpeechOutputService();
+    unawaited(_prepareVoice());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _settings = AppSettingsScope.maybeOf(context);
+  }
+
+  /// A device with no usable voice just stays quiet — spoken replies are an
+  /// enhancement, never a prerequisite for practising.
+  Future<void> _prepareVoice() async {
+    final available = await _speechOutputService.initialize(
+      onSpeakingChanged: _handleSpeakingChanged,
+    );
+    if (!mounted) return;
+    setState(() => _voiceAvailable = available);
+    _speakEmployeeLine();
+  }
+
+  /// Reads the line the other person just delivered, skipping one that has
+  /// already been spoken so a rebuild cannot restart it.
+  void _speakEmployeeLine({bool force = false}) {
+    if (!_voiceAvailable || !_voiceEnabled) return;
+    final line = _employeeLine;
+    if (!force && line == _spokenLine) return;
+    _spokenLine = line;
+    unawaited(_speechOutputService.speak(line));
+  }
+
+  void _handleSpeakingChanged(bool isSpeaking) {
+    if (!mounted || _isSpeaking == isSpeaking) return;
+    setState(() => _isSpeaking = isSpeaking);
+  }
+
+  Future<void> _toggleVoice() async {
+    final settings = _settings;
+    if (settings == null) return;
+
+    final enabled = !settings.spokenRepliesEnabled;
+    await settings.setSpokenRepliesEnabled(enabled);
+    if (!mounted) return;
+
+    if (enabled) {
+      _speakEmployeeLine(force: true);
+    } else {
+      await _speechOutputService.stop();
+    }
+  }
+
+  Future<void> _replayEmployeeLine() async {
+    if (_isSpeaking) {
+      await _speechOutputService.stop();
+      return;
+    }
+    _speakEmployeeLine(force: true);
   }
 
   void _select(ResponseChoice choice) {
@@ -112,6 +184,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
 
     _responseFocus.unfocus();
+    await _speechOutputService.stop();
     setState(() {
       _inputError = null;
       _speechError = null;
@@ -207,6 +280,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _inputError = null;
       _speechError = null;
     });
+    _speakEmployeeLine();
     _scrollToBottom();
   }
 
@@ -224,6 +298,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   @override
   void dispose() {
     unawaited(_speechInputService.cancel());
+    unawaited(_speechOutputService.stop());
     _scrollController.dispose();
     _responseController.dispose();
     _responseFocus.dispose();
@@ -290,6 +365,21 @@ class _PracticeScreenState extends State<PracticeScreen> {
           ],
         ),
         actions: [
+          if (_voiceAvailable && _settings != null)
+            IconButton(
+              key: const Key('toggle_voice'),
+              onPressed: _toggleVoice,
+              tooltip: _voiceEnabled
+                  ? 'Mute ${widget.scenario.personName}'
+                  : 'Let ${widget.scenario.personName} speak',
+              icon: Icon(
+                _voiceEnabled
+                    ? Icons.volume_up_rounded
+                    : Icons.volume_off_rounded,
+                color: _voiceEnabled ? AppColors.forest : AppColors.muted,
+                size: 21,
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.only(right: 14),
             child: Center(
@@ -355,6 +445,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     key: ValueKey(_turnIndex),
                     scenario: widget.scenario,
                     text: _employeeLine,
+                    isSpeaking: _isSpeaking,
+                    onReplay: _voiceAvailable && _voiceEnabled
+                        ? _replayEmployeeLine
+                        : null,
                   ),
                   if (_selectedResponse != null) ...[
                     const SizedBox(height: 14),
@@ -426,13 +520,41 @@ class _RoomNotice extends StatelessWidget {
 }
 
 class _PersonMessage extends StatelessWidget {
-  const _PersonMessage({required this.scenario, required this.text, super.key});
+  const _PersonMessage({
+    required this.scenario,
+    required this.text,
+    super.key,
+    this.isSpeaking = false,
+    this.onReplay,
+  });
 
   final Scenario scenario;
   final String text;
+  final bool isSpeaking;
+
+  /// Tapping the bubble replays the line, or cuts it short mid-sentence.
+  /// Null when the device has no voice or the manager has muted it.
+  final Future<void> Function()? onReplay;
 
   @override
   Widget build(BuildContext context) {
+    final bubble = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(18),
+          bottomLeft: Radius.circular(18),
+          bottomRight: Radius.circular(18),
+        ),
+        border: Border.all(
+          color: isSpeaking ? AppColors.forest : AppColors.border,
+          width: isSpeaking ? 1.5 : 1,
+        ),
+      ),
+      child: Text(text, style: Theme.of(context).textTheme.bodyLarge),
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -460,33 +582,47 @@ class _PersonMessage extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 3, bottom: 5),
-                child: Text(
-                  scenario.personName,
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                  ),
+                child: Row(
+                  children: [
+                    Text(
+                      scenario.personName,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (isSpeaking) ...[
+                      const SizedBox(width: 5),
+                      const Icon(
+                        Icons.graphic_eq_rounded,
+                        key: Key('speaking_indicator'),
+                        size: 12,
+                        color: AppColors.forest,
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 12,
-                ),
-                decoration: const BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(18),
-                    bottomLeft: Radius.circular(18),
-                    bottomRight: Radius.circular(18),
+              if (onReplay == null)
+                bubble
+              else
+                Semantics(
+                  button: true,
+                  label: isSpeaking
+                      ? 'Stop reading this line aloud'
+                      : 'Replay this line aloud',
+                  child: InkWell(
+                    key: const Key('replay_line'),
+                    onTap: onReplay,
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(18),
+                      bottomLeft: Radius.circular(18),
+                      bottomRight: Radius.circular(18),
+                    ),
+                    child: bubble,
                   ),
-                  border: Border.fromBorderSide(
-                    BorderSide(color: AppColors.border),
-                  ),
                 ),
-                child: Text(text, style: Theme.of(context).textTheme.bodyLarge),
-              ),
             ],
           ),
         ),
