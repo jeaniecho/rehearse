@@ -188,11 +188,16 @@ void main() {
       addTearDown(history.dispose);
       final subscription = Subscription(store: InMemorySettingsStore());
       addTearDown(subscription.dispose);
+      final settings = AppSettings(
+        store: InMemorySettingsStore({'rehearse.onboarding_completed': true}),
+      );
+      addTearDown(settings.dispose);
 
       await tester.pumpWidget(
         RehearseApp(
           history: history,
           subscription: subscription,
+          settings: settings,
           analytics: analytics,
         ),
       );

@@ -4,8 +4,8 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-03, after analytics.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (166 passing),
+> **Last audited:** 2026-09-03, after onboarding.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (177 passing),
 > `cd server && npm test` (3 passing), `flutter build web --release` and
 > `flutter build apk --debug` (both succeed).
 
@@ -25,7 +25,9 @@ needs App Store Connect and Play Console configuration. See
 transcript content" rule enforced by the type system rather than by
 discipline. See [`ANALYTICS.md`](ANALYTICS.md).
 
-The one commercial P0 still missing is **onboarding**.
+**Every P0 feature is now built.** What is left is not code: no sandbox
+purchase has been completed, no real analytics event has been observed, and
+the release checklist (icon, privacy policy, store metadata) is untouched.
 
 Two structural gaps inside the loop matter more than their size suggests:
 **difficulty is a label, not a behaviour**, and **simulation and evaluation
@@ -68,6 +70,9 @@ share one prompt**, which is why feedback is a generic sentence instead of
   turn reached, retry as its own attempt, and paywall triggers that
   distinguish a forced paywall from a voluntary upsell. Entitlement rides
   along as super properties. Provider-agnostic behind a three-method sink.
+- **Onboarding**: three screens, skippable, remembered. The app waits on the
+  preferences read rather than guessing, so a returning manager never sees a
+  flash of the intro.
 
 ### Partially complete
 
@@ -88,11 +93,8 @@ share one prompt**, which is why feedback is a generic sentence instead of
 
 Everything below is **P0 in the PRD** unless marked otherwise.
 
-- **Onboarding.** App opens straight onto the home screen. This is now the
-  last missing P0, and the copy is already written in PRD §18.
-- Five PRD §16 events cannot fire yet because the feature does not exist:
-  `onboarding_started`, `onboarding_completed`, `difficulty_selected`,
-  `reminder_created`, `notification_opened`.
+- Three PRD §16 events cannot fire yet because the feature does not exist:
+  `difficulty_selected`, `reminder_created`, `notification_opened`.
 - **Optimistic message rendering.** The manager's own message does not appear
   until the coach responds — PRD §28 wants it rendered immediately.
 - **Session outcome** (success / partial / unresolved / escalated).
@@ -108,7 +110,7 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 
 ### Broken
 
-Nothing. Analysis is clean, all 166 Flutter tests and 3 server tests pass, and
+Nothing. Analysis is clean, all 177 Flutter tests and 3 server tests pass, and
 both the web and Android builds succeed.
 
 The two known **defects** are cosmetic but real, and both are documented in
@@ -121,16 +123,16 @@ The two known **defects** are cosmetic but real, and both are documented in
 | Milestone | State |
 |---|---|
 | **M0** Audit existing repo | ✅ this document |
-| **M1** Local vertical slice | 🟡 loop and free-session UX complete; onboarding and difficulty selection missing |
+| **M1** Local vertical slice | 🟡 complete except difficulty selection |
 | **M2** Real AI simulation | 🟡 works, but one combined prompt and no personality input |
 | **M3** Evaluation + retry | 🟡 scores and retry exist; quote-based critique does not |
-| **M4** Monetization + analytics | 🟡 both built and tested; RevenueCat has never completed a sandbox purchase |
+| **M4** Monetization + analytics | 🟡 both built and tested; neither verified against a live service |
 | **M5** Polish + reliability | 🟢 ahead of schedule — this is the strongest area |
 | **M6** Release + submission | ❌ bundle id and version only |
 | **M7–M9** Launch, growth, submission package | ❌ not started |
 
-Onboarding is the one untouched P0. M4's remaining risk is not code — it is
-that no real transaction and no real event have been observed end to end.
+No P0 feature is unbuilt. The remaining risk is that none of M4 has been
+observed against a live service, and that M6 has barely started.
 
 ---
 
@@ -184,6 +186,17 @@ touches the server schema, `PracticeResponse`, `PracticeSummary`, the stored
 the progress screen. Worth doing before there is stored user data to migrate,
 not after.
 
+**Onboarding does not use the PRD's copy verbatim.** The three headlines are
+PRD §18 word for word. The supporting lines are not: the PRD's promise
+"different levels of resistance and defensiveness" (difficulty is not
+selectable) and feedback on "clarity, empathy, directness, and confidence"
+(the report scores courage, not directness or confidence). An intro that
+oversells in the first thirty seconds is worse than no intro, so each line
+describes what the next four minutes actually deliver. `test/onboarding_test.dart`
+has an `honesty` group asserting the screens never name a dimension the report
+does not have. Move the copy back toward the PRD once difficulty selection and
+the dimension change land.
+
 **One prompt does two jobs.** `server/coach.mjs` asks a single model call to
 score the manager *and* reply in character, inside `max_output_tokens: 350`.
 This is the root cause of generic feedback: there is no budget for a quoted
@@ -219,6 +232,9 @@ palette-indirection change across the widget layer, not a one-line addition.
 
 Ordered by what moves the submission, not by what is most interesting.
 
+0. **Nothing on this list is a missing feature any more.** Items 1–2 are
+   verification against live services; the rest is product depth and release.
+
 1. **Finish RevenueCat in the dashboards and complete a sandbox purchase.**
    Follow [`REVENUECAT.md`](REVENUECAT.md) §2–§6. The code is done; this is
    store configuration plus one device test, and until it happens the
@@ -232,8 +248,9 @@ Ordered by what moves the submission, not by what is most interesting.
    show. Do it with the dimension change in one pass.
 4. **Difficulty selection.** Make the existing enum a pre-session choice that
    reaches the simulation prompt.
-5. **Onboarding**, three screens, copy already written in PRD §18.
-6. **App icon and launch screen.** An hour, and it is in every screenshot.
+5. **App icon and launch screen.** An hour, and it is in every screenshot.
+6. **Release checklist** — privacy policy, store metadata, signing, crash
+   reporting. M6 has barely started and it gates submission.
 7. Contrast fixes and dark theme, if there is time before submission.
 
 ---
@@ -250,9 +267,10 @@ Monetization     : RevenueCat (purchases_flutter), entitlement `pro`,
                    3 free completed rehearsals, keys via --dart-define
 Analytics        : PostHog behind a provider-agnostic sink, key via
                    --dart-define, no-op without one
+Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 166 Flutter + 3 server
+Tests            : 177 Flutter + 3 server
 TODO/FIXME       : none
 ```
 

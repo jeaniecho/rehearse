@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'screens/home_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'services/analytics.dart';
 import 'services/app_settings.dart';
 import 'services/practice_history.dart';
@@ -9,6 +10,7 @@ import 'theme/app_theme.dart';
 import 'widgets/analytics_scope.dart';
 import 'widgets/app_settings_scope.dart';
 import 'widgets/practice_history_scope.dart';
+import 'widgets/app_shell.dart';
 import 'widgets/subscription_scope.dart';
 
 class RehearseApp extends StatefulWidget {
@@ -92,11 +94,47 @@ class _RehearseAppState extends State<RehearseApp> {
               title: 'Rehearse',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.light,
-              home: const HomeScreen(),
+              home: const _Root(),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Chooses the first screen once preferences are known.
+///
+/// Waiting on [AppSettings.isLoaded] rather than assuming means a returning
+/// manager never sees a flash of onboarding on a cold start.
+class _Root extends StatelessWidget {
+  const _Root();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = AppSettingsScope.of(context);
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 260),
+      child: switch (settings) {
+        AppSettings(isLoaded: false) => const _Launch(),
+        AppSettings(onboardingCompleted: false) => const OnboardingScreen(),
+        _ => const HomeScreen(),
+      },
+    );
+  }
+}
+
+/// The one or two frames before preferences resolve. Branded rather than
+/// blank, so a cold start does not flash white.
+class _Launch extends StatelessWidget {
+  const _Launch();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      key: Key('launch'),
+      body: Center(child: BrandMark()),
     );
   }
 }

@@ -11,6 +11,9 @@ Every remote capability has a local fallback, and the demo never depends on one.
 ## The loop
 
 ```text
+_Root ──▶ OnboardingScreen (first run only)
+  │
+  ▼
 HomeScreen ──▶ BriefScreen ──▶ PracticeScreen ──▶ ResultsScreen
     │            pick mode  │     3 turns          score + coaching
     │                       │                              │
@@ -23,6 +26,11 @@ HomeScreen ──▶ BriefScreen ──▶ PracticeScreen ──▶ ResultsScree
                                        PracticeHistory.add() + one free
                                        rehearsal spent
 ```
+
+`_Root` in `app.dart` picks the first screen, and waits on
+`AppSettings.isLoaded` rather than assuming — otherwise a returning manager
+sees a frame of onboarding on every cold start. Until then it shows a branded
+launch state.
 
 `ProgressScreen` hangs off the home header. Navigation is imperative
 `Navigator.push` with `MaterialPageRoute` — there are no named routes and no
@@ -44,7 +52,8 @@ lib/
     practice_summary.dart  scoring maths for a finished session
     practice_record.dart   one stored session
     subscription.dart      plans, offers, purchase outcomes
-  screens/             home, brief, practice, results, progress, paywall
+  screens/             onboarding, home, brief, practice, results, progress,
+                       paywall
   services/
     coach_service.dart        remote + offline + resilient scoring
     speech_input_service.dart dictation
@@ -264,7 +273,7 @@ call.
 | Notifier | Store interface | Key |
 |---|---|---|
 | `PracticeHistory` | `PracticeHistoryStore` | `rehearse.practice_history` (string list of JSON) |
-| `AppSettings` | `SettingsStore` | `rehearse.spoken_replies` (bool) |
+| `AppSettings` | `SettingsStore` | `rehearse.spoken_replies` (bool), `rehearse.onboarding_completed` (bool) |
 | `Subscription` | `SettingsStore` | `rehearse.free_sessions_used` (int) |
 
 Each has a `SharedPreferences…` implementation and an `InMemory…` one.
@@ -315,6 +324,7 @@ Two shared widgets carry accessibility rules worth preserving:
 | `coach_service_test.dart` | remote parsing and offline scoring |
 | `subscription_test.dart` | the gate, purchase and restore outcomes, and the paywall |
 | `analytics_test.dart` | the funnel end to end, and that no content leaks |
+| `onboarding_test.dart` | first run, skip, the no-flash launch, and copy honesty |
 | `visual_qa_test.dart` | renders each screen to `/tmp/rehearse-*.png` |
 
 Two of these are unusual and deliberate:

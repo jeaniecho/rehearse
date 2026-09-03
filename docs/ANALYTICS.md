@@ -35,6 +35,8 @@ Fired today, in funnel order.
 | Event | When | Notable properties |
 |---|---|---|
 | `app_opened` | app start | — |
+| `onboarding_started` | the intro is shown on first run | — |
+| `onboarding_completed` | the intro is finished or skipped | `pages_seen`, `skipped` |
 | `scenario_viewed` | the briefing is shown | `scenario_id`, `scenario_skill`, `difficulty` |
 | `scenario_started` | start is tapped and the gate passes | `mode` |
 | `simulation_started` | the conversation screen mounts | `is_retry` |
@@ -63,8 +65,7 @@ through each call.
 
 These are in PRD §16 but the feature does not exist:
 
-`onboarding_started`, `onboarding_completed`, `difficulty_selected`,
-`reminder_created`, `notification_opened`
+`difficulty_selected`, `reminder_created`, `notification_opened`
 
 Add the event in the same commit as the feature, not before. An event that
 never fires is worse than a missing one — it looks like a measured zero.
@@ -88,6 +89,8 @@ PRD §17, and what to query:
 
 ```text
 app_opened
+   ↓
+onboarding_completed     first-run completion
    ↓
 scenario_viewed          browse rate
    ↓

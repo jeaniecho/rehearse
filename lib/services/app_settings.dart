@@ -74,9 +74,18 @@ class AppSettings extends ChangeNotifier {
     : _store = store ?? const SharedPreferencesSettingsStore();
 
   static const _spokenRepliesKey = 'rehearse.spoken_replies';
+  static const _onboardingKey = 'rehearse.onboarding_completed';
 
   final SettingsStore _store;
   bool _spokenRepliesEnabled = true;
+  bool _onboardingCompleted = false;
+  bool _isLoaded = false;
+
+  /// False until the first read finishes. The root waits on this rather than
+  /// guessing, so a returning manager never sees a flash of onboarding.
+  bool get isLoaded => _isLoaded;
+
+  bool get onboardingCompleted => _onboardingCompleted;
 
   /// Whether the other person's lines are read aloud. On by default: a
   /// rehearsal you can hear is closer to the conversation you are dreading.
@@ -84,13 +93,27 @@ class AppSettings extends ChangeNotifier {
 
   Future<void> load() async {
     try {
-      final stored = await _store.readBool(_spokenRepliesKey);
-      if (stored != null && stored != _spokenRepliesEnabled) {
-        _spokenRepliesEnabled = stored;
-        notifyListeners();
-      }
+      _spokenRepliesEnabled =
+          await _store.readBool(_spokenRepliesKey) ?? _spokenRepliesEnabled;
+      _onboardingCompleted =
+          await _store.readBool(_onboardingKey) ?? _onboardingCompleted;
     } on Object {
-      // Fall back to the default rather than blocking startup.
+      // Fall back to the defaults rather than blocking startup. Erring
+      // toward showing onboarding is the safe way to be wrong.
+    }
+    _isLoaded = true;
+    notifyListeners();
+  }
+
+  Future<void> completeOnboarding() async {
+    if (_onboardingCompleted) return;
+    _onboardingCompleted = true;
+    notifyListeners();
+    try {
+      await _store.writeBool(_onboardingKey, true);
+    } on Object {
+      // It still applies to this session; the worst case is seeing the
+      // intro once more.
     }
   }
 

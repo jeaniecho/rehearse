@@ -45,6 +45,18 @@ class Analytics extends ChangeNotifier {
 
   void appOpened() => _track('app_opened');
 
+  // Onboarding.
+
+  void onboardingStarted() => _track('onboarding_started');
+
+  /// [pagesSeen] separates someone who read the intro from someone who
+  /// skipped it on the first screen.
+  void onboardingCompleted({required int pagesSeen, required bool skipped}) =>
+      _track('onboarding_completed', {
+        'pages_seen': pagesSeen,
+        'skipped': skipped,
+      });
+
   // Scenario funnel.
 
   void scenarioViewed(Scenario scenario) =>

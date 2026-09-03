@@ -22,7 +22,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 166 tests
+flutter test                    # 177 tests
 cd server && npm test           # 3 tests
 ```
 
@@ -55,9 +55,9 @@ then serve `build/web` — `.claude/launch.json` has a config for it.
 
 From `ROADMAP.md` §0, and they hold:
 
-1. P0 beats P1. RevenueCat and analytics are built; **onboarding is the last
-   untouched P0**. Neither a sandbox purchase nor a real analytics event has
-   been observed end to end yet.
+1. **Every P0 feature is built.** What remains is verification against live
+   services (no sandbox purchase, no real analytics event yet) and the M6
+   release checklist. Prefer those over new features.
 2. Working vertical slices beat architectural perfection.
 3. Do not rewrite working code to match the PRD more literally.
 4. Every day ends with a runnable app.
@@ -98,6 +98,8 @@ From `ROADMAP.md` §0, and they hold:
   `addPostFrameCallback` — see `ResultsScreen`.
 - **Scoring lives in `PracticeSummary`**, so the report and the stored record
   cannot disagree. Do not recompute it in a widget.
+- **Do not let the UI promise what the app does not do.** Onboarding copy
+  deviates from PRD §18 for exactly this reason; see `STATUS.md` §5.
 - **Never send transcript content to analytics** (PRD §16). No method on
   `Analytics` may take a `String` parameter — use an id or an enum. There are
   tests that will fail if this slips.
@@ -117,7 +119,7 @@ From `ROADMAP.md` §0, and they hold:
 lib/data       authored scenario content (7 scenarios)
 lib/models     Scenario, PracticeResponse, PracticeSummary, PracticeRecord,
                Subscription plans and outcomes
-lib/screens    home, brief, practice, results, progress, paywall
+lib/screens    onboarding, home, brief, practice, results, progress, paywall
 lib/services   coach (remote/offline/resilient), speech in/out, history,
                settings, subscription + RevenueCat, analytics + PostHog
 lib/theme      AppColors tokens + Material 3 theme

@@ -5,6 +5,7 @@ import 'package:rehearse/models/practice_record.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/home_screen.dart';
+import 'package:rehearse/screens/onboarding_screen.dart';
 import 'package:rehearse/screens/paywall_screen.dart';
 import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/screens/practice_screen.dart';
@@ -85,6 +86,10 @@ void main() {
     group('at ${textScale}x text', () {
       testWidgets('home', (tester) async {
         await layOut(tester, const HomeScreen(), textScale: textScale);
+      });
+
+      testWidgets('onboarding', (tester) async {
+        await layOut(tester, const OnboardingScreen(), textScale: textScale);
       });
 
       testWidgets('briefing', (tester) async {

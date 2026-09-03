@@ -40,12 +40,14 @@ Built for the RevenueCat Shipaton 2026, leadership and career coaching.
   paywall copy driven from the dashboard rather than the code.
 - A product funnel instrumented end to end, built so that nothing you say in a
   rehearsal can reach analytics.
+- A three-screen intro on first run that previews the real thing.
 
 ## What does not exist yet
 
-**Onboarding.** Difficulty is a label on each scenario rather than a
-personality the user picks, and coaching feedback is a written sentence rather
-than a quote of what you actually said with a stronger alternative.
+Every P0 feature is built. The gaps are product depth and release: difficulty
+is a label on each scenario rather than a personality the user picks, coaching
+feedback is a written sentence rather than a quote of what you actually said
+with a stronger alternative, and the app still ships the stock Flutter icon.
 
 Subscriptions are built and tested but have never completed a sandbox
 purchase, which needs App Store Connect and Play Console configuration —
@@ -58,7 +60,8 @@ order of work.
 
 - `lib/data`: curated branching scenario content
 - `lib/models`: scenario, response, summary, and history-record models
-- `lib/screens`: home, briefing, simulation, coaching report, and progress
+- `lib/screens`: onboarding, home, briefing, simulation, coaching report,
+  progress, and paywall
 - `lib/services`: remote and offline coaching, speech in and out, the local
   practice history and preferences, subscriptions, and analytics
 - `lib/theme`: visual tokens and Material theme

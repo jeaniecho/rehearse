@@ -19,8 +19,14 @@ void main() {
     addTearDown(history.dispose);
     final subscription = Subscription(store: InMemorySettingsStore());
     addTearDown(subscription.dispose);
+    final settings = AppSettings(store: seenOnboarding());
+    addTearDown(settings.dispose);
     await tester.pumpWidget(
-      RehearseApp(history: history, subscription: subscription),
+      RehearseApp(
+        history: history,
+        subscription: subscription,
+        settings: settings,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -232,6 +238,11 @@ void main() {
     expect(tester.getBottomLeft(panel).dy, 844);
   });
 }
+
+/// A settings store for a returning manager, so tests start on the home
+/// screen rather than the intro.
+InMemorySettingsStore seenOnboarding() =>
+    InMemorySettingsStore({'rehearse.onboarding_completed': true});
 
 class FakeSpeechInputService implements SpeechInputService {
   FakeSpeechInputService({this.available = true});
