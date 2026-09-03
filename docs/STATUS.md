@@ -4,9 +4,9 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-03, after splitting the coach.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (207 passing),
-> `cd server && npm test` (10 passing), `flutter build web --release` and
+> **Last audited:** 2026-09-03, after difficulty selection.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (217 passing),
+> `cd server && npm test` (14 passing), `flutter build web --release` and
 > `flutter build apk --debug` (both succeed).
 
 ---
@@ -25,14 +25,14 @@ needs App Store Connect and Play Console configuration. See
 transcript content" rule enforced by the type system rather than by
 discipline. See [`ANALYTICS.md`](ANALYTICS.md).
 
-**One PRD §34 acceptance criterion remains unmet**: *user can select
-difficulty*. The other two closed with the coach rework — the rubric is now
-clarity, empathy, directness and confidence, and feedback quotes the manager's
-own words with stronger wording to try instead.
+**Every PRD §34 product-loop acceptance criterion is now met.** The coach
+rework closed the last three: four scored dimensions, feedback that quotes the
+manager's own words with stronger wording to try, and a difficulty the manager
+picks that reaches the simulation prompt.
 
-Nothing else is a missing feature. Beyond difficulty, what is left is
-verification against live services — no sandbox purchase, no real analytics
-event — and the release checklist.
+What is left is not features. It is **verification against live services** —
+no sandbox purchase, no real analytics event, and no session yet run against a
+real model — and the **release checklist**.
 
 ---
 
@@ -86,12 +86,15 @@ event — and the release checklist.
   the instant it is sent (PRD §28).
 - **"Retry feedback"** when the evaluation call fails, without replaying the
   conversation (PRD §26).
+- **Difficulty**: Calm / Defensive / Very defensive, chosen before a free-form
+  rehearsal and remembered. Each level is a different set of behavioural
+  instructions in the simulation prompt, asserted distinct by a server test.
+  Guided mode does not offer it, because authored replies cannot vary.
 
 ### Partially complete
 
 | Item | What exists | What the PRD wants |
 |---|---|---|
-| **Difficulty** | `ScenarioDifficulty` is a fixed property of each scenario, rendered as a pill on the briefing | A **user choice before the session** (Calm / Defensive / Very Defensive) that materially changes wording, resistance, and escalation. PRD §7.2: "This must not be cosmetic." |
 | **Conversation length** | fixed 3 turns | 4–7 manager turns, with the model able to declare resolved or stalled |
 | **Retry** | restarts the scenario from turn 1; the report names the weak turn but does not scroll to it | highlight the weak moment in a transcript, then retry (P1, PRD §12) |
 | **Scenario coverage** | 7 of the 8 seeded categories | delegation is missing; boundary and saying-no are collapsed into one scenario (see §4) |
@@ -102,8 +105,8 @@ event — and the release checklist.
 
 Everything below is **P0 in the PRD** unless marked otherwise.
 
-- Three PRD §16 events cannot fire yet because the feature does not exist:
-  `difficulty_selected`, `reminder_created`, `notification_opened`.
+- Two PRD §16 events cannot fire yet because the feature does not exist:
+  `reminder_created`, `notification_opened`.
 - **Session outcome** (success / partial / unresolved / escalated).
 - **Simulation state** (trust, tension, clarity, goal progress).
 - **Employee background** field — the prompt has name and role only.
@@ -115,7 +118,7 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 
 ### Broken
 
-Nothing. Analysis is clean, all 207 Flutter tests and 10 server tests pass,
+Nothing. Analysis is clean, all 217 Flutter tests and 14 server tests pass,
 and both the web and Android builds succeed.
 
 The two known **defects** are cosmetic but real, and both are documented in
@@ -128,17 +131,18 @@ The two known **defects** are cosmetic but real, and both are documented in
 | Milestone | State |
 |---|---|
 | **M0** Audit existing repo | ✅ this document |
-| **M1** Local vertical slice | 🟡 complete except difficulty selection |
-| **M2** Real AI simulation | 🟡 separate in-character prompt; no personality input yet |
+| **M1** Local vertical slice | 🟢 complete |
+| **M2** Real AI simulation | 🟢 separate in-character prompt driven by a chosen personality |
 | **M3** Evaluation + retry | 🟢 four scores, quoted critique with suggested wording, retry |
 | **M4** Monetization + analytics | 🟡 both built and tested; neither verified against a live service |
 | **M5** Polish + reliability | 🟢 ahead of schedule — this is the strongest area |
 | **M6** Release + submission | 🟡 bundle id, version, icon, and splash done; privacy policy, metadata, signing, and crash reporting not started |
 | **M7–M9** Launch, growth, submission package | ❌ not started |
 
-M2 is where the last open acceptance criterion sits. Beyond it the risk is
-that none of M4 has been observed against a live service, and that M6 is
-mostly untouched.
+The product loop is done. The remaining risk is entirely that **none of the
+remote path has been observed working** — no sandbox purchase, no analytics
+event, no model-generated reply or evaluation — plus M6 being mostly
+untouched.
 
 ---
 
@@ -192,17 +196,13 @@ touches the server schema, `PracticeResponse`, `PracticeSummary`, the stored
 the progress screen. Worth doing before there is stored user data to migrate,
 not after.
 
-**Onboarding does not use the PRD's copy verbatim.** The three headlines are
-PRD §18 word for word. The supporting lines are not: the PRD's promise
-"different levels of resistance and defensiveness" (difficulty is not
-selectable) and feedback on "clarity, empathy, directness, and confidence"
-(at the time the report scored neither). The rubric has since caught up and
-the copy now names all four. An intro that
-oversells in the first thirty seconds is worse than no intro, so each line
-describes what the next four minutes actually deliver. `test/onboarding_test.dart`
-has an `honesty` group asserting the screens never name a dimension the report
-does not have. The dimension half is done; move the resistance line
-back toward the PRD once difficulty selection lands.
+**Onboarding copy tracked the product rather than the spec, and has now
+caught up with both.** Its headlines were always PRD §18 verbatim, but the
+supporting lines deliberately did not promise selectable resistance or a
+four-dimension score while neither existed. Both exist now, and the copy says
+so. `test/onboarding_test.dart` keeps an `honesty` group that asserts the
+promises and the rubric move together **in both directions** — naming a
+dimension the report lacks oversells, omitting one it has undersells.
 
 **The rubric now matches the PRD, and old records were migrated rather than
 discarded.** `courage` became `directness` — which is what the server schema
@@ -211,6 +211,12 @@ choices as a genuinely separate axis (33% of them score it differently from
 directness; a test fails below 25%). Records written before the change keep
 their directness and carry a null confidence, so averages are computed from
 what was actually measured instead of a fabricated neutral.
+
+**A scenario has *stakes*; a session has a *difficulty*.** They were both
+called difficulty, which made the picker unreadable next to the briefing pill.
+`Scenario.stakes` is warm-up / challenging / high-stakes and is authored;
+`SimulationDifficulty` is calm / defensive / very-defensive and is chosen.
+Analytics sends them as `scenario_stakes` and `difficulty` respectively.
 
 **Free-form mode no longer coaches mid-conversation.** PRD §7.3 says the
 simulation must not explain itself while it runs, so the per-turn coach note
@@ -247,8 +253,8 @@ palette-indirection change across the widget layer, not a one-line addition.
 
 Ordered by what moves the submission, not by what is most interesting.
 
-0. **Nothing on this list is a missing feature any more.** Items 1–2 are
-   verification against live services; the rest is product depth and release.
+**Nothing on this list is a missing P0 feature.** Items 1–3 are verification
+against live services; the rest is release and depth.
 
 1. **Finish RevenueCat in the dashboards and complete a sandbox purchase.**
    Follow [`REVENUECAT.md`](REVENUECAT.md) §2–§6. The code is done; this is
@@ -258,13 +264,17 @@ Ordered by what moves the submission, not by what is most interesting.
    One `--dart-define` ([`ANALYTICS.md`](ANALYTICS.md) §Setup). Do it at the
    same time as the sandbox purchase so the monetization funnel is verified
    in one pass.
-3. **Difficulty selection.** The last unmet acceptance criterion. The
-   simulation prompt is now a separate call with nothing else competing for
-   its tokens, so a personality has somewhere to act.
+3. **Run a real conversation against a real model.** Start the server with an
+   `OPENAI_API_KEY` and play all three difficulty levels. Everything about the
+   simulation and the quoted critique is verified against fakes; none of it
+   has met an actual model. This is where prompt quality gets judged, and
+   ROADMAP §5's test matrix is the checklist.
 4. **Release checklist** — privacy policy, store metadata, screenshots,
    signing, crash reporting. This is all that is left of M6, and it gates
    submission.
 5. Contrast fixes and dark theme, if there is time before submission.
+6. Product depth the PRD lists but does not require for P0: a delegation
+   scenario, 4–7 turn conversations, session outcomes, and simulation state.
 
 ---
 
@@ -283,7 +293,7 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 207 Flutter + 10 server
+Tests            : 217 Flutter + 14 server
 TODO/FIXME       : none
 ```
 

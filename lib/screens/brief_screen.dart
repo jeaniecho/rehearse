@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/practice_response.dart';
 import '../models/scenario.dart';
 import '../services/analytics.dart';
+import '../widgets/app_settings_scope.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
@@ -24,6 +25,19 @@ class _BriefScreenState extends State<BriefScreen> {
 
   Scenario get scenario => widget.scenario;
   bool _viewReported = false;
+
+  /// Falls back to the PRD's realistic middle when nothing is remembered.
+  SimulationDifficulty get _difficulty =>
+      AppSettingsScope.maybeOf(context)?.difficulty ??
+      SimulationDifficulty.defensive;
+
+  void _setDifficulty(SimulationDifficulty value) {
+    if (value == _difficulty) return;
+    AppSettingsScope.maybeOf(context)?.setDifficulty(value);
+    AnalyticsScope.maybeOf(
+      context,
+    )?.difficultySelected(scenario, difficulty: value);
+  }
 
   @override
   void didChangeDependencies() {
@@ -49,10 +63,14 @@ class _BriefScreenState extends State<BriefScreen> {
     }
 
     if (!context.mounted) return;
-    analytics?.scenarioStarted(scenario, mode: _mode);
+    analytics?.scenarioStarted(scenario, mode: _mode, difficulty: _difficulty);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => PracticeScreen(scenario: scenario, mode: _mode),
+        builder: (_) => PracticeScreen(
+          scenario: scenario,
+          mode: _mode,
+          difficulty: _difficulty,
+        ),
       ),
     );
   }
@@ -94,7 +112,7 @@ class _BriefScreenState extends State<BriefScreen> {
                 ),
                 MetaPill(
                   icon: Icons.signal_cellular_alt_rounded,
-                  label: scenario.difficulty.label,
+                  label: scenario.stakes.label,
                 ),
               ],
             ),
@@ -186,6 +204,40 @@ class _BriefScreenState extends State<BriefScreen> {
               selected: _mode == PracticeMode.guided,
               onTap: () => setState(() => _mode = PracticeMode.guided),
             ),
+            // Only free-form has a model playing the other person, so only
+            // free-form can honour this. Offering it in guided mode would be
+            // exactly the cosmetic control PRD §7.2 warns against.
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              alignment: Alignment.topCenter,
+              child: _mode == PracticeMode.freestyle
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 22),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'How hard should ${scenario.personName.split(' ').first} push back?',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 5),
+                          const Text(
+                            'This changes how they answer, not how you are scored.',
+                            style: TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _DifficultyPicker(
+                            selected: _difficulty,
+                            onChanged: _setDifficulty,
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
             const SizedBox(height: 18),
             Container(
               padding: const EdgeInsets.all(17),
@@ -236,6 +288,86 @@ class _BriefScreenState extends State<BriefScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Three levels as one compact row — the choice matters, but it should not
+/// take as much room as the briefing it sits under.
+class _DifficultyPicker extends StatelessWidget {
+  const _DifficultyPicker({required this.selected, required this.onChanged});
+
+  final SimulationDifficulty selected;
+  final ValueChanged<SimulationDifficulty> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            for (final level in SimulationDifficulty.values) ...[
+              if (level != SimulationDifficulty.values.first)
+                const SizedBox(width: 8),
+              Expanded(
+                child: Semantics(
+                  selected: level == selected,
+                  button: true,
+                  child: Material(
+                    color: level == selected
+                        ? AppColors.forest
+                        : AppColors.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    child: InkWell(
+                      key: Key('difficulty_${level.name}'),
+                      onTap: () => onChanged(level),
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 12,
+                        ),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: level == selected
+                                ? AppColors.forest
+                                : AppColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          level.label,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          style: TextStyle(
+                            color: level == selected
+                                ? Colors.white
+                                : AppColors.ink,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          selected.description,
+          key: const Key('difficulty_description'),
+          style: const TextStyle(
+            color: AppColors.muted,
+            fontSize: 13,
+            height: 1.4,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -37,9 +37,10 @@ Fired today, in funnel order.
 | `app_opened` | app start | — |
 | `onboarding_started` | the intro is shown on first run | — |
 | `onboarding_completed` | the intro is finished or skipped | `pages_seen`, `skipped` |
-| `scenario_viewed` | the briefing is shown | `scenario_id`, `scenario_skill`, `difficulty` |
-| `scenario_started` | start is tapped and the gate passes | `mode` |
-| `simulation_started` | the conversation screen mounts | `is_retry` |
+| `scenario_viewed` | the briefing is shown | `scenario_id`, `scenario_skill`, `scenario_stakes` |
+| `scenario_started` | start is tapped and the gate passes | `mode`, `difficulty` |
+| `difficulty_selected` | the resistance level is changed | `difficulty` |
+| `simulation_started` | the conversation screen mounts | `difficulty`, `is_retry` |
 | `retry_started` | as above, when `is_retry` | |
 | `simulation_message_sent` | one manager turn is committed | `turn_index`, `response_length`, `coach` |
 | `simulation_completed` | the last turn is answered | `turn_count`, `simulation_duration_seconds`, the four dimension scores, `score_band` |
@@ -65,7 +66,7 @@ through each call.
 
 These are in PRD §16 but the feature does not exist:
 
-`difficulty_selected`, `reminder_created`, `notification_opened`
+`reminder_created`, `notification_opened`
 
 Add the event in the same commit as the feature, not before. An event that
 never fires is worse than a missing one — it looks like a measured zero.
@@ -78,6 +79,10 @@ never fires is worse than a missing one — it looks like a measured zero.
   it actually is. Rename it when outcomes are real.
 - **`scenario_skill`, not `scenario_category`.** Scenarios carry a skill, not
   a category.
+- **`scenario_stakes` and `difficulty` are separate.** The first is how heavy
+  the scenario is, authored. The second is how hard the manager asked the
+  other person to push, chosen. Collapsing them would make "hard scenarios
+  score worse" indistinguishable from "hard settings score worse".
 - **`evaluation_requested` is folded into `simulation_message_sent`**, which
   already records the coach that scored the turn.
 

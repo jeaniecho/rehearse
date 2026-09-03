@@ -169,7 +169,25 @@ used to be a generic sentence.
 
 ### During the conversation
 
-`respond()` returns only what the other person says. **Nothing scores a turn
+`respond()` carries the chosen `SimulationDifficulty` and returns only what
+the other person says.
+
+> **Stakes and difficulty are different things.** `Scenario.stakes`
+> (warm-up / challenging / high-stakes) is how heavy the situation is, and is
+> authored. `SimulationDifficulty` (calm / defensive / very-defensive) is how
+> hard the other person pushes, and is chosen per session. A high-stakes
+> conversation can be held with someone calm. They used to share a name, which
+> made the picker unreadable next to the briefing pill.
+
+The level is the only thing that changes between simulation prompts, so
+`TEMPERAMENTS` in `server/coach.mjs` has to carry the whole difference: each
+entry names how readily the person accepts a point, how hard they challenge,
+and how far they escalate. A server test asserts the three are distinct and
+that resistance never becomes licence to be unpleasant.
+
+Difficulty deliberately does **not** reach the evaluation prompt. Scoring
+judges the manager, not how hard the setting was; mixing them would make an
+easy session score better for no reason. **Nothing scores a turn
 while the conversation is running** (PRD §7.3): the consequence of a weak
 message is the reply it earns, not a note about it. Guided mode is the
 exception, and only because its feedback is authored rather than generated —
@@ -204,6 +222,11 @@ thing:
 | Guided | authored per-turn deltas | the choice you picked | the strongest choice you did not |
 | Free-form, AI | the evaluation call | validated model output | model output |
 | Free-form, offline | keyword and similarity heuristics | what you typed | **the authored best choice for that turn** |
+
+The offline coach cannot vary mid-conversation resistance, because those lines
+are authored — but it does vary how the conversation *lands*, since a very
+defensive person does not sign off agreeing. Guided mode offers no difficulty
+control at all rather than a cosmetic one.
 
 That last row matters: with no key and no network the report still quotes you
 and still offers real alternative wording, because the authored content

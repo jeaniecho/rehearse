@@ -26,6 +26,8 @@ Built for the RevenueCat Shipaton 2026, leadership and career coaching.
   upward candor, hard news, standards, and hearing a resignation.
 - A briefing before each conversation with context, goal, and a common trap.
 - Guided choices or typed or spoken free-form answers for every scenario.
+- A resistance level you pick before each rehearsal, from calm to very
+  defensive, that changes how the other person answers.
 - Spoken replies, so the other person's lines are heard rather than read.
 - AI-personalized scoring and in-character replies through a secure server.
 - Automatic offline coaching when the server is not configured or unavailable.
@@ -44,10 +46,9 @@ Built for the RevenueCat Shipaton 2026, leadership and career coaching.
 
 ## What does not exist yet
 
-Every P0 feature is built. The gaps are product depth and release: difficulty
-is a label on each scenario rather than a personality the user picks, coaching
-feedback is a written sentence rather than a quote of what you actually said
-with a stronger alternative.
+Every P0 feature is built, and every PRD acceptance criterion for the product
+loop is met. What is unproven is the remote path: no sandbox purchase, no real
+analytics event, and no conversation yet run against an actual model.
 
 For release, what remains is a privacy policy, store metadata and screenshots,
 signing, and crash reporting.

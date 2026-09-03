@@ -29,6 +29,7 @@ abstract interface class CoachService {
   /// Continues the conversation in character.
   Future<EmployeeReply> respond({
     required Scenario scenario,
+    required SimulationDifficulty difficulty,
     required int turnIndex,
     required List<PracticeResponse> history,
     required String managerResponse,
@@ -70,6 +71,7 @@ class RemoteCoachService implements CoachService {
   @override
   Future<EmployeeReply> respond({
     required Scenario scenario,
+    required SimulationDifficulty difficulty,
     required int turnIndex,
     required List<PracticeResponse> history,
     required String managerResponse,
@@ -77,6 +79,7 @@ class RemoteCoachService implements CoachService {
     final decoded = await _post('/simulation/respond', {
       'sessionId': _sessionId,
       'scenario': _scenarioJson(scenario),
+      'difficulty': difficulty.name,
       'turn': {
         'index': turnIndex,
         'isLast': turnIndex == scenario.turns.length - 1,
@@ -224,6 +227,7 @@ class ResilientCoachService implements CoachService {
   @override
   Future<EmployeeReply> respond({
     required Scenario scenario,
+    required SimulationDifficulty difficulty,
     required int turnIndex,
     required List<PracticeResponse> history,
     required String managerResponse,
@@ -231,6 +235,7 @@ class ResilientCoachService implements CoachService {
     try {
       return await primary.respond(
         scenario: scenario,
+        difficulty: difficulty,
         turnIndex: turnIndex,
         history: history,
         managerResponse: managerResponse,
@@ -238,6 +243,7 @@ class ResilientCoachService implements CoachService {
     } on Object {
       return fallback.respond(
         scenario: scenario,
+        difficulty: difficulty,
         turnIndex: turnIndex,
         history: history,
         managerResponse: managerResponse,
@@ -293,18 +299,32 @@ class OfflineCoachService implements CoachService {
   @override
   Future<EmployeeReply> respond({
     required Scenario scenario,
+    required SimulationDifficulty difficulty,
     required int turnIndex,
     required List<PracticeResponse> history,
     required String managerResponse,
   }) async {
     final next = turnIndex + 1;
     return EmployeeReply(
+      // Mid-conversation lines are authored, so the offline coach cannot
+      // vary how hard the pushback is. How the conversation *lands* it can:
+      // a very defensive person does not close by agreeing.
       text: next < scenario.turns.length
           ? scenario.turns[next].employeeLine
-          : 'Okay. I understand what we’re agreeing to.',
+          : _closingFor(difficulty),
       source: EvaluationSource.offline,
     );
   }
+
+  static String _closingFor(SimulationDifficulty difficulty) =>
+      switch (difficulty) {
+        SimulationDifficulty.calm =>
+          'Okay. I understand what we’re agreeing to.',
+        SimulationDifficulty.defensive =>
+          'Fine. I hear you, though I still think some of this wasn’t on me.',
+        SimulationDifficulty.veryDefensive =>
+          'Sure. I’ll do what you’re asking. I don’t agree with it.',
+      };
 
   @override
   Future<PracticeSummary> evaluate({

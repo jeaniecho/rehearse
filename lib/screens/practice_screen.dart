@@ -23,12 +23,17 @@ class PracticeScreen extends StatefulWidget {
     this.coachService,
     this.speechInputService,
     this.speechOutputService,
+    this.difficulty = SimulationDifficulty.defensive,
     this.isRetry = false,
     super.key,
   });
 
   final Scenario scenario;
   final PracticeMode mode;
+
+  /// How hard the other person pushes back. Reaches the simulation prompt;
+  /// guided mode ignores it, because its replies are authored.
+  final SimulationDifficulty difficulty;
 
   /// Set when this rehearsal was started from "Try again", so the retry
   /// funnel can be measured separately.
@@ -107,6 +112,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     _analytics?.simulationStarted(
       widget.scenario,
       mode: widget.mode,
+      difficulty: widget.difficulty,
       isRetry: widget.isRetry,
     );
   }
@@ -199,6 +205,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     try {
       reply = await _coachService.respond(
         scenario: widget.scenario,
+        difficulty: widget.difficulty,
         turnIndex: _turnIndex,
         history: List.unmodifiable(_responses),
         managerResponse: text,

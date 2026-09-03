@@ -18,6 +18,7 @@ class ResultsScreen extends StatefulWidget {
     required this.scenario,
     required this.summary,
     this.mode = PracticeMode.guided,
+    this.difficulty = SimulationDifficulty.defensive,
     this.isRetry = false,
     super.key,
   });
@@ -28,6 +29,7 @@ class ResultsScreen extends StatefulWidget {
   /// what is stored cannot disagree.
   final PracticeSummary summary;
   final PracticeMode mode;
+  final SimulationDifficulty difficulty;
 
   /// Carried through from the rehearsal so the retry funnel stays intact
   /// across a "Try again".
@@ -85,6 +87,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         builder: (_) => PracticeScreen(
           scenario: widget.scenario,
           mode: widget.mode,
+          difficulty: widget.difficulty,
           isRetry: true,
         ),
       ),

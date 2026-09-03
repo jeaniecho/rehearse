@@ -62,22 +62,38 @@ class Analytics extends ChangeNotifier {
   void scenarioViewed(Scenario scenario) =>
       _track('scenario_viewed', _scenarioProperties(scenario));
 
-  void scenarioStarted(Scenario scenario, {required PracticeMode mode}) =>
-      _track('scenario_started', {
-        ..._scenarioProperties(scenario),
-        'mode': mode.name,
-      });
+  void scenarioStarted(
+    Scenario scenario, {
+    required PracticeMode mode,
+    required SimulationDifficulty difficulty,
+  }) => _track('scenario_started', {
+    ..._scenarioProperties(scenario),
+    'mode': mode.name,
+    'difficulty': difficulty.name,
+  });
+
+  /// Fires when the level is changed, not when a session inherits the
+  /// remembered one — the question is which levels people reach for.
+  void difficultySelected(
+    Scenario scenario, {
+    required SimulationDifficulty difficulty,
+  }) => _track('difficulty_selected', {
+    ..._scenarioProperties(scenario),
+    'difficulty': difficulty.name,
+  });
 
   // Simulation funnel.
 
   void simulationStarted(
     Scenario scenario, {
     required PracticeMode mode,
+    required SimulationDifficulty difficulty,
     required bool isRetry,
   }) {
     _track('simulation_started', {
       ..._scenarioProperties(scenario),
       'mode': mode.name,
+      'difficulty': difficulty.name,
       'is_retry': isRetry,
     });
     if (isRetry) _track('retry_started', _scenarioProperties(scenario));
@@ -190,7 +206,9 @@ class Analytics extends ChangeNotifier {
   static Map<String, Object> _scenarioProperties(Scenario scenario) => {
     'scenario_id': scenario.id,
     'scenario_skill': scenario.skill,
-    'difficulty': scenario.difficulty.name,
+    // The scenario's own weight. The level the manager picked travels
+    // separately as `difficulty`, because they are different questions.
+    'scenario_stakes': scenario.stakes.name,
   };
 
   static Map<String, Object> _summaryProperties(PracticeSummary summary) => {

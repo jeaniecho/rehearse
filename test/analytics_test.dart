@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rehearse/app.dart';
 import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
+import 'package:rehearse/models/scenario.dart';
 import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/models/subscription.dart';
 import 'package:rehearse/screens/paywall_screen.dart';
@@ -57,7 +58,9 @@ void main() {
       expect(sink.last.properties, {
         'scenario_id': 'missed-deadlines',
         'scenario_skill': 'Clear feedback',
-        'difficulty': 'challenging',
+        // The scenario's own weight. The level the manager picked is a
+        // separate property, because they answer different questions.
+        'scenario_stakes': 'challenging',
       });
     });
 
@@ -65,6 +68,7 @@ void main() {
       analytics.simulationStarted(
         scenario,
         mode: PracticeMode.guided,
+        difficulty: SimulationDifficulty.veryDefensive,
         isRetry: true,
       );
 
@@ -76,6 +80,7 @@ void main() {
       analytics.simulationStarted(
         scenario,
         mode: PracticeMode.guided,
+        difficulty: SimulationDifficulty.calm,
         isRetry: false,
       );
 
@@ -542,7 +547,11 @@ void main() {
       addTearDown(analytics.dispose);
 
       analytics.scenarioViewed(scenario);
-      analytics.scenarioStarted(scenario, mode: PracticeMode.freestyle);
+      analytics.scenarioStarted(
+        scenario,
+        mode: PracticeMode.freestyle,
+        difficulty: SimulationDifficulty.defensive,
+      );
       analytics.simulationMessageSent(
         scenario,
         mode: PracticeMode.freestyle,
@@ -557,6 +566,7 @@ void main() {
         'challenging',
         'freestyle',
         'offline',
+        'defensive',
       };
       for (final event in sink.events) {
         for (final value in event.properties.values) {

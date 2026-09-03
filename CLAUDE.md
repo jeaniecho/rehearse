@@ -22,8 +22,8 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 207 tests
-cd server && npm test           # 10 tests
+flutter test                    # 217 tests
+cd server && npm test           # 14 tests
 ```
 
 ```bash
@@ -107,6 +107,8 @@ From `ROADMAP.md` §0, and they hold:
 - **Nothing coaches mid-conversation in free-form mode** (PRD §7.3). The
   employee's reply is the consequence. Guided mode is the exception because
   its feedback is authored.
+- **A scenario has `stakes`; a session has a `SimulationDifficulty`.** Do not
+  merge them — see `docs/ARCHITECTURE.md`, The coach.
 - **Never show a quote the manager did not say.** Both the server and
   `CoachingNote.isGroundedIn` drop ungrounded notes; do not weaken either.
 - **Scoring lives in `PracticeSummary`**, so the report and the stored record

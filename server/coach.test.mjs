@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildEvaluateRequest,
+  temperamentFor,
   buildRespondRequest,
   evaluateWithOpenAI,
   extractOutputText,
@@ -24,6 +25,7 @@ const managerSaid =
 const respondPayload = {
   sessionId: "local-test-session",
   scenario,
+  difficulty: "defensive",
   turn: { index: 0, isLast: false },
   history: [],
   managerResponse: managerSaid,
@@ -66,6 +68,46 @@ test("the simulation prompt stays in character and never coaches", () => {
   assert.match(instructions, /untrusted data/);
   // The employee has to know who they are.
   assert.match(instructions, /Jordan Lee/);
+});
+
+test("each difficulty describes materially different behaviour", () => {
+  const levels = ["calm", "defensive", "veryDefensive"].map(temperamentFor);
+
+  // PRD §7.2: "This must not be cosmetic."
+  assert.equal(new Set(levels).size, 3);
+  assert.match(levels[0], /listens?|resolved/i);
+  assert.match(levels[1], /push back/i);
+  assert.match(levels[2], /concede almost nothing/i);
+  // Resistance is not licence to be unpleasant.
+  assert.match(levels[2], /Do not insult/i);
+});
+
+test("an unknown difficulty falls back rather than dropping the trait", () => {
+  assert.equal(temperamentFor(undefined), temperamentFor("defensive"));
+  assert.equal(temperamentFor("nonsense"), temperamentFor("defensive"));
+});
+
+test("the chosen difficulty reaches the simulation prompt", () => {
+  const veryDefensive = buildRespondRequest({
+    ...respondPayload,
+    difficulty: "veryDefensive",
+  }).input[0].content[0].text;
+  const calm = buildRespondRequest({
+    ...respondPayload,
+    difficulty: "calm",
+  }).input[0].content[0].text;
+
+  assert.notEqual(veryDefensive, calm);
+  assert.ok(veryDefensive.includes(temperamentFor("veryDefensive")));
+  assert.ok(calm.includes(temperamentFor("calm")));
+});
+
+test("difficulty does not leak into the evaluation prompt", () => {
+  // Scoring judges the manager, not how hard the setting was. Mixing them
+  // would make an easy session score better for no reason.
+  const instructions = buildEvaluateRequest(evaluatePayload).input[0]
+    .content[0].text;
+  assert.ok(!instructions.includes(temperamentFor("veryDefensive")));
 });
 
 test("the evaluation prompt demands exact quotes and is a separate task", () => {

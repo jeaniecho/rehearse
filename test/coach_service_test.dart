@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
+import 'package:rehearse/models/scenario.dart';
 import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/services/coach_service.dart';
 
@@ -62,6 +63,7 @@ void main() {
               client: client,
             ).respond(
               scenario: scenario,
+              difficulty: SimulationDifficulty.defensive,
               turnIndex: 0,
               history: const [],
               managerResponse: _said,
@@ -86,6 +88,7 @@ void main() {
       expect(
         () => service.respond(
           scenario: scenario,
+          difficulty: SimulationDifficulty.defensive,
           turnIndex: 0,
           history: const [],
           managerResponse: _said,
@@ -105,6 +108,7 @@ void main() {
 
       final reply = await service.respond(
         scenario: scenario,
+        difficulty: SimulationDifficulty.defensive,
         turnIndex: 0,
         history: const [],
         managerResponse: _said,

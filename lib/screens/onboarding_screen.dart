@@ -9,11 +9,11 @@ import '../widgets/score_display.dart';
 
 /// Three screens, then out of the way.
 ///
-/// The headlines are PRD §18 verbatim. The supporting lines are not: the
-/// PRD's versions promise selectable resistance levels and a "confidence"
-/// score, neither of which the app has. Onboarding that oversells is worse
-/// than none, so each line here describes something the next four minutes
-/// will actually deliver. Revisit when difficulty selection lands.
+/// The headlines are PRD §18 verbatim, and the supporting lines now say the
+/// same things its versions do — selectable resistance and a four-dimension
+/// score both exist. They are still worded for this app rather than copied,
+/// and `test/onboarding_test.dart` asserts the promises and the product move
+/// together in both directions.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -37,9 +37,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _Page(
       headline: 'They won’t always agree with you.',
       body:
-          'Expect pushback. Every reply follows from your last one, so a '
-          'vague message makes the next turn harder, exactly like it does '
-          'in the room.',
+          'Choose how hard they push back, then live with it. Every reply '
+          'follows from your last one, so a vague message makes the next '
+          'turn harder, exactly like it does in the room.',
       art: _PushbackArt(),
     ),
     _Page(

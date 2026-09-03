@@ -197,13 +197,15 @@ void main() {
       }
     });
 
-    testWidgets('does not promise choosing a difficulty', (tester) async {
+    testWidgets('promises the resistance choice, now that there is one', (
+      tester,
+    ) async {
       await pumpApp(tester);
       await tester.tap(find.byKey(const Key('onboarding_next')));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('levels of resistance'), findsNothing);
       expect(find.text('They won’t always agree with you.'), findsOneWidget);
+      expect(find.textContaining('how hard they push back'), findsOneWidget);
     });
   });
 }
@@ -251,4 +253,10 @@ class _SlowStore implements SettingsStore {
 
   @override
   Future<void> writeInt(String key, int value) async {}
+
+  @override
+  Future<String?> readString(String key) async => null;
+
+  @override
+  Future<void> writeString(String key, String value) async {}
 }
