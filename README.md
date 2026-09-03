@@ -6,7 +6,8 @@ specific feedback on clarity, empathy, and courage.
 
 ## Contest MVP
 
-- Three playable leadership scenarios: clear feedback, boundaries, and repair.
+- Seven playable leadership scenarios: clear feedback, boundaries, repair,
+  upward candor, hard news, standards, and hearing a resignation.
 - A briefing before each conversation with context, goal, and a common trap.
 - Guided choices or typed or spoken free-form answers for every scenario.
 - Spoken replies, so the other person's lines are heard rather than read.

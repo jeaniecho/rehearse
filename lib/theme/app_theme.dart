@@ -10,6 +10,9 @@ abstract final class AppColors {
   static const coral = Color(0xFFE86D4A);
   static const peach = Color(0xFFF8D9C8);
   static const lavender = Color(0xFFE7E0F2);
+  static const sky = Color(0xFFD7E5EF);
+  static const butter = Color(0xFFF4E5BE);
+  static const rose = Color(0xFFF2DBE1);
   static const border = Color(0xFFE4DFD3);
 }
 
