@@ -1,10 +1,24 @@
 # Rehearse
 
+> Practice the difficult conversation before it matters.
+
 Rehearse is a private practice room for difficult workplace conversations. It
 helps new managers build confidence through short, branching simulations and
 specific feedback on clarity, empathy, and courage.
 
-## Contest MVP
+Built for the RevenueCat Shipaton 2026, leadership and career coaching.
+
+## Documentation
+
+| Document | What it is |
+|---|---|
+| [`docs/STATUS.md`](docs/STATUS.md) | **Start here.** What is built, what is missing, what to do next. |
+| [`docs/PRD.md`](docs/PRD.md) | Product spec: requirements, priorities, acceptance criteria. |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Execution plan and milestones. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the code is put together. |
+| [`CLAUDE.md`](CLAUDE.md) | Conventions and invariants for anyone, human or agent, changing this repo. |
+
+## What works today
 
 - Seven playable leadership scenarios: clear feedback, boundaries, repair,
   upward candor, hard news, standards, and hearing a resignation.
@@ -16,9 +30,21 @@ specific feedback on clarity, empathy, and courage.
 - A final conversation score and skill-by-skill coaching report.
 - On-device progress: a practice streak, weekly count, average score, and a
   full session history that never leaves the phone.
-- A responsive Material 3 experience for iOS, Android, and web.
+- A responsive Material 3 experience for iOS, Android, and web, verified up to
+  1.6x system text size.
 - Fully local scenario logic, so the demo is fast and reliable without an API
   key or network connection.
+
+## What does not exist yet
+
+The practice loop is complete. The commercial layer around it is not:
+**no RevenueCat, no analytics, no onboarding, and no free-session limit.**
+Difficulty is a label on each scenario rather than a personality the user
+picks, and coaching feedback is a written sentence rather than a quote of what
+you actually said with a stronger alternative.
+
+[`docs/STATUS.md`](docs/STATUS.md) has the full gap list and the recommended
+order of work.
 
 ## Project structure
 
@@ -85,5 +111,4 @@ flutter test
 cd server && npm test
 ```
 
-The next product step is a dark theme and a contrast pass on the coaching
-cards.
+See [`docs/STATUS.md`](docs/STATUS.md) §7 for what to build next.
