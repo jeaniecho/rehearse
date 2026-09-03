@@ -12,7 +12,8 @@ PracticeRecord recordAt(
   int score = 70,
   int clarity = 70,
   int empathy = 70,
-  int courage = 70,
+  int directness = 70,
+  int confidence = 70,
 }) {
   return PracticeRecord(
     scenarioId: scenarioId,
@@ -21,7 +22,8 @@ PracticeRecord recordAt(
     score: score,
     clarity: clarity,
     empathy: empathy,
-    courage: courage,
+    directness: directness,
+    confidence: confidence,
     usedAi: false,
   );
 }
@@ -30,7 +32,8 @@ PracticeResponse responseWith({
   required int scoreDelta,
   int clarity = 0,
   int empathy = 0,
-  int courage = 0,
+  int directness = 0,
+  int confidence = 0,
   EvaluationSource source = EvaluationSource.guided,
 }) {
   return PracticeResponse(
@@ -39,7 +42,8 @@ PracticeResponse responseWith({
     feedback: 'feedback',
     clarity: clarity,
     empathy: empathy,
-    courage: courage,
+    directness: directness,
+    confidence: confidence,
     source: source,
   );
 }
@@ -51,21 +55,39 @@ void main() {
   group('PracticeSummary', () {
     test('starts neutral and moves with each turn', () {
       final summary = PracticeSummary.fromResponses([
-        responseWith(scoreDelta: 12, clarity: 2, empathy: 1, courage: 2),
-        responseWith(scoreDelta: 10, clarity: 1, empathy: 2, courage: 1),
+        responseWith(
+          scoreDelta: 12,
+          clarity: 2,
+          empathy: 1,
+          directness: 2,
+          confidence: 2,
+        ),
+        responseWith(
+          scoreDelta: 10,
+          clarity: 1,
+          empathy: 2,
+          directness: 1,
+          confidence: 1,
+        ),
       ]);
 
       expect(summary.score, 72);
       expect(summary.clarity, 74);
       expect(summary.empathy, 74);
-      expect(summary.courage, 74);
+      expect(summary.directness, 74);
       expect(summary.usedAi, isFalse);
     });
 
     test('clamps to the 0-100 range', () {
       final summary = PracticeSummary.fromResponses([
         for (var i = 0; i < 8; i++)
-          responseWith(scoreDelta: -10, clarity: -2, empathy: -2, courage: -2),
+          responseWith(
+            scoreDelta: -10,
+            clarity: -2,
+            empathy: -2,
+            directness: -2,
+            confidence: -2,
+          ),
       ]);
 
       expect(summary.score, 0);
@@ -100,6 +122,36 @@ void main() {
       expect(PracticeRecord.tryFromJson({'score': 70}), isNull);
       expect(PracticeRecord.tryFromJson({'scenarioId': 'x'}), isNull);
       expect(PracticeRecord.tryFromJson('not a map'), isNull);
+    });
+
+    test('reads a record written before the rubric gained a dimension', () {
+      // `courage` was always described as directness, so it maps straight
+      // across. Confidence was genuinely not measured and stays absent
+      // rather than being invented as a neutral 50.
+      final record = PracticeRecord.tryFromJson({
+        'scenarioId': 'missed-deadlines',
+        'completedAt': '2026-08-01T09:00:00.000',
+        'score': 74,
+        'clarity': 66,
+        'empathy': 82,
+        'courage': 58,
+        'usedAi': true,
+      });
+
+      expect(record, isNotNull);
+      expect(record!.directness, 58);
+      expect(record.confidence, isNull);
+      expect(record.toJson().containsKey('confidence'), isFalse);
+    });
+
+    test('a new record round-trips all four dimensions', () {
+      final record = recordAt(DateTime(2026, 9, 1), score: 80);
+      final restored = PracticeRecord.tryFromJson(
+        jsonDecode(jsonEncode(record.toJson())),
+      );
+
+      expect(restored!.directness, record.directness);
+      expect(restored.confidence, record.confidence);
     });
 
     test('falls back to neutral scores for missing fields', () {
@@ -212,6 +264,36 @@ void main() {
       await history.add(recordAt(today.subtract(const Duration(days: 7))));
 
       expect(history.sessionsThisWeek, 2);
+    });
+
+    test('confidence averages only over rehearsals that measured it', () async {
+      final history = PracticeHistory(store: InMemoryHistoryStore(), now: now);
+      addTearDown(history.dispose);
+
+      await history.add(
+        PracticeRecord(
+          scenarioId: 'missed-deadlines',
+          completedAt: today,
+          mode: PracticeMode.guided,
+          score: 70,
+          clarity: 70,
+          empathy: 70,
+          directness: 70,
+          usedAi: false,
+        ),
+      );
+      expect(history.averageConfidence, isNull);
+      expect(
+        history.averageSkills.containsKey(PracticeSkill.confidence),
+        isFalse,
+      );
+
+      await history.add(
+        recordAt(today.subtract(const Duration(days: 1)), confidence: 40),
+      );
+
+      expect(history.averageConfidence, 40);
+      expect(history.averageSkills[PracticeSkill.confidence], 40);
     });
 
     test('averages scores and skills across every rehearsal', () async {

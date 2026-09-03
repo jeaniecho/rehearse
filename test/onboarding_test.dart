@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rehearse/app.dart';
+import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/screens/home_screen.dart';
 import 'package:rehearse/screens/onboarding_screen.dart';
 import 'package:rehearse/services/analytics.dart';
@@ -168,7 +169,7 @@ void main() {
   });
 
   group('honesty', () {
-    testWidgets('promises only the three skills the app actually scores', (
+    testWidgets('names every dimension the report actually scores', (
       tester,
     ) async {
       await pumpApp(tester);
@@ -177,13 +178,23 @@ void main() {
       await tester.tap(find.byKey(const Key('onboarding_next')));
       await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('clarity, empathy, and courage'),
-        findsWidgets,
-      );
-      // The PRD's copy names dimensions the report does not have.
-      expect(find.textContaining('confidence'), findsNothing);
-      expect(find.textContaining('directness'), findsNothing);
+      // The promise and the rubric have to move together, in both
+      // directions: naming one the report lacks oversells, and omitting one
+      // it has undersells.
+      final promise = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((text) => text.data ?? '')
+          .join(' ')
+          .toLowerCase();
+
+      for (final skill in PracticeSkill.values) {
+        expect(
+          promise,
+          contains(skill.label.toLowerCase()),
+          reason:
+              'the report scores ${skill.label} but the intro never says so',
+        );
+      }
     });
 
     testWidgets('does not promise choosing a difficulty', (tester) async {

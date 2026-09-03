@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/practice_summary.dart';
 import '../theme/app_theme.dart';
 
 /// The large circular conversation score used on the coaching report.
@@ -161,5 +162,39 @@ class SkillBar extends StatelessWidget {
 abstract final class SkillColors {
   static const clarity = AppColors.coral;
   static const empathy = AppColors.forest;
-  static const courage = Color(0xFF7660A8);
+  static const directness = Color(0xFF7660A8);
+  static const confidence = Color(0xFF2E6E8E);
+
+  static Color of(PracticeSkill skill) => switch (skill) {
+    PracticeSkill.clarity => clarity,
+    PracticeSkill.empathy => empathy,
+    PracticeSkill.directness => directness,
+    PracticeSkill.confidence => confidence,
+  };
+}
+
+/// Every skill in a summary or a history average, drawn in report order.
+class SkillBars extends StatelessWidget {
+  const SkillBars({required this.values, super.key, this.spacing = 16});
+
+  final Map<PracticeSkill, int> values;
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = values.entries.toList();
+
+    return Column(
+      children: [
+        for (var index = 0; index < entries.length; index++) ...[
+          SkillBar(
+            label: entries[index].key.label,
+            value: entries[index].value,
+            color: SkillColors.of(entries[index].key),
+          ),
+          if (index != entries.length - 1) SizedBox(height: spacing),
+        ],
+      ],
+    );
+  }
 }

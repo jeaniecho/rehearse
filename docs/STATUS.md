@@ -5,7 +5,7 @@
 > document a new session should read first.
 >
 > **Last audited:** 2026-09-03, after onboarding.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (191 passing),
+> **Verified by:** `flutter analyze` (clean), `flutter test` (195 passing),
 > `cd server && npm test` (3 passing), `flutter build web --release` and
 > `flutter build apk --debug` (both succeed).
 
@@ -25,14 +25,20 @@ needs App Store Connect and Play Console configuration. See
 transcript content" rule enforced by the type system rather than by
 discipline. See [`ANALYTICS.md`](ANALYTICS.md).
 
-**Every P0 feature is now built.** What is left is not code: no sandbox
-purchase has been completed, no real analytics event has been observed, and
-the release checklist (icon, privacy policy, store metadata) is untouched.
+**Two PRD §34 acceptance criteria remain unmet**, and both trace back to the
+coach: *user can select difficulty*, and *feedback references actual user
+wording*. A third — *evaluation contains the four required scores* — is now
+met: the rubric is clarity, empathy, directness, and confidence.
 
-Two structural gaps inside the loop matter more than their size suggests:
-**difficulty is a label, not a behaviour**, and **simulation and evaluation
-share one prompt**, which is why feedback is a generic sentence instead of
-"you said X, try Y".
+Both remaining gaps have the same root cause. `server/coach.mjs` runs one
+prompt that scores the manager *and* plays the employee, so there is no budget
+for a quoted critique and nowhere for a difficulty setting to act. Splitting
+it into `/simulation/respond` and `/simulation/evaluate` (PRD §22) unblocks
+both.
+
+Nothing else is a missing feature. Beyond the coach, what is left is
+verification against live services — no sandbox purchase, no real analytics
+event — and the release checklist.
 
 ---
 
@@ -82,7 +88,6 @@ share one prompt**, which is why feedback is a generic sentence instead of
 | Item | What exists | What the PRD wants |
 |---|---|---|
 | **Difficulty** | `ScenarioDifficulty` is a fixed property of each scenario, rendered as a pill on the briefing | A **user choice before the session** (Calm / Defensive / Very Defensive) that materially changes wording, resistance, and escalation. PRD §7.2: "This must not be cosmetic." |
-| **Evaluation dimensions** | clarity, empathy, **courage** | clarity, empathy, **directness**, **confidence** (PRD §10) |
 | **Evaluation content** | one generic sentence per turn; report picks best/worst by score | exact user quote → why it was weak → suggested stronger wording (PRD §5.4, §10) |
 | **AI architecture** | one `/evaluate` call does simulation *and* scoring in a single 350-token prompt | separate simulation and evaluation prompts. PRD §22: "Do not use one giant prompt for everything." |
 | **Conversation length** | fixed 3 turns | 4–7 manager turns, with the model able to declare resolved or stalled |
@@ -111,7 +116,7 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 
 ### Broken
 
-Nothing. Analysis is clean, all 191 Flutter tests and 3 server tests pass, and
+Nothing. Analysis is clean, all 195 Flutter tests and 3 server tests pass, and
 both the web and Android builds succeed.
 
 The two known **defects** are cosmetic but real, and both are documented in
@@ -132,8 +137,9 @@ The two known **defects** are cosmetic but real, and both are documented in
 | **M6** Release + submission | 🟡 bundle id, version, icon, and splash done; privacy policy, metadata, signing, and crash reporting not started |
 | **M7–M9** Launch, growth, submission package | ❌ not started |
 
-No P0 feature is unbuilt. The remaining risk is that none of M4 has been
-observed against a live service, and that M6 has barely started.
+M2 and M3 are what the two open acceptance criteria sit in. Beyond them the
+risk is that none of M4 has been observed against a live service, and that M6
+is mostly untouched.
 
 ---
 
@@ -191,12 +197,21 @@ not after.
 PRD §18 word for word. The supporting lines are not: the PRD's promise
 "different levels of resistance and defensiveness" (difficulty is not
 selectable) and feedback on "clarity, empathy, directness, and confidence"
-(the report scores courage, not directness or confidence). An intro that
+(at the time the report scored neither). The rubric has since caught up and
+the copy now names all four. An intro that
 oversells in the first thirty seconds is worse than no intro, so each line
 describes what the next four minutes actually deliver. `test/onboarding_test.dart`
 has an `honesty` group asserting the screens never name a dimension the report
-does not have. Move the copy back toward the PRD once difficulty selection and
-the dimension change land.
+does not have. The dimension half is done; move the resistance line
+back toward the PRD once difficulty selection lands.
+
+**The rubric now matches the PRD, and old records were migrated rather than
+discarded.** `courage` became `directness` — which is what the server schema
+had always described it as — and `confidence` was authored across all 63
+choices as a genuinely separate axis (33% of them score it differently from
+directness; a test fails below 25%). Records written before the change keep
+their directness and carry a null confidence, so averages are computed from
+what was actually measured instead of a fabricated neutral.
 
 **One prompt does two jobs.** `server/coach.mjs` asks a single model call to
 score the manager *and* reply in character, inside `max_output_tokens: 350`.
@@ -271,7 +286,7 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 191 Flutter + 3 server
+Tests            : 195 Flutter + 3 server
 TODO/FIXME       : none
 ```
 

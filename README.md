@@ -4,7 +4,7 @@
 
 Rehearse is a private practice room for difficult workplace conversations. It
 helps new managers build confidence through short, branching simulations and
-specific feedback on clarity, empathy, and courage.
+specific feedback on clarity, empathy, directness, and confidence.
 
 Built for the RevenueCat Shipaton 2026, leadership and career coaching.
 

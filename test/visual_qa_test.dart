@@ -65,7 +65,8 @@ void main() {
           score: 62 + day * 7,
           clarity: 58 + day * 6,
           empathy: 74,
-          courage: 50 + day * 9,
+          directness: 50,
+          confidence: 50 + day * 9,
           usedAi: day.isEven,
         ),
       );

@@ -112,7 +112,7 @@ never disagree.
 
 ```text
 ResponseChoice / AI response
-        │  scoreDelta (-10..14), clarity/empathy/courage (-2..2)
+        │  scoreDelta (-10..14), four dimensions (-2..2 each)
         ▼
 PracticeResponse                      one manager turn
         │
@@ -127,8 +127,17 @@ A three-turn best path lands around 88–90; a worst path lands below 52. Those
 bands are what `PracticeSummary.headline` switches on, and
 `test/scenarios_test.dart` asserts every authored scenario reaches them.
 
-> The dimensions are **clarity, empathy, courage**. The PRD specifies
-> **clarity, empathy, directness, confidence**. See `STATUS.md` §5.
+The rubric is PRD §10's four dimensions: **clarity, empathy, directness,
+confidence**. `PracticeSummary.skills` returns them in report order, and both
+the coaching report and the progress screen render that map rather than
+listing bars by hand, so the two cannot fall out of step.
+
+> Records written before the fourth dimension existed stored directness under
+> the name `courage` — which is what the server schema always described it as.
+> `PracticeRecord.tryFromJson` maps it across. Confidence was genuinely not
+> measured then, so it stays **null** rather than becoming a fabricated 50,
+> and `averageConfidence` returns null until some rehearsal has actually been
+> scored on it.
 
 ---
 
@@ -167,7 +176,8 @@ environment. The Flutter app knows a URL and nothing else.
 ### Request shape
 
 `POST /evaluate` takes `{sessionId, scenario, turn, history, managerResponse}`
-and returns `{score_delta, feedback, clarity, empathy, courage, employee_reply}`.
+and returns `{score_delta, feedback, clarity, empathy, directness, confidence,
+employee_reply}`.
 
 One model call does both jobs — scoring and staying in character — inside
 `max_output_tokens: 350`. The `sessionId` is hashed to a `safety_identifier`

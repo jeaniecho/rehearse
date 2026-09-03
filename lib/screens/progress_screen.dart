@@ -4,6 +4,7 @@ import '../data/scenarios.dart';
 import '../models/practice_record.dart';
 import '../models/practice_response.dart';
 import '../models/scenario.dart';
+import '../models/practice_summary.dart';
 import '../models/subscription.dart';
 import '../services/analytics.dart';
 import '../services/practice_history.dart';
@@ -459,13 +460,11 @@ class _SkillTrends extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final skills = <(String, int, Color)>[
-      ('Clarity', history.averageClarity, SkillColors.clarity),
-      ('Empathy', history.averageEmpathy, SkillColors.empathy),
-      ('Courage', history.averageCourage, SkillColors.courage),
-    ];
-    final strongest = skills.reduce((a, b) => a.$2 >= b.$2 ? a : b);
-    final weakest = skills.reduce((a, b) => a.$2 <= b.$2 ? a : b);
+    final skills = history.averageSkills;
+    final strongest = skills.entries.reduce(
+      (a, b) => a.value >= b.value ? a : b,
+    );
+    final weakest = skills.entries.reduce((a, b) => a.value <= b.value ? a : b);
 
     return Card(
       child: Padding(
@@ -479,20 +478,14 @@ class _SkillTrends extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              strongest.$2 == weakest.$2
+              strongest.value == weakest.value
                   ? 'Evenly balanced so far. Keep going to see a pattern.'
-                  : '${strongest.$1} is carrying you. ${weakest.$1} is where the next point is.',
+                  : '${strongest.key.label} is carrying you. '
+                        '${weakest.key.label} is where the next point is.',
               style: const TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 22),
-            for (var index = 0; index < skills.length; index++) ...[
-              SkillBar(
-                label: skills[index].$1,
-                value: skills[index].$2,
-                color: skills[index].$3,
-              ),
-              if (index != skills.length - 1) const SizedBox(height: 17),
-            ],
+            SkillBars(values: skills, spacing: 17),
           ],
         ),
       ),

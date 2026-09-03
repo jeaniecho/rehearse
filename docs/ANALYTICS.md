@@ -42,7 +42,7 @@ Fired today, in funnel order.
 | `simulation_started` | the conversation screen mounts | `is_retry` |
 | `retry_started` | as above, when `is_retry` | |
 | `simulation_message_sent` | one manager turn is committed | `turn_index`, `response_length`, `coach` |
-| `simulation_completed` | the last turn is answered | `turn_count`, `simulation_duration_seconds`, scores, `score_band` |
+| `simulation_completed` | the last turn is answered | `turn_count`, `simulation_duration_seconds`, the four dimension scores, `score_band` |
 | `retry_completed` | as above, when `is_retry` | |
 | `simulation_abandoned` | the screen is left before the report | `turn_reached`, `simulation_duration_seconds` |
 | `evaluation_viewed` | the coaching report is shown | scores, `score_band` |

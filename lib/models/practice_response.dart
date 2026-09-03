@@ -17,7 +17,8 @@ class PracticeResponse {
     required this.feedback,
     required this.clarity,
     required this.empathy,
-    required this.courage,
+    required this.directness,
+    required this.confidence,
     required this.source,
     this.employeeReply,
   });
@@ -29,7 +30,8 @@ class PracticeResponse {
       feedback: choice.feedback,
       clarity: choice.clarity,
       empathy: choice.empathy,
-      courage: choice.courage,
+      directness: choice.directness,
+      confidence: choice.confidence,
       source: EvaluationSource.guided,
     );
   }
@@ -59,7 +61,8 @@ class PracticeResponse {
       feedback: feedback.trim(),
       clarity: readInt('clarity', min: -2, max: 2),
       empathy: readInt('empathy', min: -2, max: 2),
-      courage: readInt('courage', min: -2, max: 2),
+      directness: readInt('directness', min: -2, max: 2),
+      confidence: readInt('confidence', min: -2, max: 2),
       source: source,
       employeeReply: employeeReply is String && employeeReply.trim().isNotEmpty
           ? employeeReply.trim()
@@ -72,7 +75,8 @@ class PracticeResponse {
   final String feedback;
   final int clarity;
   final int empathy;
-  final int courage;
+  final int directness;
+  final int confidence;
   final EvaluationSource source;
   final String? employeeReply;
 }

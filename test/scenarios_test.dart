@@ -11,6 +11,27 @@ void main() {
     expect(scenarios, isNotEmpty);
   });
 
+  test('confidence is scored as its own axis, not a copy of directness', () {
+    // The two come apart in real conversations — blunt but rattled, or
+    // gentle but immovable — and the rubric is worthless if the authored
+    // content treats them as the same number.
+    final choices = [
+      for (final scenario in scenarios)
+        for (final turn in scenario.turns) ...turn.choices,
+    ];
+    final differing = choices
+        .where((choice) => choice.confidence != choice.directness)
+        .length;
+
+    expect(
+      differing / choices.length,
+      greaterThan(0.25),
+      reason:
+          'confidence tracks directness too closely to be measuring '
+          'anything of its own',
+    );
+  });
+
   test('ids and characters are unique', () {
     expect(
       scenarios.map((scenario) => scenario.id).toSet(),
@@ -65,7 +86,9 @@ void main() {
           expect(choice.scoreDelta, inInclusiveRange(-10, 14));
           expect(choice.clarity, inInclusiveRange(-2, 2));
           expect(choice.empathy, inInclusiveRange(-2, 2));
-          expect(choice.courage, inInclusiveRange(-2, 2));
+          expect(choice.directness, inInclusiveRange(-2, 2));
+          expect(choice.confidence, inInclusiveRange(-2, 2));
+          expect(choice.confidence, inInclusiveRange(-2, 2));
         }
       });
 

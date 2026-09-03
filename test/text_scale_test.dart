@@ -51,7 +51,8 @@ void main() {
           score: 55 + day * 9,
           clarity: 61,
           empathy: 78,
-          courage: 47,
+          directness: 47,
+          confidence: 47,
           usedAi: true,
         ),
       );

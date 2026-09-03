@@ -197,7 +197,8 @@ class Analytics extends ChangeNotifier {
     'overall_score': summary.score,
     'clarity': summary.clarity,
     'empathy': summary.empathy,
-    'courage': summary.courage,
+    'directness': summary.directness,
+    'confidence': summary.confidence,
     'coached_by_ai': summary.usedAi,
     // Not PRD §9's success/partial/unresolved/escalated — the simulation has
     // no outcome model yet. Named for what it actually is.

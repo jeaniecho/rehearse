@@ -93,7 +93,8 @@ void main() {
           score: 74,
           clarity: 66,
           empathy: 90,
-          courage: 58,
+          directness: 58,
+          confidence: 58,
           usedAi: true,
         ),
       );
@@ -121,7 +122,8 @@ void main() {
             score: score,
             clarity: score,
             empathy: score,
-            courage: score,
+            directness: score,
+            confidence: score,
             usedAi: false,
           ),
         );

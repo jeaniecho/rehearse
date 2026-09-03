@@ -22,7 +22,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 191 tests
+flutter test                    # 195 tests
 cd server && npm test           # 3 tests
 ```
 
@@ -105,7 +105,10 @@ From `ROADMAP.md` §0, and they hold:
 - **Never write to a `ChangeNotifier` during build.** Defer with
   `addPostFrameCallback` — see `ResultsScreen`.
 - **Scoring lives in `PracticeSummary`**, so the report and the stored record
-  cannot disagree. Do not recompute it in a widget.
+  cannot disagree. Do not recompute it in a widget. The rubric is PRD §10's
+  four dimensions: clarity, empathy, directness, confidence.
+- **A dimension the app does not score must not be promised anywhere** — the
+  onboarding copy and the rubric are asserted to match, in both directions.
 - **Do not let the UI promise what the app does not do.** Onboarding copy
   deviates from PRD §18 for exactly this reason; see `STATUS.md` §5.
 - **Never send transcript content to analytics** (PRD §16). No method on

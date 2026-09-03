@@ -10,8 +10,9 @@ class PracticeRecord {
     required this.score,
     required this.clarity,
     required this.empathy,
-    required this.courage,
+    required this.directness,
     required this.usedAi,
+    this.confidence,
   });
 
   factory PracticeRecord.fromSummary({
@@ -27,7 +28,8 @@ class PracticeRecord {
       score: summary.score,
       clarity: summary.clarity,
       empathy: summary.empathy,
-      courage: summary.courage,
+      directness: summary.directness,
+      confidence: summary.confidence,
       usedAi: summary.usedAi,
     );
   }
@@ -57,7 +59,14 @@ class PracticeRecord {
       score: score('score', 50),
       clarity: score('clarity', 50),
       empathy: score('empathy', 50),
-      courage: score('courage', 50),
+      // Records written before the rubric gained a fourth dimension stored
+      // this as `courage`, which was always described as directness.
+      directness: json.containsKey('directness')
+          ? score('directness', 50)
+          : score('courage', 50),
+      // Genuinely absent from those records rather than neutral, so it is
+      // left out of averages instead of dragging them toward 50.
+      confidence: json['confidence'] is num ? score('confidence', 50) : null,
       usedAi: json['usedAi'] == true,
     );
   }
@@ -68,7 +77,10 @@ class PracticeRecord {
   final int score;
   final int clarity;
   final int empathy;
-  final int courage;
+  final int directness;
+
+  /// Null on records written before the rubric gained this dimension.
+  final int? confidence;
   final bool usedAi;
 
   Map<String, dynamic> toJson() => {
@@ -78,7 +90,8 @@ class PracticeRecord {
     'score': score,
     'clarity': clarity,
     'empathy': empathy,
-    'courage': courage,
+    'directness': directness,
+    'confidence': ?confidence,
     'usedAi': usedAi,
   };
 }

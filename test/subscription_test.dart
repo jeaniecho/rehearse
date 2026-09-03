@@ -454,7 +454,9 @@ void main() {
         tester,
         const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
         subscription: subscription,
-        records: [_record(clarity: 80, empathy: 78, courage: 40)],
+        records: [
+          _record(clarity: 80, empathy: 78, directness: 40, confidence: 40),
+        ],
       );
 
       expect(
@@ -654,7 +656,8 @@ PracticeRecord _record({
   int score = 70,
   int clarity = 70,
   int empathy = 70,
-  int courage = 70,
+  int directness = 70,
+  int confidence = 70,
 }) {
   return PracticeRecord(
     scenarioId: scenarios.first.id,
@@ -663,7 +666,8 @@ PracticeRecord _record({
     score: score,
     clarity: clarity,
     empathy: empathy,
-    courage: courage,
+    directness: directness,
+    confidence: confidence,
     usedAi: false,
   );
 }

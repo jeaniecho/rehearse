@@ -21,7 +21,8 @@ PracticeRecord record({
     score: score,
     clarity: score,
     empathy: score,
-    courage: score,
+    directness: score,
+    confidence: score,
     usedAi: false,
   );
 }

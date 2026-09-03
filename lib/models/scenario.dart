@@ -17,7 +17,8 @@ class ResponseChoice {
     required this.feedback,
     required this.clarity,
     required this.empathy,
-    required this.courage,
+    required this.directness,
+    required this.confidence,
   });
 
   final String text;
@@ -25,7 +26,8 @@ class ResponseChoice {
   final String feedback;
   final int clarity;
   final int empathy;
-  final int courage;
+  final int directness;
+  final int confidence;
 }
 
 class DialogueTurn {

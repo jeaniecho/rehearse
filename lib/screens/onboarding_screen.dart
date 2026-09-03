@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/practice_summary.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_settings_scope.dart';
@@ -44,8 +45,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _Page(
       headline: 'See exactly what to improve.',
       body:
-          'A score for clarity, empathy, and courage, the move that worked, '
-          'and the one thing to change next time. Then go again.',
+          'A score for clarity, empathy, directness, and confidence, the move '
+          'that worked, and the one thing to change next time. Then go again.',
       art: _ReportArt(),
     ),
   ];
@@ -359,13 +360,17 @@ class _ReportArt extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ScoreRing(score: 78, diameter: 104),
-          SizedBox(height: 20),
-          SkillBar(label: 'Clarity', value: 74, color: SkillColors.clarity),
-          SizedBox(height: 12),
-          SkillBar(label: 'Empathy', value: 86, color: SkillColors.empathy),
-          SizedBox(height: 12),
-          SkillBar(label: 'Courage', value: 66, color: SkillColors.courage),
+          ScoreRing(score: 78, diameter: 96),
+          SizedBox(height: 18),
+          SkillBars(
+            spacing: 10,
+            values: {
+              PracticeSkill.clarity: 74,
+              PracticeSkill.empathy: 86,
+              PracticeSkill.directness: 66,
+              PracticeSkill.confidence: 71,
+            },
+          ),
         ],
       ),
     );

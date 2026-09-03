@@ -139,17 +139,29 @@ class PracticeHistory extends ChangeNotifier {
 
   int get averageEmpathy => _average(_records.map((record) => record.empathy));
 
-  int get averageCourage => _average(_records.map((record) => record.courage));
+  int get averageDirectness =>
+      _average(_records.map((record) => record.directness));
+
+  /// Null until at least one rehearsal was scored on it — older records
+  /// predate the dimension and must not be counted as a neutral 50.
+  int? get averageConfidence {
+    final scored = [for (final record in _records) ?record.confidence];
+    return scored.isEmpty ? null : _average(scored);
+  }
+
+  /// Every dimension there is data for, in report order.
+  Map<PracticeSkill, int> get averageSkills => {
+    PracticeSkill.clarity: averageClarity,
+    PracticeSkill.empathy: averageEmpathy,
+    PracticeSkill.directness: averageDirectness,
+    PracticeSkill.confidence: ?averageConfidence,
+  };
 
   /// The skill that has scored lowest across every rehearsal, or null while
   /// the scores are still tied or there is no history to read.
   PracticeSkill? get weakestSkill {
     if (_records.isEmpty) return null;
-    final averages = {
-      PracticeSkill.clarity: averageClarity,
-      PracticeSkill.empathy: averageEmpathy,
-      PracticeSkill.courage: averageCourage,
-    };
+    final averages = averageSkills;
     final lowest = averages.values.reduce((a, b) => a < b ? a : b);
     if (lowest == averages.values.reduce((a, b) => a > b ? a : b)) return null;
     return averages.entries.firstWhere((entry) => entry.value == lowest).key;

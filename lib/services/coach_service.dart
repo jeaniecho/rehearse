@@ -204,7 +204,8 @@ class OfflineCoachService implements CoachService {
         feedback: choice.feedback,
         clarity: choice.clarity,
         empathy: choice.empathy,
-        courage: choice.courage,
+        directness: choice.directness,
+        confidence: choice.confidence,
         source: EvaluationSource.offline,
         employeeReply: employeeReply,
       );
@@ -228,7 +229,7 @@ class OfflineCoachService implements CoachService {
       'sorry',
       'help',
     ]);
-    final courage = _signalScore(lower, const [
+    final directness = _signalScore(lower, const [
       'need',
       'cannot',
       'can’t',
@@ -237,7 +238,14 @@ class OfflineCoachService implements CoachService {
       'impact',
       'tradeoff',
     ]);
-    final scoreDelta = ((clarity + empathy + courage) * 3).clamp(-6, 12);
+    // Conviction reads as committing to something; hedging reads as giving
+    // ground before anyone has pushed.
+    final confidence = _hedgeScore(lower);
+    final scoreDelta =
+        (((clarity + empathy + directness + confidence) * 2.5).round()).clamp(
+          -6,
+          12,
+        );
 
     return PracticeResponse(
       text: responseText,
@@ -245,11 +253,13 @@ class OfflineCoachService implements CoachService {
       feedback: _feedbackFor(
         clarity: clarity,
         empathy: empathy,
-        courage: courage,
+        directness: directness,
+        confidence: confidence,
       ),
       clarity: clarity,
       empathy: empathy,
-      courage: courage,
+      directness: directness,
+      confidence: confidence,
       source: EvaluationSource.offline,
       employeeReply: employeeReply,
     );
@@ -293,12 +303,40 @@ class OfflineCoachService implements CoachService {
     };
   }
 
+  /// Hedges cost conviction; a plain commitment earns it.
+  int _hedgeScore(String value) {
+    const hedges = [
+      'maybe',
+      'sort of',
+      'kind of',
+      'i guess',
+      'i think maybe',
+      'if that’s ok',
+      'if that works',
+      'just wondering',
+      'do your best',
+      'we’ll see',
+      'sorry to bother',
+    ];
+    const commitments = ['i need', 'i expect', 'we will', 'i will', 'by '];
+
+    final hedged = hedges.where(value.contains).length;
+    final committed = commitments.where(value.contains).length;
+    if (hedged > 0 && committed == 0) return -2;
+    if (hedged > 0) return 0;
+    return committed > 0 ? 2 : -1;
+  }
+
   String _feedbackFor({
     required int clarity,
     required int empathy,
-    required int courage,
+    required int directness,
+    required int confidence,
   }) {
-    if (clarity >= 1 && empathy >= 1 && courage >= 1) {
+    if (confidence < 0 && clarity >= 1) {
+      return 'The point is there, but the hedging around it invites a negotiation you did not intend to open.';
+    }
+    if (clarity >= 1 && empathy >= 1 && directness >= 1) {
       return 'You balanced a clear message with acknowledgment and a concrete way forward.';
     }
     if (clarity < 1) {
@@ -306,6 +344,9 @@ class OfflineCoachService implements CoachService {
     }
     if (empathy < 1) {
       return 'The message is direct. Add one sentence that shows you heard the pressure or impact on the other person.';
+    }
+    if (directness < 1) {
+      return 'You showed care and clarity. State the boundary or expectation more directly so it cannot be missed.';
     }
     return 'You showed care and clarity. State the boundary or expectation more directly so it cannot be missed.';
   }

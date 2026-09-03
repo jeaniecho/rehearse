@@ -1,13 +1,14 @@
 import 'practice_response.dart';
 
-/// The three things a hard message needs to land.
-enum PracticeSkill { clarity, empathy, courage }
+/// The four things a hard message needs to land (PRD §10).
+enum PracticeSkill { clarity, empathy, directness, confidence }
 
 extension PracticeSkillLabel on PracticeSkill {
   String get label => switch (this) {
     PracticeSkill.clarity => 'Clarity',
     PracticeSkill.empathy => 'Empathy',
-    PracticeSkill.courage => 'Courage',
+    PracticeSkill.directness => 'Directness',
+    PracticeSkill.confidence => 'Confidence',
   };
 
   /// What this skill running low actually looks like in a conversation.
@@ -17,8 +18,10 @@ extension PracticeSkillLabel on PracticeSkill {
       'You tend to leave the expectation vague once the conversation gets uncomfortable.',
     PracticeSkill.empathy =>
       'You get to the point, but the other person rarely feels heard first.',
-    PracticeSkill.courage =>
+    PracticeSkill.directness =>
       'You tend to soften the expectation when the other person pushes back.',
+    PracticeSkill.confidence =>
+      'You start well, then give ground the moment the other person leans on you.',
   };
 }
 
@@ -32,7 +35,8 @@ class PracticeSummary {
     required this.score,
     required this.clarity,
     required this.empathy,
-    required this.courage,
+    required this.directness,
+    required this.confidence,
     required this.usedAi,
   });
 
@@ -53,7 +57,8 @@ class PracticeSummary {
       score: score,
       clarity: dimension((response) => response.clarity),
       empathy: dimension((response) => response.empathy),
-      courage: dimension((response) => response.courage),
+      directness: dimension((response) => response.directness),
+      confidence: dimension((response) => response.confidence),
       usedAi: responses.any(
         (response) => response.source == EvaluationSource.ai,
       ),
@@ -66,8 +71,18 @@ class PracticeSummary {
   final int score;
   final int clarity;
   final int empathy;
-  final int courage;
+  final int directness;
+  final int confidence;
   final bool usedAi;
+
+  /// Every dimension, in the order the report and the progress screen show
+  /// them, so the two cannot fall out of step.
+  Map<PracticeSkill, int> get skills => {
+    PracticeSkill.clarity: clarity,
+    PracticeSkill.empathy: empathy,
+    PracticeSkill.directness: directness,
+    PracticeSkill.confidence: confidence,
+  };
 
   String get headline => switch (score) {
     >= 82 => 'You held the line with care.',
