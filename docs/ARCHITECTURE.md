@@ -408,12 +408,10 @@ is how something meant to read as one element stops doing so. `SCORE` on the
 coaching report is deliberately **not** one: it is tracked much wider because
 it sits under a 64pt numeral.
 
-Two shared widgets carry accessibility rules worth preserving:
-
-- `MetaPill` ellipsizes its label, so a long string cannot overflow its card.
-- `ScoreRing` grows with the text scale and caps both together at 1.4×, so
-  scaled numerals stay inside the circle. It takes explicit colours, with an
-  `onDark` variant for the progress banner.
+`ScoreRing` carries an accessibility rule worth preserving: it grows with the
+text scale and caps both together at 1.4×, so scaled numerals stay inside the
+circle. It takes explicit colours, with an `onDark` variant for the progress
+banner.
 
 ---
 

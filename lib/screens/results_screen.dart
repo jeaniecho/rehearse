@@ -8,6 +8,7 @@ import '../models/scenario.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/brand_mark.dart';
 import '../widgets/eyebrow.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_display.dart';

@@ -11,7 +11,7 @@ import 'package:rehearse/services/app_settings.dart';
 import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/services/speech_input_service.dart';
 import 'package:rehearse/theme/app_theme.dart';
-import 'package:rehearse/widgets/app_shell.dart';
+import 'package:rehearse/widgets/brand_mark.dart';
 
 void main() {
   testWidgets('completes the recommended practice and shows coaching', (

@@ -7,6 +7,7 @@ import '../services/practice_history.dart';
 import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/brand_mark.dart';
 import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';

@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_settings_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/brand_mark.dart';
 import '../widgets/score_display.dart';
 
 /// Three screens, then out of the way.
