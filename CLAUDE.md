@@ -160,6 +160,8 @@ lib/data       authored scenario content (7 scenarios)
 lib/models     Scenario, PracticeResponse, PracticeSummary, PracticeRecord,
                Subscription plans and outcomes
 lib/screens    onboarding, home, brief, practice, results, progress, paywall
+lib/screens/practice
+               `part`s of practice_screen, split for length only
 lib/services   coach (remote/offline/resilient), speech in/out, history,
                settings, subscription + RevenueCat, analytics + PostHog
 lib/theme      AppColors tokens, Material 3 theme, and the brand mark painter

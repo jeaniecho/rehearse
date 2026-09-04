@@ -479,6 +479,29 @@ Four masters come out of the generator, and each exists for a reason:
 1024 icon has no alpha channel — App Store Connect rejects one that does, at
 the last step of submission.
 
+## The practice screen
+
+The one screen split across files. It was 1,356 lines, which is the only
+place in the app where "where is X" is a real question:
+
+```text
+practice_screen.dart      PracticeScreen and its State — the turn loop
+practice/transcript.dart  what the conversation looks like
+practice/composer.dart    what you answer with, in both modes
+```
+
+The two halves are **`part`s, not libraries.** Their widgets stay private to
+the screen, which is the point: they are its innards rather than a set
+anything else may reach for, and making them public to solve a file-length
+problem would have invited exactly that. The cost is that a part carries no
+imports of its own — the library's are at the top of `practice_screen.dart`.
+
+`_PracticeScreenState` stays whole at ~570 lines. Splitting it means lifting
+the turn loop into a controller, which is a rewrite of working code rather
+than a move, and nothing has asked for one.
+
+---
+
 ## Testing
 
 | File | Covers |
