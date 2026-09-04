@@ -124,9 +124,20 @@ gates nothing, and reports nothing.
 
 ### Not retyping them
 
-`.vscode/launch.json` is gitignored, so keys can live in it directly. A
-committed one would pin everyone to a single environment, which is the same
-reason the keys are not in the repo to begin with.
+`.vscode/launch.json` is committed, carrying placeholders. The RevenueCat SDK
+keys are publishable rather than secret, so everyone starting from a config
+that already runs is worth more than keeping the file out of the repository.
+
+Replace the placeholders with your own, then stop git seeing the change:
+
+```bash
+git update-index --skip-worktree .vscode/launch.json
+```
+
+Without that the file shows as modified forever, and someone eventually
+commits their own keys over the placeholders by accident. To edit the
+committed version deliberately — adding a configuration, say — reverse it
+with `--no-skip-worktree` first.
 
 ```jsonc
 {

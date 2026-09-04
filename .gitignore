@@ -46,9 +46,13 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Build-time keys. Publishable client keys, but per-environment and not the
-# repo's business — and a committed launch config would pin everyone to one
-# environment. docs/REVENUECAT.md §5 has the list and a config to paste.
-.vscode/launch.json
-release.json
+# .vscode/launch.json is committed, carrying placeholder keys — the
+# RevenueCat SDK keys are publishable, so the value of everyone starting from
+# a working config beats keeping the file out. Fill it in locally and keep
+# your edit out of git with:
+#
+#   git update-index --skip-worktree .vscode/launch.json
+#
+# A whole file of real per-environment values is a different thing, and stays
+# out. See docs/REVENUECAT.md §5.
 *.dart-define.json
