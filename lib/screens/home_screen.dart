@@ -20,6 +20,15 @@ import 'paywall_screen.dart';
 /// have to reach past it — so everything that is not a rail asks for it.
 const _gutter = EdgeInsets.symmetric(horizontal: 20);
 
+/// The gutter, plus room for the contact shadow.
+///
+/// A horizontal list clips to its own bounds, so a card whose shadow falls
+/// outside them has it sliced off along the bottom edge. `Paper.lift`
+/// reaches four points down and blurs twelve, so sixteen below and a little
+/// above keeps the whole of it inside the viewport.
+const _railGutter = EdgeInsets.fromLTRB(20, 6, 20, 16);
+const _railShadowRoom = 22.0;
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -377,10 +386,11 @@ class _StakesGroup extends StatelessWidget {
           height:
               Illustration.tileSize +
               58 +
+              _railShadowRoom +
               MediaQuery.textScalerOf(context).scale(53),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: _gutter,
+            padding: _railGutter,
             itemCount: items.length,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (_, index) =>
