@@ -27,26 +27,40 @@ class Illustration extends StatelessWidget {
   final String name;
   final double size;
 
-  /// The sizes the set is drawn at. The logo's frame is square but its
-  /// artwork is wider than it is tall, so it is set larger than the 34pt
-  /// chip it replaced to land at the same weight beside the wordmark.
+  /// The briefing, where a scenario mark labels a header.
   static const scenarioSize = 40.0;
+
+  /// The home grid.
+  static const tileSize = 56.0;
+
+  /// The home card for whatever is next — the largest a scenario mark is
+  /// drawn anywhere, and so the size they are all cut to.
+  static const spotSize = 88.0;
+
+  /// A mark that heads a screen on its own.
   static const heroSize = 120.0;
+
+  /// The logo's frame is square but its artwork is wider than it is tall, so
+  /// it is set larger than the 34pt chip it replaced to land at the same
+  /// weight beside the wordmark.
   static const logoSize = 44.0;
 
   static const directory = 'assets/illustrations';
 
-  /// Every mark, and the logical size its variants are cut to. A mark shown
-  /// at any other size is resampled — change one of these and re-run
-  /// `tool/generate_illustrations.dart`.
+  /// Every mark, and the size its variants are cut to — the **largest** it
+  /// is drawn anywhere. Drawn smaller it downscales, which is cheap and
+  /// stays sharp; drawn larger is what goes soft. Scenario marks appear at
+  /// three sizes, so they are cut at the biggest of the three.
+  ///
+  /// Change one of these and re-run `tool/generate_illustrations.dart`.
   static const sizes = <String, double>{
-    'missed-deadlines': scenarioSize,
-    'say-no': scenarioSize,
-    'peer-conflict': scenarioSize,
-    'upward-feedback': scenarioSize,
-    'promotion-denied': scenarioSize,
-    'high-performer': scenarioSize,
-    'resignation': scenarioSize,
+    'missed-deadlines': spotSize,
+    'say-no': spotSize,
+    'peer-conflict': spotSize,
+    'upward-feedback': spotSize,
+    'promotion-denied': spotSize,
+    'high-performer': spotSize,
+    'resignation': spotSize,
     'empty-progress': heroSize,
     'pro-unlock': heroSize,
     'logo': logoSize,

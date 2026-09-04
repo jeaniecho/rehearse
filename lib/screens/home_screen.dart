@@ -98,36 +98,38 @@ class HomeScreen extends StatelessWidget {
                       context,
                     ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
                   ),
-                  const SizedBox(height: 22),
-                  FilledButton(
-                    key: const Key('start_recommended'),
-                    onPressed: () => _openScenario(context, recommended),
-                    child: Text(
-                      history.isEmpty
-                          ? 'Start practicing'
-                          : 'Continue practicing',
-                    ),
+                  const SizedBox(height: 20),
+                  _NextUp(
+                    scenario: recommended,
+                    isFirst: history.isEmpty,
+                    reps: history.recordsFor(recommended.id).length,
+                    onTap: () => _openScenario(context, recommended),
                   ),
                   if (subscription != null &&
                       subscription.showsFreeAllowance) ...[
                     const SizedBox(height: 14),
                     _FreeAllowance(subscription: subscription),
                   ],
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 34),
                   Text(
                     'Conversations',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
-                  const SizedBox(height: 14),
-                  for (final scenario in scenarios) ...[
-                    _ScenarioRow(
-                      scenario: scenario,
-                      recommended: scenario == recommended,
-                      reps: history.recordsFor(scenario.id).length,
-                      bestScore: history.bestScoreFor(scenario.id),
-                      onTap: () => _openScenario(context, scenario),
+                  const SizedBox(height: 16),
+                  // Grouped by what the situation is carrying, in order, so
+                  // the library reads as a ramp rather than seven of the
+                  // same thing. Skill would not group: all seven differ.
+                  //
+                  // The featured one is left out rather than repeated. On a
+                  // phone the card and the grid are on screen together, and
+                  // the same scenario twice reads as a mistake.
+                  for (final stakes in ScenarioStakes.values) ...[
+                    _StakesGroup(
+                      stakes: stakes,
+                      history: history,
+                      exclude: recommended,
+                      onOpen: (scenario) => _openScenario(context, scenario),
                     ),
-                    const SizedBox(height: 10),
                   ],
                 ],
               ),
@@ -241,17 +243,155 @@ class _FreeAllowance extends StatelessWidget {
   }
 }
 
-class _ScenarioRow extends StatelessWidget {
-  const _ScenarioRow({
+/// Whatever to rehearse next, given its own card.
+///
+/// The old screen led with a bare "Continue practicing" button that never
+/// said what it would open, above seven rows of equal weight. This says it.
+class _NextUp extends StatelessWidget {
+  const _NextUp({
     required this.scenario,
-    required this.recommended,
+    required this.isFirst,
+    required this.reps,
+    required this.onTap,
+  });
+
+  final Scenario scenario;
+  final bool isFirst;
+  final int reps;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        color: AppColors.mint,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Illustration.scenario(scenario.id, size: Illustration.spotSize),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Eyebrow(
+                      reps == 0 ? 'START HERE' : 'GO AGAIN',
+                      color: AppColors.forest,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      scenario.title,
+                      style: const TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${scenario.skill} · ${scenario.durationMinutes} min',
+                      style: const TextStyle(
+                        color: AppColors.forest,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          FilledButton(
+            key: const Key('start_recommended'),
+            onPressed: onTap,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+            ),
+            child: Text(isFirst ? 'Start practicing' : 'Continue practicing'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One rung of the ramp: the scenarios carrying the same weight, two across.
+class _StakesGroup extends StatelessWidget {
+  const _StakesGroup({
+    required this.stakes,
+    required this.history,
+    required this.exclude,
+    required this.onOpen,
+  });
+
+  final ScenarioStakes stakes;
+  final PracticeHistory history;
+  final Scenario exclude;
+  final ValueChanged<Scenario> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = scenarios
+        .where((s) => s.stakes == stakes && s != exclude)
+        .toList();
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Eyebrow(stakes.label.toUpperCase(), color: AppColors.muted),
+        const SizedBox(height: 10),
+        for (var i = 0; i < items.length; i += 2) ...[
+          // Intrinsic height rather than a fixed aspect ratio: a title wraps
+          // to three lines at a large text scale, and a tile that cannot
+          // grow would clip it.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _tile(items[i])),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: i + 1 < items.length
+                      ? _tile(items[i + 1])
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        const SizedBox(height: 14),
+      ],
+    );
+  }
+
+  Widget _tile(Scenario scenario) => _ScenarioTile(
+    scenario: scenario,
+    reps: history.recordsFor(scenario.id).length,
+    bestScore: history.bestScoreFor(scenario.id),
+    onTap: () => onOpen(scenario),
+  );
+}
+
+class _ScenarioTile extends StatelessWidget {
+  const _ScenarioTile({
+    required this.scenario,
     required this.reps,
     required this.bestScore,
     required this.onTap,
   });
 
   final Scenario scenario;
-  final bool recommended;
   final int reps;
   final int? bestScore;
   final VoidCallback onTap;
@@ -266,59 +406,38 @@ class _ScenarioRow extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 15, 16, 15),
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 13),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: recommended ? AppColors.ink : AppColors.border,
-              width: recommended ? 1.6 : 1,
-            ),
+            border: Border.all(color: AppColors.border),
           ),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Illustration.scenario(scenario.id),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (recommended) ...[
-                      const Eyebrow('START HERE', color: AppColors.forest),
-                      const SizedBox(height: 5),
-                    ],
-                    Text(
-                      scenario.title,
-                      style: const TextStyle(
-                        color: AppColors.ink,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      scenario.subtitle,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 13,
-                        height: 1.35,
-                      ),
-                    ),
-                    if (bestScore case final best?) ...[
-                      const SizedBox(height: 7),
-                      Text(
-                        reps == 1
-                            ? '1 rep · best $best'
-                            : '$reps reps · best $best',
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ],
+              Illustration.scenario(scenario.id, size: Illustration.tileSize),
+              const SizedBox(height: 10),
+              Text(
+                scenario.title,
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const Spacer(),
+              const SizedBox(height: 8),
+              Text(
+                bestScore == null
+                    ? '${scenario.durationMinutes} min'
+                    : reps == 1
+                    ? '1 rep · best $bestScore'
+                    : '$reps reps · best $bestScore',
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

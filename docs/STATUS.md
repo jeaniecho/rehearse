@@ -234,6 +234,17 @@ style and the prompts are in [`ILLUSTRATIONS.md`](ILLUSTRATIONS.md); the one
 emoji left in the app is the flame on the streak badge, which is why
 `tool/generate_screenshots.dart` still loads an emoji font.
 
+**The scenario list is a featured card plus a grouped grid, not seven equal
+rows.** Everything on the old home had the same weight, the marks were 40pt
+afterthoughts, and the primary button said "Continue practicing" without
+saying what it would open. Now: a card naming the next scenario with its mark
+at 88pt, then the library in two columns grouped into the stakes ramp. Nothing
+about the content model changed — `stakes` was already authored and
+`recommendedScenario` already existed; neither was being shown.
+
+Scenario marks are cut at 88px rather than 40 as a result, since they are now
+drawn at three sizes. The bundled set went from 540 KB to 1.1 MB.
+
 **Navigation is three tabs, and the progress screen stopped doing two jobs.**
 Practice / Progress / You. The plan card and Restore, the spoken-replies
 preference, and clearing your history moved to the new You tab; progress is

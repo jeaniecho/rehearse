@@ -503,6 +503,22 @@ switches tab instead of popping; passed nothing, it falls back to
 `bottomNavigationBar`, so the screens inside see a bottom padding of zero and
 do not double-count the home indicator.
 
+The **Practice** tab leads with a card for whatever is next — the scenario
+`HomeScreen.recommendedScenario` picks — and then the library, grouped by
+`ScenarioStakes` into warm-up, challenging and high stakes, two across. That
+grouping is the only one the content supports: `skill` is unique per scenario
+and would put one in each group, while stakes splits 2/2/3 and happens to be
+a difficulty ramp, which is the order a library like this wants to be read in.
+
+The featured scenario is left **out** of the grid rather than repeated in it.
+On a phone the card and the first group are on screen together, and the same
+scenario twice reads as a mistake rather than a shortcut.
+
+The tiles size to their content — `IntrinsicHeight` and a `Row` of two, not a
+grid with a fixed aspect ratio. A title wraps to three lines at 1.6× text and
+a tile that could not grow would clip it; `test/text_scale_test.dart` is what
+holds that.
+
 The **You** tab exists because the progress screen was answering two
 questions at once — "how am I doing" and "what have you got of mine". It
 carries plan state and Restore, the two preferences, what the app keeps, and

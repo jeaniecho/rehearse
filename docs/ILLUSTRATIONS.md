@@ -117,12 +117,19 @@ flutter test tool/generate_illustrations.dart   # art/ -> assets/illustrations/
 
 | | 1.0x | 2.0x | 3.0x |
 |---|---|---|---|
-| the seven scenario marks | 40px | 80 | 120 |
+| the seven scenario marks | 88px | 176 | 264 |
 | `empty-progress`, `pro-unlock` | 120px | 240 | 360 |
 | `logo` | 44px | 88 | 132 |
 
 `Illustration.sizes` is the list, and the generator reads it, so the two
-cannot disagree. That is 540 KB for the whole set.
+cannot disagree. That is 1.1 MB for the whole set.
+
+The value is the size a mark is cut to, which is the **largest** it is drawn
+anywhere — not the only size it is drawn at. Scenario marks appear three
+times: 88pt on the home card for whatever is next, 56pt in the home grid,
+40pt on the briefing. Downscaling is cheap and stays sharp, so one cut at the
+top size serves all three; upscaling is what goes soft, which is why the cut
+follows the largest use rather than the commonest.
 
 Do not downscale by hand, and do not put a master in `assets/` — the
 generator mipmaps, and a 1254 → 40 downscale done in one bilinear step
