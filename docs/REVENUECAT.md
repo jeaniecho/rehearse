@@ -139,14 +139,23 @@ reason the keys are not in the repo to begin with.
       "toolArgs": [
         "--dart-define=REHEARSE_REVENUECAT_ANDROID_KEY=goog_xxxxxxxx",
         "--dart-define=REHEARSE_REVENUECAT_IOS_KEY=appl_xxxxxxxx"
+      ] },
+    { "name": "Rehearse (with keys, release)", "request": "launch",
+      "type": "dart", "program": "lib/main.dart", "flutterMode": "release",
+      "toolArgs": [
+        "--dart-define=REHEARSE_REVENUECAT_ANDROID_KEY=goog_xxxxxxxx",
+        "--dart-define=REHEARSE_REVENUECAT_IOS_KEY=appl_xxxxxxxx"
       ] }
   ]
 }
 ```
 
-Two configurations rather than one, because the demo path — no keys at all —
-is the one that has to keep working and is easy to stop exercising once a
-key is in the file.
+Three configurations, because the app has three states worth launching. The
+demo path — no keys at all — is the one that has to keep working and is the
+easiest to stop exercising once a key is in the file. The release one is
+what §6 needs: a sandbox purchase cannot be completed in debug against a
+simulator, and a release build additionally has no Dart VM service, which is
+the usual way round a physical device refusing the debug connection.
 
 > **Never commit a `sk_` secret key.** Those are server keys and have no place
 > in a client at all.
