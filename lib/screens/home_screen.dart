@@ -16,6 +16,10 @@ import '../widgets/subscription_scope.dart';
 import 'brief_screen.dart';
 import 'paywall_screen.dart';
 
+/// The page gutter. The scroll view cannot own it any more — the rails
+/// have to reach past it — so everything that is not a rail asks for it.
+const _gutter = EdgeInsets.symmetric(horizontal: 20);
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -82,39 +86,50 @@ class HomeScreen extends StatelessWidget {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                // No horizontal padding: the rails below bleed to both
+                // edges, because a card cut off by the screen is the only
+                // thing that says there is more to the side. Everything
+                // else asks for the gutter itself.
+                padding: const EdgeInsets.only(top: 8, bottom: 24),
                 children: [
-                  if (history.streakDays > 0) ...[
-                    _StreakChip(days: history.streakDays),
-                    const SizedBox(height: 14),
-                  ],
-                  Text(
-                    headline,
-                    style: Theme.of(context).textTheme.displayLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    body,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
-                  ),
-                  const SizedBox(height: 20),
-                  _NextUp(
-                    scenario: recommended,
-                    isFirst: history.isEmpty,
-                    reps: history.recordsFor(recommended.id).length,
-                    onTap: () => _openScenario(context, recommended),
-                  ),
-                  if (subscription != null &&
-                      subscription.showsFreeAllowance) ...[
-                    const SizedBox(height: 14),
-                    _FreeAllowance(subscription: subscription),
-                  ],
-                  const SizedBox(height: 34),
-                  Text(
-                    'Conversations',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                  Padding(
+                    padding: _gutter,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (history.streakDays > 0) ...[
+                          _StreakChip(days: history.streakDays),
+                          const SizedBox(height: 14),
+                        ],
+                        Text(
+                          headline,
+                          style: Theme.of(context).textTheme.displayLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          body,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: AppColors.muted),
+                        ),
+                        const SizedBox(height: 20),
+                        _NextUp(
+                          scenario: recommended,
+                          isFirst: history.isEmpty,
+                          reps: history.recordsFor(recommended.id).length,
+                          onTap: () => _openScenario(context, recommended),
+                        ),
+                        if (subscription != null &&
+                            subscription.showsFreeAllowance) ...[
+                          const SizedBox(height: 14),
+                          _FreeAllowance(subscription: subscription),
+                        ],
+                        const SizedBox(height: 34),
+                        Text(
+                          'Conversations',
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
                   // Grouped by what the situation is carrying, in order, so
@@ -349,29 +364,30 @@ class _StakesGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Eyebrow(stakes.label.toUpperCase(), color: AppColors.muted),
+        Padding(
+          padding: _gutter,
+          child: Eyebrow(stakes.label.toUpperCase(), color: AppColors.muted),
+        ),
         const SizedBox(height: 10),
-        for (var i = 0; i < items.length; i += 2) ...[
-          // Intrinsic height rather than a fixed aspect ratio: a title wraps
-          // to three lines at a large text scale, and a tile that cannot
-          // grow would clip it.
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: _tile(items[i])),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: i + 1 < items.length
-                      ? _tile(items[i + 1])
-                      : const SizedBox.shrink(),
-                ),
-              ],
-            ),
+        // A horizontal list has to be told its height, so it is derived from
+        // the text scale rather than fixed: the illustration is a constant
+        // but the two lines of title under it are not, and a rail that could
+        // not grow would clip them at an accessibility size.
+        SizedBox(
+          height:
+              Illustration.tileSize +
+              58 +
+              MediaQuery.textScalerOf(context).scale(53),
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: _gutter,
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (_, index) =>
+                SizedBox(width: 168, child: _tile(items[index])),
           ),
-          const SizedBox(height: 12),
-        ],
-        const SizedBox(height: 14),
+        ),
+        const SizedBox(height: 22),
       ],
     );
   }
@@ -421,6 +437,10 @@ class _ScenarioTile extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 scenario.title,
+                // The rail is a fixed height, so the title is capped rather
+                // than allowed to push past it at a large text scale.
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AppColors.ink,
                   fontSize: 15,
@@ -437,6 +457,8 @@ class _ScenarioTile extends StatelessWidget {
                     : reps == 1
                     ? '1 rep · best $bestScore'
                     : '$reps reps · best $bestScore',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AppColors.muted,
                   fontSize: 12,
