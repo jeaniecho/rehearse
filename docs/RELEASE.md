@@ -152,9 +152,10 @@ they cannot drift from the app. The generator loads the system font and the
 Material icon font, because the test environment ships neither and without
 them every glyph renders as a box.
 
-> This works on macOS. On a machine without `/System/Library/Fonts/SFNS.ttf`
-> the generator still runs and still checks layout, but the output must not
-> be submitted — it will be full of boxes and the run says so.
+> This used to work only on a Mac, because the generator borrowed the system
+> typeface. The app bundles its own now, so the harness loads that instead and
+> the output is identical on any machine. The run still warns and the images
+> are still unusable if the bundled font fails to load.
 
 Suggested captions, in order:
 
@@ -353,9 +354,4 @@ Say these out loud rather than hoping nobody notices.
 - **No session outcome.** Conversations do not end as
   success/partial/unresolved/escalated. The report shows a score band instead,
   named honestly.
-- **Delegation is missing** from the scenario library.
-- **`fontFamily: 'SF Pro Display'` only resolves on Apple platforms.** On
-  Android and web the app silently uses the platform default, so it does not
-  look quite like the screenshots. Bundling a licensed font would fix it.
-- **Two contrast pairs fail WCAG AA** — see `STATUS.md` §6.
 - **No dark theme.**

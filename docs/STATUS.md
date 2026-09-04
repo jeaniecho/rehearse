@@ -4,11 +4,11 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-04, after the serif landed on the results screen.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (**226 passing,
-> 23 failing** — see §2 Broken), `cd server && npm test` (14 passing),
-> `flutter build web --release` and `flutter build apk --debug` (both
-> succeed, and both carry the second font).
+> **Last audited:** 2026-09-05, after the delegation mark closed the red
+> suite and Android release signing was wired.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (**249 passing,
+> none failing**), `cd server && npm test` (14 passing), `flutter build
+> appbundle --release` and `flutter build ios --no-codesign` (both succeed).
 
 ---
 
@@ -104,7 +104,7 @@ real model — and the **release checklist**.
 |---|---|---|
 | **Conversation length** | fixed 3 turns | 4–7 manager turns, with the model able to declare resolved or stalled |
 | **Retry** | restarts the scenario from turn 1; the report names the weak turn but does not scroll to it | highlight the weak moment in a transcript, then retry (P1, PRD §12) |
-| **Scenario coverage** | 7 of the 8 seeded categories | delegation is missing; boundary and saying-no are collapsed into one scenario (see §4) |
+| **Scenario coverage** | all 8 seeded categories, since `delegation` landed | boundary and saying-no are still collapsed into one scenario (see §4) |
 | **Malformed AI output** | falls back to the offline coach; a fabricated quote is dropped on both sides | server-side repair/retry once (PRD §26) — currently it degrades rather than repairs |
 | **Empty states / transitions** | present on home and progress | haptics and an animated score reveal are not built |
 
@@ -125,7 +125,11 @@ three simulation items are not the P0 gaps this section used to call them.
   model sketch. The app carries the same prose in `Scenario.context` and
   sends it to both endpoints, so this is a shape difference rather than
   missing information — see §5.
-- **Signing**, both platforms. Android still signs with the debug key.
+- **Signing** — iOS only now. Android reads a release config out of
+  `android/key.properties` as of 2026-09-05, falling back to the debug key
+  when that file is absent so a clone still runs; Play rejects the fallback,
+  which is the right place to fail. iOS still needs a distribution
+  certificate and profile.
 - **Store records**, with the metadata from [`RELEASE.md`](RELEASE.md) §3
   entered, and the privacy policy hosted at a public URL.
 - OneSignal reminders *(P1)*.
@@ -134,28 +138,18 @@ three simulation items are not the P0 gaps this section used to call them.
 
 ### Broken
 
-**The home screen throws, and 23 tests fail with it.** The `delegation`
-scenario was committed without its illustration master, so
-`assets/illustrations/delegation.png` does not exist and the home list — which
-draws a mark for every scenario — raises "Unable to load asset" on build.
-Every test that renders home fails behind that one cause; the scenario's own
-content assertions all pass.
+Nothing. 249 Flutter tests and 14 server tests pass, analysis is clean, and
+both the Android bundle and the iOS build succeed.
 
-This was committed knowingly, to be closed by generating the master. The fix
-is two commands and no code:
+The `delegation` illustration that made this section red was added
+2026-09-05. It is worth recording *how* that failure hid: the master had
+existed on the authoring machine for some time, so a local `flutter test`
+was green while a clean checkout was still red. A suite passing where the
+asset was generated says nothing about the repository — check `git
+ls-files` for a new binary, not the test output.
 
-```bash
-# save the §2 subject from docs/ILLUSTRATIONS.md as art/illustrations/delegation.png
-flutter test tool/generate_illustrations.dart && flutter test
-```
-
-Until then the app is not runnable in the sense priority 4 means, and the
-Flutter suite is red. Analysis is clean, the 14 server tests pass, and both
-builds still succeed.
-
-One known **defect** remains, and it is documented in §6 rather than here
-because it is a quality issue rather than breakage. The contrast failures
-that used to sit beside it were fixed by the paper redesign; see §6.
+Two known **defects** remain, both in §6 rather than here because they are
+quality and future-risk issues rather than breakage.
 
 ---
 
@@ -405,6 +399,20 @@ true.
 The lesson is the entry, not the ratios: a measured claim in this file goes
 stale the moment the palette moves. Re-measure before trusting it.
 
+**`flutter_tts` does not support Swift Package Manager.** Every iOS build
+prints a warning saying this will become an error in a future Flutter. It is
+not one today: SPM is disabled in this checkout, the app builds through
+CocoaPods, and Flutter's SPM mode is hybrid anyway — plugins without support
+stay on CocoaPods. 4.2.5 is the latest release, so there is no upgrade that
+fixes it.
+
+It is recorded because it has no symptom until it is suddenly blocking. The
+trigger is whichever comes first: the plugin adopts SPM, or Flutter drops the
+CocoaPods fallback. The insurance already exists — `SpeechOutputService` is
+an interface with a device implementation and a fake, so replacing the plugin
+with a platform channel touches one file and moves no tests. Voice is P2 and
+`ROADMAP` §1 says not to extend it, so this waits.
+
 **No dark theme.** `lib/app.dart` sets `theme:` only. `AppColors` are const
 values referenced directly across 20 files in `lib/`, so adding one is a
 palette-indirection change through the whole widget layer, not a one-line
@@ -433,9 +441,9 @@ against live services; the rest is release and depth.
    has met an actual model. This is where prompt quality gets judged, and
    ROADMAP §5's test matrix is the checklist.
 4. **Work through [`RELEASE.md`](RELEASE.md).** The copy, the policy, the
-   screenshots and the privacy answers are written; what is left needs an
-   Apple account, a Play account, a keystore, and somewhere to host the
-   policy.
+   screenshots and the privacy answers are written, and Android signing is
+   wired. What is left needs an Apple account, a Play account, iOS signing,
+   and somewhere to host the policy.
 5. Dark theme, if there is time before submission. The contrast half of
    this item is done — see §6.
 6. Product depth the PRD lists but does not require for P0: a delegation
