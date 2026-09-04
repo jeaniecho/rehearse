@@ -109,13 +109,27 @@ real model — and the **release checklist**.
 
 ### Missing
 
-Everything below is **P0 in the PRD** unless marked otherwise.
+Priorities below are against **PRD §34**, the acceptance checklist that
+defines when the MVP is complete. Nothing here is on it; see §5 for why the
+three simulation items are not the P0 gaps this section used to call them.
 
 - Two PRD §16 events cannot fire yet because the feature does not exist:
   `reminder_created`, `notification_opened`.
-- **Session outcome** (success / partial / unresolved / escalated).
-- **Simulation state** (trust, tension, clarity, goal progress).
-- **Employee background** field — the prompt has name and role only.
+- **Session outcome** (success / partial / unresolved / escalated) — listed
+  under a hard `Required:` in §11, and the only item on that list the app
+  does not have. Not addable as a label: see §5.
+- **Simulation state** (trust, tension, clarity, goal progress) — §8, and
+  *not* P0. This section asserted it was.
+- **The server drops the scenario context it is sent.** `_scenarioJson`
+  sends `context` (`coach_service.dart:153`) and `coach.mjs` never reads it:
+  the character prompt interpolates `personName` and `personRole` and
+  nothing else, so the model playing Jordan does not know about the two
+  missed handoffs or the open role Jordan is covering. This is what the old
+  "employee background field" entry was really describing — the app has the
+  prose, in `Scenario.context`; the prompt throws it away. Cheapest
+  simulation-quality fix available, and it should land *before* the first
+  real-model run, or that run judges the prompts with the situation
+  missing.
 - **Signing**, both platforms. Android still signs with the debug key.
 - **Store records**, with the metadata from [`RELEASE.md`](RELEASE.md) §3
   entered, and the privacy policy hosted at a public URL.
@@ -182,6 +196,36 @@ beat fifty generic scenarios."
 ## 5. Where the current build diverges from the plan
 
 Recorded so the next session does not have to rediscover it.
+
+**What P0 means here, settled against the PRD.** §2 used to mark session
+outcome and simulation state as missing P0 features, while §7 said nothing
+remaining was one and `CLAUDE.md` said every P0 was built. Read against the
+PRD, 2026-09-04:
+
+- **§34 is the authority.** It opens "The contest MVP is complete when all of
+  the following work on a real device" and lists five checklists. Simulation
+  state appears in none of them. §7 of the PRD — the section actually titled
+  "P0 functional requirements" — ends where §8 begins, so §8 sits outside it,
+  and §8's own language is advisory: "should maintain", "*Suggested* values",
+  "For MVP, structured LLM output is acceptable if reliable". Simulation state
+  is depth, not P0.
+- **Session outcome is the one real gap**, because §11 lists it under
+  `Required:` and every other item on that list exists — score, four
+  dimensions, strengths, improvements, quoted wording, why it was weak,
+  improved wording, the retry CTA. §34 does not mention it, which is where
+  the disagreement came from.
+- **It cannot be shipped as a label.** `practice_screen.dart:342` ends a
+  session one way: the authored turns run out. Of §9's four end conditions
+  only "maximum turn count is reached" ever fires — goal-reached and
+  breakdown are not detected — so three of the four outcomes could never
+  occur, and deriving one from the score band is exactly what the "do not let
+  the UI promise what the app does not do" invariant forbids. "Add session
+  outcome" means "implement §9's end conditions", which is simulation work.
+
+So `CLAUDE.md` and §7 hold, §2 was wrong, and nothing about the shipping
+order changes: session outcome plus §9 end conditions is the best-justified
+thing to build after submission, ahead of dark theme, because it is the only
+item the PRD calls required.
 
 **The app is set in two families, which the PRD does not mention.** Plus
 Jakarta Sans throughout, plus Literata on the results screen only — the quote
