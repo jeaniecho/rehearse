@@ -1,0 +1,9 @@
+# Copy to android/key.properties and fill in. Both this file's real
+# counterpart and the keystore itself are gitignored — never commit either.
+#
+# storeFile is resolved relative to android/app/, so an absolute path to a
+# keystore kept outside the repository is the safer choice.
+storeFile=/absolute/path/to/rehearse-upload.jks
+storePassword=
+keyAlias=upload
+keyPassword=
