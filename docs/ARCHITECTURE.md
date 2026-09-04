@@ -401,29 +401,20 @@ bottom padding rather than leaning on the list's top padding, because the
 list's scrolls away and the first line passing underneath would be sliced
 against the logo.
 
-`Paper` (in `lib/theme/`) is the paper vocabulary of the illustrations lent to
-the UI, and it is deliberately **two** things rather than three.
+`Paper.lift` (in `lib/theme/`) is the one thing the UI borrows from the
+illustrations: a contact shadow. A card separated only by a hairline border
+reads as drawn *on* the page; the marks read as paper because of edge and
+shadow, and this lends a card the same treatment so it reads as laid on it.
+`AppTheme.cardTheme` carries the same weight through `elevation`, because
+`Card` takes an elevation rather than a shadow list — move one, move the other.
 
-`Paper.lift` is a contact shadow, and it goes on cards generally. What makes
-those marks read as paper is edge and shadow more than grain: a card with only
-a hairline border reads as drawn *on* the page, and this reads as laid on it.
-
-`Paper.grain` tiles a generated stock texture, and it goes on **coloured
-blocks only** — three of them: the briefing's person card, the progress streak
-banner, and home's card for what is next. It is kept off white surfaces on
-purpose. `AppColors.canvas` records that an off-white ground "was most of what
-made the app read as generated", and a grain field over everything is that
-mistake with more texture; §6's three failing contrast pairs are all on the
-warm half of the palette; and a grain field has no contrast ratio to state
-even where the flat colour passes.
-
-`Paper.grainOnDark` is the same asset turned up. Not a brightness adjustment
-but a polarity one — the stock carries light and dark specks, and on forest
-the dark half contributes nothing, so the light half has to do all the work.
-
-The stock itself is per-pixel noise, which tiles without a seam by
-construction: anything with spatial structure would have to be made to wrap.
-`tool/generate_texture.dart` writes it.
+A **grain texture was prototyped and dropped**, and `paper.dart` records why
+at length so it is not proposed again. Briefly: shadow alone carries the
+material, and grain costs a surface that can no longer state a contrast ratio
+— which matters while §6's three pairs still fail — bakes in a light-mode
+assumption, and repeats the mistake `AppColors.canvas` already names. Applied
+to the whole app it also flattens the figure and ground the marks depend on:
+they read as objects because the page behind them is plain.
 
 `Eyebrow` is the small all-caps label — the kicker above a screen title, and
 the smaller one inside a card. There were eleven of these written out by hand,

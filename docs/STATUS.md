@@ -296,9 +296,8 @@ change, not just a refactor.
 Measured, not guessed. Neither is in the PRD, so neither is P0.
 
 **Contrast.** Three pairs in the palette fail WCAG AA for body text. Worth
-fixing before any more colour goes on these surfaces — `Paper.grain` is kept
-off all three for this reason, and a grain field has no single contrast ratio
-to report even if it were not:
+fixing before any more colour or texture goes near these surfaces — it is one
+of the reasons the grain prototype was dropped rather than kept:
 
 | Pair | Ratio | Where |
 |---|---|---|

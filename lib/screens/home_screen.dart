@@ -268,7 +268,6 @@ class _NextUp extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.mint,
         borderRadius: BorderRadius.circular(20),
-        image: Paper.grain,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
