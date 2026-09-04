@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/models/scenario.dart';
+import 'package:rehearse/widgets/illustration.dart';
 
 /// Guards the authored content. Every scenario is hand-written, so these
 /// check the shape the screens and the coach both rely on.
@@ -42,6 +45,37 @@ void main() {
       hasLength(scenarios.length),
     );
   });
+
+  test('every scenario has a mark, and the set has nothing spare', () {
+    // Filenames are keyed by scenario id, so this is the only thing
+    // standing between a new scenario and a blank space in the home list.
+    expect(
+      Illustration.names.toSet(),
+      containsAll(scenarios.map((scenario) => scenario.id)),
+    );
+    expect(
+      Illustration.names.toSet().difference(
+        scenarios.map((scenario) => scenario.id).toSet(),
+      ),
+      {'empty-progress', 'pro-unlock', 'logo'},
+      reason: 'a mark nothing references is dead weight in the bundle',
+    );
+  });
+
+  for (final name in Illustration.names) {
+    test('$name is derived at every pixel ratio', () {
+      // The masters in art/ do not ship. If the variants are missing or
+      // stale, run `flutter test tool/generate_illustrations.dart`.
+      expect(File('art/illustrations/$name.png').existsSync(), isTrue);
+      for (final variant in ['', '2.0x/', '3.0x/']) {
+        expect(
+          File('${Illustration.directory}/$variant$name.png').existsSync(),
+          isTrue,
+          reason: 'missing the ${variant.isEmpty ? '1.0x' : variant} variant',
+        );
+      }
+    });
+  }
 
   for (final scenario in scenarios) {
     group(scenario.id, () {

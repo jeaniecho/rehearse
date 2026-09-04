@@ -2,8 +2,8 @@
 
 The scenario marks and the app icon, and the prompts that produce them.
 
-Keep this file in step with `assets/illustrations/`. An image regenerated
-from a half-remembered prompt is how a set stops looking like a set.
+Keep this file in step with `art/illustrations/`. An image regenerated from
+a half-remembered prompt is how a set stops looking like a set.
 
 ---
 
@@ -46,7 +46,7 @@ Square, 1024x1024.
 
 ---
 
-## 2. The nine subjects
+## 2. The ten subjects
 
 Append one line to the block above. Filenames are load-bearing — the code
 looks them up by scenario id.
@@ -62,10 +62,17 @@ looks them up by scenario id.
 | `resignation.png` | A sealed envelope standing upright, a single door key leaning against it. |
 | `empty-progress.png` | A bar chart with only the first, shortest bar present. |
 | `pro-unlock.png` | An open padlock resting on its side, shackle lifted. |
+| `logo.png` | Two overlapping speech bubbles, the left deep green and the right warm off-white, with a small muted amber bubble showing in the gap between them. |
 
 The first seven are the scenarios, shown at 40pt in the home list and on
 the briefing. `empty-progress` is the progress screen before the first
 rehearsal, and `pro-unlock` heads the paywall; both are shown at 120pt.
+
+`logo` is the mark in the `BrandMark` lockup — the app's own header, on
+home, onboarding and the coaching report — at 44pt. It is the app icon's
+subject drawn on a transparent ground, which is why the two look related
+and why this one has no background of its own. It replaced a forest square
+with a Material `forum` glyph in it; the wordmark beside it is still type.
 
 ### Two subjects that had to be replaced
 
@@ -89,14 +96,45 @@ say one thing on their own.
 
 ## 3. Export
 
-- 1024×1024 PNG, transparent background.
+- Square PNG, transparent background, 1024×1024 or larger. The set that
+  shipped is 1254.
 - Generate the whole set in one session so the model holds the style.
   Regenerate anything that drifts rather than accepting a near-miss; one
   off-style image makes the set look assembled.
-- Do not downscale by hand. The 1024s are the masters; the `2.0x` and
-  `3.0x` variants Flutter resolves are derived from them.
 - Check the detailed ones at size before committing to the set. At 40pt
   the difference between a gemstone and a grey blob is a few pixels.
+
+### The masters do not ship
+
+`art/illustrations/` holds them, outside the bundle, because together they
+are about 12 MB — more than the rest of the app. What ships is cut from
+them to the size each mark is actually drawn at, at the three pixel ratios
+Flutter resolves:
+
+```bash
+flutter test tool/generate_illustrations.dart   # art/ -> assets/illustrations/
+```
+
+| | 1.0x | 2.0x | 3.0x |
+|---|---|---|---|
+| the seven scenario marks | 40px | 80 | 120 |
+| `empty-progress`, `pro-unlock` | 120px | 240 | 360 |
+| `logo` | 44px | 88 | 132 |
+
+`Illustration.sizes` is the list, and the generator reads it, so the two
+cannot disagree. That is 540 KB for the whole set.
+
+Do not downscale by hand, and do not put a master in `assets/` — the
+generator mipmaps, and a 1254 → 40 downscale done in one bilinear step
+turns the paper texture into noise.
+
+### Adding a scenario
+
+Add the mark under `art/illustrations/`, named for the scenario id, add it
+to `Illustration.sizes`, and re-run the generator. There is no path table to
+update — `Illustration.scenario` builds one from the id — and
+`test/scenarios_test.dart` fails until the master, all three variants, and
+the scenario itself agree.
 
 ---
 

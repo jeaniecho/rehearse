@@ -6,6 +6,7 @@ import '../services/analytics.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/subscription_scope.dart';
 
@@ -234,6 +235,8 @@ class _Header extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Illustration.proUnlock(),
+        const SizedBox(height: 18),
         const Text(
           'REHEARSE PRO',
           style: TextStyle(

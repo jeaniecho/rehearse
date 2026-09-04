@@ -389,7 +389,33 @@ Two shared widgets carry accessibility rules worth preserving:
 
 ## Brand assets
 
-The app icon and splash mark are **drawn in Dart**, not shipped as art:
+### Illustrations
+
+Ten paper cut-out marks identify the seven scenarios, the empty progress
+screen, the paywall, and the app's own header — `BrandMark` shows the `logo`
+mark beside the wordmark, where it used to draw a forest square with a
+Material glyph in it. `Illustration` (in `lib/widgets/`) is the only thing
+that knows where they live; a scenario's mark is found by its id, so there is
+no table to keep in step and no field on `Scenario` to forget.
+
+The masters are large and stay out of the bundle. `art/illustrations/` holds
+them; `tool/generate_illustrations.dart` cuts the `1.0x` / `2.0x` / `3.0x`
+variants that ship into `assets/illustrations/`. The style, the prompts and
+the sizes are in [`ILLUSTRATIONS.md`](ILLUSTRATIONS.md).
+
+Two things follow from an asset being a real image rather than a glyph. A
+widget test's clock does not run the decode, so any harness that captures a
+frame has to `await Illustration.precacheAll` first or the marks come out
+blank — both `tool/generate_screenshots.dart` and `test/visual_qa_test.dart`
+do. And the variant Flutter picks comes from the *device pixel ratio*, which
+is why the screenshot harness now lays out at a real ratio of 3 rather than
+faking 1 and rasterising at 3: the second lays out identically but resolves
+every asset at `1.0x`, and the store would get upscaled art.
+
+### Icon and splash
+
+What is left in `BrandMarkPainter` is the icon and the splash, which stay
+**drawn in Dart** rather than shipped as art:
 `lib/theme/brand_mark_painter.dart` paints two speech bubbles on a 1024 grid
 using the same `AppColors` as the rest of the app, so the icon cannot drift
 from the brand. The same painter renders Flutter's own launch state, which is

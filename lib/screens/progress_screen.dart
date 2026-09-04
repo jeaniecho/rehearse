@@ -12,6 +12,7 @@ import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_display.dart';
 import '../widgets/subscription_scope.dart';
@@ -286,19 +287,7 @@ class _EmptyProgress extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 76,
-            height: 76,
-            decoration: const BoxDecoration(
-              color: AppColors.mint,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.insights_rounded,
-              color: AppColors.forest,
-              size: 34,
-            ),
-          ),
+          const Illustration.emptyProgress(),
           const SizedBox(height: 18),
           Text(
             'No rehearsals yet',

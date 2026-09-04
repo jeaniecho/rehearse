@@ -86,7 +86,6 @@ class Scenario {
     required this.durationMinutes,
     required this.stakes,
     required this.icon,
-    required this.emoji,
     required this.tint,
     required this.personName,
     required this.personRole,
@@ -104,11 +103,11 @@ class Scenario {
   final String skill;
   final int durationMinutes;
   final ScenarioStakes stakes;
-  final IconData icon;
 
-  /// Stands in for an illustration in lists. A drawn mark reads as a
-  /// thing; a flat glyph in a tinted square reads as a template.
-  final String emoji;
+  /// The compact stand-in, used where a paper mark would be too small to
+  /// read — the practice history rows. Everywhere the scenario is being
+  /// chosen or briefed, `Illustration.scenario` looks up its mark by [id].
+  final IconData icon;
 
   final Color tint;
   final String personName;

@@ -34,6 +34,7 @@ import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/theme/app_theme.dart';
 import 'package:rehearse/widgets/analytics_scope.dart';
 import 'package:rehearse/widgets/app_settings_scope.dart';
+import 'package:rehearse/widgets/illustration.dart';
 import 'package:rehearse/widgets/practice_history_scope.dart';
 import 'package:rehearse/widgets/subscription_scope.dart';
 
@@ -43,9 +44,9 @@ const _ratio = 3.0;
 
 final _scenario = scenarios.first;
 
-/// Scenario rows are identified by an emoji, and the test environment has
-/// no font that can draw one — so without this they render as boxes on
-/// exactly the screen the store listing leads with.
+/// The streak badge on the home screen leads with an emoji, and the test
+/// environment has no font that can draw one — so without this it renders
+/// as a box on exactly the screen the store listing leads with.
 const _emojiFamily = 'Apple Color Emoji';
 
 /// Whether the bundled typeface loaded. The warning below and the output
@@ -160,19 +161,18 @@ void main() {
   });
 
   Future<void> shoot(WidgetTester tester, String name, Widget screen) async {
-    // Lay out at the logical size a 6.7" phone actually has, then rasterise
-    // at its pixel ratio. Laying out at 1290 points wide instead would give
-    // a tablet layout at the right resolution, which is not the same thing.
-    tester.view.physicalSize = Size(
-      _size.width / _ratio,
-      _size.height / _ratio,
-    );
-    tester.view.devicePixelRatio = 1;
+    // The device exactly: 1290 physical pixels across at a ratio of 3, so
+    // the layout is the 430 points a 6.7" phone actually has. Faking the
+    // ratio as 1 lays out the same but resolves every asset at 1.0x, and
+    // the illustrations would be upscaled in the store's own images.
+    tester.view.physicalSize = _size;
+    tester.view.devicePixelRatio = _ratio;
     // Without these the frame has no notch and no home indicator, so the
     // output cannot show a safe-area mistake and does not match the device.
-    // Physical equals logical here because the ratio above is 1.
-    tester.view.viewPadding = const FakeViewPadding(top: 59, bottom: 34);
-    tester.view.padding = const FakeViewPadding(top: 59, bottom: 34);
+    // View padding is physical, hence the ratio.
+    const insets = FakeViewPadding(top: 59 * _ratio, bottom: 34 * _ratio);
+    tester.view.viewPadding = insets;
+    tester.view.padding = insets;
     addTearDown(tester.view.reset);
 
     final boundary = GlobalKey();
@@ -197,6 +197,13 @@ void main() {
           ),
         ),
       ),
+    );
+    await tester.pumpAndSettle();
+
+    // The marks decode off the clock this test controls, so they are blank
+    // until something actually awaits them.
+    await tester.runAsync(
+      () => Illustration.precacheAll(tester.element(find.byType(MaterialApp))),
     );
     await tester.pumpAndSettle();
 

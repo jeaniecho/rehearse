@@ -7,6 +7,7 @@ import '../services/practice_history.dart';
 import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/subscription_scope.dart';
 import 'brief_screen.dart';
@@ -275,8 +276,8 @@ class _ScenarioRow extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(scenario.emoji, style: const TextStyle(fontSize: 22)),
-              const SizedBox(width: 14),
+              Illustration.scenario(scenario.id),
+              const SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

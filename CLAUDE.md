@@ -25,7 +25,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 219 tests
+flutter test                    # 230 tests
 cd server && npm test           # 14 tests
 ```
 
@@ -50,6 +50,13 @@ To regenerate the store screenshots:
 
 ```bash
 flutter test tool/generate_screenshots.dart
+```
+
+To rebuild the bundled illustrations after adding or replacing a master in
+`art/illustrations/`:
+
+```bash
+flutter test tool/generate_illustrations.dart
 ```
 
 To regenerate the app icon and splash after changing the mark:
@@ -153,6 +160,8 @@ lib/screens    onboarding, home, brief, practice, results, progress, paywall
 lib/services   coach (remote/offline/resilient), speech in/out, history,
                settings, subscription + RevenueCat, analytics + PostHog
 lib/theme      AppColors tokens, Material 3 theme, and the brand mark painter
-lib/widgets    shared UI + the four InheritedNotifier scopes
+lib/widgets    shared UI, the Illustration lookup, and the four
+               InheritedNotifier scopes
+art            illustration masters; not bundled, see docs/ILLUSTRATIONS.md
 server         Node proxy: /health, /simulation/respond, /simulation/evaluate
 ```

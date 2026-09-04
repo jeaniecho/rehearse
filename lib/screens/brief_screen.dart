@@ -7,6 +7,7 @@ import '../widgets/app_settings_scope.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/illustration.dart';
 import '../widgets/subscription_scope.dart';
 import 'paywall_screen.dart';
 import 'practice_screen.dart';
@@ -94,6 +95,13 @@ class _BriefScreenState extends State<BriefScreen> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           children: [
             const SizedBox(height: 12),
+            // The same mark the home row carried, so arriving here reads as
+            // opening the thing you tapped rather than as a new screen.
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Illustration.scenario(scenario.id),
+            ),
+            const SizedBox(height: 18),
             Text(
               '${scenario.skill.toUpperCase()}  ·  ${scenario.durationMinutes} MIN  ·  ${scenario.stakes.label.toUpperCase()}',
               style: const TextStyle(

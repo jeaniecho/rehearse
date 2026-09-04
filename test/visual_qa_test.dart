@@ -15,6 +15,7 @@ import 'package:rehearse/screens/results_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/theme/app_theme.dart';
+import 'package:rehearse/widgets/illustration.dart';
 import 'package:rehearse/widgets/practice_history_scope.dart';
 
 void main() {
@@ -36,6 +37,10 @@ void main() {
         history: history,
         child: MaterialApp(theme: AppTheme.light, home: screen),
       ),
+    );
+    await tester.pumpAndSettle();
+    await tester.runAsync(
+      () => Illustration.precacheAll(tester.element(find.byType(MaterialApp))),
     );
     await tester.pumpAndSettle();
     final element = tester.element(find.byType(Scaffold).first);

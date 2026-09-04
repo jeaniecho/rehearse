@@ -225,6 +225,23 @@ called difficulty, which made the picker unreadable next to the briefing pill.
 `SimulationDifficulty` is calm / defensive / very-defensive and is chosen.
 Analytics sends them as `scenario_stakes` and `difficulty` respectively.
 
+**Scenarios are identified by drawn marks, not emoji.** The seven scenarios,
+the empty progress screen and the paywall each carry a paper cut-out
+illustration; `Scenario.emoji` is gone. `Scenario.icon` stayed — the practice
+history rows show a scenario at 42pt in a tinted tile, which is below the size
+at which a textured illustration says anything, so those kept the glyph. The
+style and the prompts are in [`ILLUSTRATIONS.md`](ILLUSTRATIONS.md); the one
+emoji left in the app is the flame on the streak badge, which is why
+`tool/generate_screenshots.dart` still loads an emoji font.
+
+**The header logo is the paper mark, not a glyph in a square.** `BrandMark`
+showed `Icons.forum_rounded` on a forest rounded square; it now shows the
+`logo` illustration, so the app's own header is in the same material as
+everything else it labels. `BrandMarkPainter` stays — it still draws the app
+icon's Android layers and both splashes, which are flat by definition.
+`BrandMark.light` went with the change: it was never used, and the artwork
+carries its own colour.
+
 **Free-form mode no longer coaches mid-conversation.** PRD §7.3 says the
 simulation must not explain itself while it runs, so the per-turn coach note
 is gone from free-form: the consequence of a weak message is the reply it
@@ -307,7 +324,7 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 219 Flutter + 14 server
+Tests            : 230 Flutter + 14 server
 TODO/FIXME       : none
 ```
 
