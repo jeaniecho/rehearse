@@ -107,6 +107,47 @@ For a release build, pass the same defines to `flutter build`. A
 `--dart-define-from-file=keys.json` file is easier for CI — add it to
 `.gitignore` if you create one.
 
+### Every key the app reads
+
+All of them are optional. With none set the app runs on the offline coach,
+gates nothing, and reports nothing.
+
+| Key | Absent means |
+|---|---|
+| `REHEARSE_REVENUECAT_IOS_KEY` | no gate, no counter, no paywall on iOS |
+| `REHEARSE_REVENUECAT_ANDROID_KEY` | the same on Android |
+| `REHEARSE_COACH_URL` | the on-device offline coach answers |
+| `REHEARSE_POSTHOG_KEY` | analytics is a no-op sink |
+| `REHEARSE_POSTHOG_HOST` | `https://us.i.posthog.com` |
+| `REHEARSE_SENTRY_DSN` | crash reporting is off |
+| `REHEARSE_ENVIRONMENT` | `development` |
+
+### Not retyping them
+
+`.vscode/launch.json` is gitignored, so keys can live in it directly. A
+committed one would pin everyone to a single environment, which is the same
+reason the keys are not in the repo to begin with.
+
+```jsonc
+{
+  "version": "0.2.0",
+  "configurations": [
+    { "name": "Rehearse (demo)", "request": "launch", "type": "dart",
+      "program": "lib/main.dart" },
+    { "name": "Rehearse (with keys)", "request": "launch", "type": "dart",
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--dart-define=REHEARSE_REVENUECAT_ANDROID_KEY=goog_xxxxxxxx",
+        "--dart-define=REHEARSE_REVENUECAT_IOS_KEY=appl_xxxxxxxx"
+      ] }
+  ]
+}
+```
+
+Two configurations rather than one, because the demo path — no keys at all —
+is the one that has to keep working and is easy to stop exercising once a
+key is in the file.
+
 > **Never commit a `sk_` secret key.** Those are server keys and have no place
 > in a client at all.
 

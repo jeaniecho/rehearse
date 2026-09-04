@@ -46,7 +46,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Build-time keys passed with --dart-define-from-file. Publishable client
-# keys, but per-environment and not the repo's business.
+# Build-time keys. Publishable client keys, but per-environment and not the
+# repo's business — and a committed launch config would pin everyone to one
+# environment. docs/REVENUECAT.md §5 has the list and a config to paste.
+.vscode/launch.json
 release.json
 *.dart-define.json
