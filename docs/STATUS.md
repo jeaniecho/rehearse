@@ -4,10 +4,10 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-03, after the release drafting.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (219 passing),
+> **Last audited:** 2026-09-04, after the serif landed on the results screen.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (242 passing),
 > `cd server && npm test` (14 passing), `flutter build web --release` and
-> `flutter build apk --debug` (both succeed).
+> `flutter build apk --debug` (both succeed, and both carry the second font).
 
 ---
 
@@ -125,11 +125,12 @@ Everything below is **P0 in the PRD** unless marked otherwise.
 
 ### Broken
 
-Nothing. Analysis is clean, all 219 Flutter tests and 14 server tests pass,
+Nothing. Analysis is clean, all 242 Flutter tests and 14 server tests pass,
 and both the web and Android builds succeed.
 
-The two known **defects** are cosmetic but real, and both are documented in
-§6 rather than here because they are quality issues rather than breakage.
+One known **defect** remains, and it is documented in §6 rather than here
+because it is a quality issue rather than breakage. The contrast failures
+that used to sit beside it were fixed by the paper redesign; see §6.
 
 ---
 
@@ -310,24 +311,34 @@ change, not just a refactor.
 
 ## 6. Known quality defects
 
-Measured, not guessed. Neither is in the PRD, so neither is P0.
+Measured, not guessed. Neither is in the PRD, so neither is P0 — and one
+of the two turned out to be already fixed.
 
-**Contrast.** Three pairs in the palette fail WCAG AA for body text. Worth
-fixing before any more colour or texture goes near these surfaces — it is one
-of the reasons the grain prototype was dropped rather than kept:
+**Contrast — fixed, and this entry used to say otherwise.** Three pairs were
+recorded here as failing WCAG AA. The paper redesign darkened `coral` to
+`#B3400F` and took all three past the 4.5:1 floor for body text, and nobody
+updated this section. Re-measured 2026-09-04:
 
-| Pair | Ratio | Where |
-|---|---|---|
-| coral on peach | **2.34:1** | the coach's feedback text — the most important copy in the app |
-| coral on canvas | **2.79:1** | "RECOMMENDED" and other eyebrow labels |
-| muted on peach / mint | 3.8–4.1:1 | coach card bodies |
+| Pair | Recorded here | Actual | Verdict |
+|---|---|---|---|
+| coral on peach | 2.34:1 | **4.99:1** | passes |
+| coral on canvas | 2.79:1 | **5.74:1** | passes |
+| muted on peach / mint | 3.8–4.1:1 | **4.6 / 4.67:1** | passes |
+| forest on mint | 7.63:1 | **6.43:1** | passes |
 
-4.5:1 is the floor for body text. The forest-on-mint pair used for positive
-feedback passes at 7.63:1, so only the warm half of the palette is affected.
+One pair is still under the body-text floor: `coralBright` on peach, at
+**3.2:1**. It is used in exactly one place — the 4px rule beside YOUR GOAL in
+`brief_screen.dart` — where the relevant threshold is 3:1 for a non-text
+element, which it passes. Put `coralBright` on type and that stops being
+true.
+
+The lesson is the entry, not the ratios: a measured claim in this file goes
+stale the moment the palette moves. Re-measure before trusting it.
 
 **No dark theme.** `lib/app.dart` sets `theme:` only. `AppColors` are const
-values referenced directly by roughly forty widgets, so adding one is a
-palette-indirection change across the widget layer, not a one-line addition.
+values referenced directly across 20 files in `lib/`, so adding one is a
+palette-indirection change through the whole widget layer, not a one-line
+addition.
 
 ---
 
@@ -355,7 +366,8 @@ against live services; the rest is release and depth.
    screenshots and the privacy answers are written; what is left needs an
    Apple account, a Play account, a keystore, and somewhere to host the
    policy.
-5. Contrast fixes and dark theme, if there is time before submission.
+5. Dark theme, if there is time before submission. The contrast half of
+   this item is done — see §6.
 6. Product depth the PRD lists but does not require for P0: a delegation
    scenario, 4–7 turn conversations, session outcomes, and simulation state.
 
