@@ -7,6 +7,7 @@ import '../models/scenario.dart';
 import '../models/practice_summary.dart';
 import '../services/practice_history.dart';
 import '../theme/app_theme.dart';
+import '../theme/paper.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
@@ -146,6 +147,7 @@ class _StreakBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.forest,
         borderRadius: BorderRadius.circular(22),
+        image: Paper.grainOnDark,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

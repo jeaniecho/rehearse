@@ -6,6 +6,7 @@ import '../services/analytics.dart';
 import '../services/practice_history.dart';
 import '../services/subscription.dart';
 import '../theme/app_theme.dart';
+import '../theme/paper.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/brand_mark.dart';
 import '../widgets/eyebrow.dart';
@@ -267,6 +268,7 @@ class _NextUp extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.mint,
         borderRadius: BorderRadius.circular(20),
+        image: Paper.grain,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,8 +410,10 @@ class _ScenarioTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 13),
           decoration: BoxDecoration(
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
+            boxShadow: Paper.lift,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

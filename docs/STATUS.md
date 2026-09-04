@@ -293,10 +293,12 @@ change, not just a refactor.
 
 ## 6. Known quality defects
 
-Both were measured, not guessed. Neither is in the PRD, so neither is P0 — but
-both affect the screenshots the submission is judged on.
+Measured, not guessed. Neither is in the PRD, so neither is P0.
 
-**Contrast.** Three pairs in the palette fail WCAG AA for body text:
+**Contrast.** Three pairs in the palette fail WCAG AA for body text. Worth
+fixing before any more colour goes on these surfaces — `Paper.grain` is kept
+off all three for this reason, and a grain field has no single contrast ratio
+to report even if it were not:
 
 | Pair | Ratio | Where |
 |---|---|---|
@@ -306,12 +308,6 @@ both affect the screenshots the submission is judged on.
 
 4.5:1 is the floor for body text. The forest-on-mint pair used for positive
 feedback passes at 7.63:1, so only the warm half of the palette is affected.
-
-**`fontFamily: 'SF Pro Display'` only exists on Apple platforms.** On Android
-and web the app silently falls back to the platform default, so it does not
-look quite like its own screenshots. Found while generating them. Bundling a
-licensed font would fix it and would also make widget tests render real text
-instead of boxes.
 
 **No dark theme.** `lib/app.dart` sets `theme:` only. `AppColors` are const
 values referenced directly by roughly forty widgets, so adding one is a

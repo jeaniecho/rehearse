@@ -59,6 +59,12 @@ To rebuild the bundled illustrations after adding or replacing a master in
 flutter test tool/generate_illustrations.dart
 ```
 
+To rebuild the tiled paper stock behind `Paper.grain`:
+
+```bash
+flutter test tool/generate_texture.dart
+```
+
 To regenerate the app icon and splash after changing the mark:
 
 ```bash
@@ -167,7 +173,8 @@ lib/screens/practice
                `part`s of practice_screen, split for length only
 lib/services   coach (remote/offline/resilient), speech in/out, history,
                settings, subscription + RevenueCat, analytics + PostHog
-lib/theme      AppColors tokens, Material 3 theme, and the brand mark painter
+lib/theme      AppColors tokens, Material 3 theme, the Paper surface
+               vocabulary, and the brand mark painter
 lib/widgets    shared UI, the Illustration lookup, and the four
                InheritedNotifier scopes behind one RehearseScope
 art            illustration masters; not bundled, see docs/ILLUSTRATIONS.md

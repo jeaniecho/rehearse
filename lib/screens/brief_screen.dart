@@ -5,6 +5,7 @@ import '../models/scenario.dart';
 import '../services/analytics.dart';
 import '../widgets/app_settings_scope.dart';
 import '../theme/app_theme.dart';
+import '../theme/paper.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/difficulty_picker.dart';
@@ -376,6 +377,7 @@ class _PersonCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.forest,
         borderRadius: BorderRadius.circular(18),
+        image: Paper.grainOnDark,
       ),
       child: Row(
         children: [

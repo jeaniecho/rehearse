@@ -130,7 +130,11 @@ abstract final class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
-        elevation: 0,
+        // Material's own shadow rather than Paper.lift, because Card takes
+        // an elevation and not a shadow list. Tuned to sit at the same
+        // weight; if one moves, move the other.
+        elevation: 1.5,
+        shadowColor: const Color(0x1A000000),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
