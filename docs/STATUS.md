@@ -182,6 +182,23 @@ beat fifty generic scenarios."
 
 Recorded so the next session does not have to rediscover it.
 
+**The app is set in two families, which the PRD does not mention.** Plus
+Jakarta Sans throughout, plus Literata on the results screen only — the quote
+in `_Quote` and the `STRONGER` rewrite. The rule is that sans is the app
+talking and serif is what a person said; the note card has to hold your line,
+a comment on it, and a better line in one column, and the quote had already
+resorted to italic to get that separation. Adding the serif to the scenario
+brief was mocked up and rejected: the one paragraph that qualifies
+(`scenario.context`) sits collapsed behind **Read the full brief**, and a
+voice you have to tap to see does not earn a bundled font. If that disclosure
+ever goes away, the brief becomes worth revisiting.
+
+The bundled file is subset to latin, 312 KB against the 955 KB Google Fonts
+ships, with both the weight and optical-size axes intact. `text_scale_test.dart`
+draws boxes rather than glyphs, so it does not prove the serif's metrics — the
+report was laid out separately at 1.0x, 1.3x, 1.6x and 2.0x with both families
+really loaded, and holds.
+
 **Voice is P2 and it is built.** The PRD lists "voice conversation" and
 "realtime speech" under non-goals (§29) and P2 (§31); the roadmap agrees (§1).
 Dictated answers and spoken replies both exist. The PRD's own escape clause —

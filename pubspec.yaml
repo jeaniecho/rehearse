@@ -73,6 +73,13 @@ flutter:
         - asset: assets/fonts/PlusJakartaSans[wght].ttf
         - asset: assets/fonts/PlusJakartaSans-Italic[wght].ttf
           style: italic
+    # The second voice, and it earns its place on one screen only — see
+    # `AppTheme.serifFontFamily`. Subset to latin, which is why it is a
+    # third of what Google Fonts ships; both axes survive, and the
+    # optical-size one is the reason this face rather than a display serif.
+    - family: Literata
+      fonts:
+        - asset: assets/fonts/Literata[opsz,wght].ttf
 
   # The paper cut-out marks. Derived from the masters in `art/` — see
   # docs/ILLUSTRATIONS.md — so the 2.0x and 3.0x variants beside them are

@@ -64,6 +64,12 @@ Future<bool> _loadBrandFont() async {
         rootBundle.load('assets/fonts/PlusJakartaSans-Italic[wght].ttf'),
       );
     await loader.load();
+
+    // The serif too, or the coaching report — the one shot that carries a
+    // quote — comes out with the quote and the rewrite set in boxes.
+    final serif = FontLoader(AppTheme.serifFontFamily)
+      ..addFont(rootBundle.load('assets/fonts/Literata[opsz,wght].ttf'));
+    await serif.load();
   } on Object {
     text = false;
   }

@@ -415,13 +415,20 @@ class _NoteCard extends StatelessWidget {
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(14),
               ),
+              // Serif, like the quote above it: this is a line to say, not
+              // a note about one. The card then reads as speech, comment,
+              // speech, and the comment stops looking like more of your
+              // own words. Lighter than the w600 it replaced — the serif
+              // was already carrying the emphasis.
               child: Text(
                 suggestion,
                 style: const TextStyle(
                   color: AppColors.ink,
-                  fontSize: 14,
+                  fontFamily: AppTheme.serifFontFamily,
+                  fontFamilyFallback: AppTheme.serifFallback,
+                  fontSize: 15,
                   height: 1.45,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -434,6 +441,12 @@ class _NoteCard extends StatelessWidget {
 
 /// What you said, set off so it reads as a quotation rather than as more
 /// coaching prose.
+///
+/// The serif is what does that now. It used to be italic, which was the
+/// only distinction one family offered; serif and italic together would be
+/// one emphasis too many. A point larger than the comment beside it
+/// because the serif's x-height is smaller — the two should look the same
+/// size, not measure the same.
 class _Quote extends StatelessWidget {
   const _Quote({required this.text, required this.accent});
 
@@ -451,9 +464,10 @@ class _Quote extends StatelessWidget {
         '“$text”',
         style: const TextStyle(
           color: AppColors.ink,
-          fontSize: 14,
+          fontFamily: AppTheme.serifFontFamily,
+          fontFamilyFallback: AppTheme.serifFallback,
+          fontSize: 15,
           height: 1.45,
-          fontStyle: FontStyle.italic,
         ),
       ),
     );

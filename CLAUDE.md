@@ -142,6 +142,11 @@ From `ROADMAP.md` §0, and they hold:
 - **Anything that changes what leaves the device changes
   `docs/PRIVACY.md`,** in the same commit. It is a published document that
   describes the code.
+- **The serif is speech, and only on the results screen.** `AppTheme.serifFontFamily`
+  reaches two styles — the quote and the `STRONGER` rewrite — because sans is the
+  app talking and serif is what a person said. Widen it and the distinction stops
+  meaning anything; the brief was considered and rejected, see
+  `docs/ARCHITECTURE.md`, Two families.
 - **Never send transcript content to analytics** (PRD §16). No method on
   `Analytics` may take a `String` parameter — use an id or an enum. There are
   tests that will fail if this slips.
@@ -167,8 +172,8 @@ lib/screens/practice
                `part`s of practice_screen, split for length only
 lib/services   coach (remote/offline/resilient), speech in/out, history,
                settings, subscription + RevenueCat, analytics + PostHog
-lib/theme      AppColors tokens, Material 3 theme, the Paper card shadow,
-               and the brand mark painter
+lib/theme      AppColors tokens, Material 3 theme, the two font families,
+               the Paper card shadow, and the brand mark painter
 lib/widgets    shared UI, the Illustration lookup, and the four
                InheritedNotifier scopes behind one RehearseScope
 art            illustration masters; not bundled, see docs/ILLUSTRATIONS.md

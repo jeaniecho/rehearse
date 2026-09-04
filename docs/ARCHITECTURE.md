@@ -385,6 +385,26 @@ whole widget layer rather than a single addition in `app.dart`.
 Scenario cards use the tint set — `peach`, `lavender`, `mint`, `sky`, `butter`,
 `rose` — all light enough to carry `AppColors.ink`.
 
+### Two families
+
+`AppTheme.fontFamily` (Plus Jakarta Sans) is the app. `AppTheme.serifFontFamily`
+(Literata) reaches exactly two `TextStyle`s, both in `results_screen.dart`: the
+quote in `_Quote`, and the rewrite in the `STRONGER` box. The rule is *sans is
+the app talking, serif is what a person said* — and a note card is the one place
+that has to hold your line, our read of it, and a better line in a single
+column, which one family can only distinguish by convention. The quote was
+italic for that reason before the serif existed.
+
+Neither family goes through `ThemeData`, which takes a single `fontFamily`; the
+serif is named on the two styles directly. `AppTheme.serifFallback` points at
+the sans, because both strings can come from the model and the bundled Literata
+is subset to latin — a glyph it lacks falls back rather than drawing a box.
+
+The serif is a point larger than the sans beside it (15 against 14) so the two
+*look* the same size. `tool/generate_screenshots.dart` loads both families, or
+the coaching report — the one store shot with a quote in it — renders the serif
+as boxes.
+
 `AppTheme.overlayStyle` is the status bar, and it is set in two places
 because there are two ways a screen gets one. An `AppBar` picks its own
 style by estimating the brightness of its background, and this app bar is

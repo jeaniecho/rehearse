@@ -39,6 +39,27 @@ abstract final class AppTheme {
   /// and the app stops looking unlike its own screenshots.
   static const fontFamily = 'Plus Jakarta Sans';
 
+  /// The second voice: what a person said, rather than what the app says
+  /// about it.
+  ///
+  /// It reaches exactly two styles, both on the results screen — the quote
+  /// and the rewrite offered back — because a note card has to hold your
+  /// line, our read of it, and a better line in one column, and one family
+  /// can only tell those apart by convention. Everything else in the app
+  /// stays [fontFamily]: headings, labels, scores, buttons, the wordmark,
+  /// and the practice transcript, which is scanned turn by turn rather
+  /// than read.
+  ///
+  /// Not applied through `ThemeData`, which takes a single family. Widen
+  /// this and the distinction stops meaning anything.
+  static const serifFontFamily = 'Literata';
+
+  /// The sans catches anything the serif cannot draw, rather than a row of
+  /// notdef boxes. Both serif strings can come from the model, and the
+  /// bundled Literata is subset to latin — so this is the same bet as
+  /// every other fallback in the app: degrade, never break.
+  static const serifFallback = [fontFamily];
+
   /// Dark status bar content, on every screen.
   ///
   /// Not the default it looks like: an `AppBar` picks its overlay style by
