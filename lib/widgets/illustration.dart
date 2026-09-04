@@ -61,6 +61,7 @@ class Illustration extends StatelessWidget {
     'promotion-denied': spotSize,
     'high-performer': spotSize,
     'resignation': spotSize,
+    'delegation': spotSize,
     'empty-progress': heroSize,
     'pro-unlock': heroSize,
     'logo': logoSize,

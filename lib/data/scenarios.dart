@@ -979,4 +979,144 @@ const scenarios = <Scenario>[
       ),
     ],
   ),
+  Scenario(
+    id: 'delegation',
+    title: 'The work that keeps coming back',
+    subtitle: 'Leave something hard in someone else’s hands.',
+    skill: 'Delegation',
+    durationMinutes: 4,
+    stakes: ScenarioStakes.warmUp,
+    icon: Icons.outbox_outlined,
+    tint: AppColors.subtle,
+    personName: 'Elif Demir',
+    personRole: 'Data analyst',
+    personInitials: 'ED',
+    context:
+        'Elif is presenting the quarterly business review on Thursday — the first exec-facing thing you have handed over. The slides are strong. Elif has now asked you twice to present it instead.',
+    goal:
+        'Leave the presentation with Elif, and agree on the support that makes that reasonable rather than reckless.',
+    watchFor:
+        'Taking the work back will feel like kindness. It is the one move that guarantees nothing changes.',
+    openingLine:
+        'The deck is basically done — I just think it lands better coming from you. You know that room.',
+    turns: [
+      DialogueTurn(
+        employeeLine:
+            'The deck is basically done — I just think it lands better coming from you. You know that room.',
+        prompt: 'How do you answer?',
+        choices: [
+          ResponseChoice(
+            text:
+                'The deck is yours and so is the room. Tell me what would make Thursday feel survivable.',
+            scoreDelta: 14,
+            feedback:
+                'You left ownership where it was and asked what support would make it work — that is the whole job.',
+            clarity: 2,
+            empathy: 2,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'You’re probably right — I’ll present it and you can walk me through the slides beforehand.',
+            scoreDelta: -8,
+            feedback:
+                'Kind, and the fastest way to teach Elif that hard things come back to you.',
+            clarity: -1,
+            empathy: 1,
+            directness: -2,
+            confidence: -2,
+          ),
+          ResponseChoice(
+            text: 'You’ll be fine. It’s only a readout.',
+            scoreDelta: -3,
+            feedback:
+                'You held the line, but waved away a worry you had not heard yet.',
+            clarity: 0,
+            empathy: -2,
+            directness: 2,
+            confidence: 1,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine:
+            'Last time I presented, I got cut off four slides in and asked for numbers I didn’t have. I don’t want that in front of the whole leadership team.',
+        prompt: 'Elif names the real fear. What next?',
+        choices: [
+          ResponseChoice(
+            text:
+                'That’s a fair thing to be worried about. Which question would you least want to be asked?',
+            scoreDelta: 10,
+            feedback:
+                'You treated the fear as information and started rehearsing the actual risk.',
+            clarity: 1,
+            empathy: 2,
+            directness: 1,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'That happens to everyone in there. Try not to take it personally.',
+            scoreDelta: -5,
+            feedback:
+                'Normalising it is not the same as preparing for it, and it landed as dismissive.',
+            clarity: 0,
+            empathy: -1,
+            directness: 0,
+            confidence: 1,
+          ),
+          ResponseChoice(
+            text: 'I’ll sit next to you and jump in if it gets rough.',
+            scoreDelta: -4,
+            feedback:
+                'Sitting in as backup sounds supportive; it also tells the room who really owns this.',
+            clarity: -1,
+            empathy: 2,
+            directness: -2,
+            confidence: -1,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine:
+            'Okay. If I can get the regional numbers from finance by Tuesday, I think I can hold my own.',
+        prompt: 'Close it.',
+        choices: [
+          ResponseChoice(
+            text:
+                'Then Tuesday is the checkpoint. Send me the two slides you are least sure of and I’ll push on them, not fix them.',
+            scoreDelta: 14,
+            feedback:
+                'A checkpoint with a stated limit — you offered pressure-testing rather than rescue.',
+            clarity: 2,
+            empathy: 1,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'Great. And if finance is slow, just send it over and I’ll finish it off.',
+            scoreDelta: -8,
+            feedback:
+                'One sentence undid the handover: the exit you left is the one Elif will take.',
+            clarity: -2,
+            empathy: 1,
+            directness: -2,
+            confidence: -2,
+          ),
+          ResponseChoice(
+            text: 'Good. Thursday, ten o’clock, you’re presenting.',
+            scoreDelta: -2,
+            feedback:
+                'Unambiguous, but you closed without agreeing the one thing Elif said they needed.',
+            clarity: 2,
+            empathy: -2,
+            directness: 2,
+            confidence: 1,
+          ),
+        ],
+      ),
+    ],
+  ),
 ];

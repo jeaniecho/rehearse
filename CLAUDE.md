@@ -25,7 +25,8 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 242 tests
+flutter test                    # 249 tests — 23 red until the delegation
+                                # mark exists; see STATUS.md §2 Broken
 cd server && npm test           # 14 tests
 ```
 
@@ -163,7 +164,7 @@ From `ROADMAP.md` §0, and they hold:
 ## Current shape
 
 ```text
-lib/data       authored scenario content (7 scenarios)
+lib/data       authored scenario content (8 scenarios)
 lib/models     Scenario, PracticeResponse, PracticeSummary, PracticeRecord,
                Subscription plans and outcomes
 lib/screens    onboarding, tabs (home / progress / you), brief, practice,

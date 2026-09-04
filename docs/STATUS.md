@@ -5,9 +5,10 @@
 > document a new session should read first.
 >
 > **Last audited:** 2026-09-04, after the serif landed on the results screen.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (242 passing),
-> `cd server && npm test` (14 passing), `flutter build web --release` and
-> `flutter build apk --debug` (both succeed, and both carry the second font).
+> **Verified by:** `flutter analyze` (clean), `flutter test` (**226 passing,
+> 23 failing** — see §2 Broken), `cd server && npm test` (14 passing),
+> `flutter build web --release` and `flutter build apk --debug` (both
+> succeed, and both carry the second font).
 
 ---
 
@@ -133,8 +134,24 @@ three simulation items are not the P0 gaps this section used to call them.
 
 ### Broken
 
-Nothing. Analysis is clean, all 242 Flutter tests and 14 server tests pass,
-and both the web and Android builds succeed.
+**The home screen throws, and 23 tests fail with it.** The `delegation`
+scenario was committed without its illustration master, so
+`assets/illustrations/delegation.png` does not exist and the home list — which
+draws a mark for every scenario — raises "Unable to load asset" on build.
+Every test that renders home fails behind that one cause; the scenario's own
+content assertions all pass.
+
+This was committed knowingly, to be closed by generating the master. The fix
+is two commands and no code:
+
+```bash
+# save the §2 subject from docs/ILLUSTRATIONS.md as art/illustrations/delegation.png
+flutter test tool/generate_illustrations.dart && flutter test
+```
+
+Until then the app is not runnable in the sense priority 4 means, and the
+Flutter suite is red. Analysis is clean, the 14 server tests pass, and both
+builds still succeed.
 
 One known **defect** remains, and it is documented in §6 rather than here
 because it is a quality issue rather than breakage. The contrast failures
@@ -164,7 +181,7 @@ untouched.
 
 ## 4. Scenario coverage against the Day 1 seed list
 
-Target was 8 across six categories. Seven exist.
+Target was 8 across six categories. Eight exist.
 
 | Roadmap category | Covered by | |
 |---|---|---|
@@ -173,14 +190,15 @@ Target was 8 across six categories. Seven exist.
 | Boundary ×1 | `say-no` | 🟡 shared |
 | Saying no ×1 | `say-no` | 🟡 same scenario as boundary |
 | Conflict ×1 | `peer-conflict` | ✅ |
-| Delegation ×1 | — | ❌ **missing** |
+| Delegation ×1 | `delegation` | ✅ |
 
 Beyond the seed list: `upward-feedback` and `resignation`.
 
-Two writes would close this: a **delegation** scenario (PRD §7.1 category 6,
-"delegating instead of taking work back"), and splitting **boundary** from
-**saying no** — an after-hours-messages boundary is a distinct conversation
-from declining a request.
+One write would close this: splitting **boundary** from **saying no** — an
+after-hours-messages boundary is a distinct conversation from declining a
+request, and `say-no` is currently doing both jobs. The delegation gap was
+closed 2026-09-04 by `delegation`, which is PRD §7.1 category 6,
+"delegating instead of taking work back".
 
 The PRD is explicit that this should stop around 10: "Ten excellent scenarios
 beat fifty generic scenarios."

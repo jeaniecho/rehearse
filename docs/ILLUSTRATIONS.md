@@ -46,7 +46,7 @@ Square, 1024x1024.
 
 ---
 
-## 2. The ten subjects
+## 2. The eleven subjects
 
 Append one line to the block above. Filenames are load-bearing — the code
 looks them up by scenario id.
@@ -60,11 +60,12 @@ looks them up by scenario id.
 | `promotion-denied.png` | An open gift box with its lid lifted off and set beside it, the box clearly empty. |
 | `high-performer.png` | A faceted cut gemstone on a flat base, one facet edge sharper than the rest. |
 | `resignation.png` | A sealed envelope standing upright, a single door key leaning against it. |
+| `delegation.png` | A shallow out-tray holding one thick sheet, the sheet sitting slightly proud of the tray as though just set down. |
 | `empty-progress.png` | A bar chart with only the first, shortest bar present. |
 | `pro-unlock.png` | An open padlock resting on its side, shackle lifted. |
 | `logo.png` | Two overlapping speech bubbles, the left deep green and the right warm off-white, with a small muted amber bubble showing in the gap between them. |
 
-The first seven are the scenarios, shown at 40pt in the home list and on
+The first eight are the scenarios, shown at 40pt in the home list and on
 the briefing. `empty-progress` is the progress screen before the first
 rehearsal, and `pro-unlock` heads the paywall; both are shown at 120pt.
 
