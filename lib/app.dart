@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -46,6 +47,9 @@ class _RehearseAppState extends State<RehearseApp> {
     _settings = widget.settings ?? AppSettings();
     _subscription = widget.subscription ?? Subscription();
     _analytics = widget.analytics ?? Analytics();
+
+    // Home and onboarding have no AppBar to assert this for them.
+    SystemChrome.setSystemUIOverlayStyle(AppTheme.overlayStyle);
 
     _history.load();
     _settings.load();

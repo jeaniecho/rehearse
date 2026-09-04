@@ -378,6 +378,22 @@ whole widget layer rather than a single addition in `app.dart`.
 Scenario cards use the tint set — `peach`, `lavender`, `mint`, `sky`, `butter`,
 `rose` — all light enough to carry `AppColors.ink`.
 
+`AppTheme.overlayStyle` is the status bar, and it is set in two places
+because there are two ways a screen gets one. An `AppBar` picks its own
+style by estimating the brightness of its background, and this app bar is
+transparent — which estimates as *dark* and asks the system for white icons
+on a white bar. `AppBarTheme.systemOverlayStyle` overrides that; `app.dart`
+calls `SystemChrome.setSystemUIOverlayStyle` once for home and onboarding,
+which have no app bar to assert it for them. The two brightness fields are
+deliberate opposites: Android names the icons, iOS names the background.
+
+Home and onboarding both put their header *outside* the scrollable — a
+`Column` of a fixed `Padding` and an `Expanded` list — so it stays put and
+the content cannot ride up under the status bar. The header carries its own
+bottom padding rather than leaning on the list's top padding, because the
+list's scrolls away and the first line passing underneath would be sliced
+against the logo.
+
 Two shared widgets carry accessibility rules worth preserving:
 
 - `MetaPill` ellipsizes its label, so a long string cannot overflow its card.

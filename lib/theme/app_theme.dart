@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 abstract final class AppColors {
   /// Cards are white on white; the border is what separates them. The old
@@ -34,6 +35,22 @@ abstract final class AppTheme {
   /// Bundled, so Android and the web no longer fall back to something else
   /// and the app stops looking unlike its own screenshots.
   static const fontFamily = 'Plus Jakarta Sans';
+
+  /// Dark status bar content, on every screen.
+  ///
+  /// Not the default it looks like: an `AppBar` picks its overlay style by
+  /// estimating the brightness of its own background, and this app bar is
+  /// transparent — which estimates as dark and asks the system for white
+  /// icons, on a white bar. Set here so the app bars and the two screens
+  /// that have none all say the same thing.
+  ///
+  /// The two brightnesses are opposites on purpose: Android names the
+  /// icons, iOS names the background behind them.
+  static const overlayStyle = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+  );
 
   static ThemeData get light => withFallback(null);
 
@@ -106,6 +123,7 @@ abstract final class AppTheme {
         elevation: 0,
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
+        systemOverlayStyle: overlayStyle,
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,

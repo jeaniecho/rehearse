@@ -55,82 +55,103 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       body: PageWidth(
-        child: ListView(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            MediaQuery.paddingOf(context).top,
-            20,
-            24,
-          ),
+        // The header sits outside the scrollable rather than being its
+        // first row, so it stays put and the list cannot ride up under the
+        // status bar. Onboarding is built the same way.
+        child: Column(
           children: [
-            Row(
-              children: [
-                // Flexible so the wordmark yields to the progress button
-                // rather than pushing it off the edge at a large text scale.
-                const Flexible(child: BrandMark()),
-                const Spacer(),
-                if (subscription?.isPro ?? false) ...[
-                  const Text(
-                    'PRO',
-                    style: TextStyle(
-                      color: AppColors.forest,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                MediaQuery.paddingOf(context).top,
+                20,
+                // Space below the header, not above the list: the list's own
+                // padding scrolls away, and without this the first line of
+                // whatever is passing underneath is sliced against the logo.
+                12,
+              ),
+              child: Row(
+                children: [
+                  // Flexible so the wordmark yields to the progress button
+                  // rather than pushing it off the edge at a large text
+                  // scale.
+                  const Flexible(child: BrandMark()),
+                  const Spacer(),
+                  if (subscription?.isPro ?? false) ...[
+                    const Text(
+                      'PRO',
+                      style: TextStyle(
+                        color: AppColors.forest,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  IconButton(
+                    key: const Key('open_progress'),
+                    tooltip: 'Your progress',
+                    onPressed: () => _openProgress(context),
+                    icon: const Icon(Icons.bar_chart_rounded),
+                    style: IconButton.styleFrom(foregroundColor: AppColors.ink),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                children: [
+                  if (history.streakDays > 0) ...[
+                    _StreakChip(days: history.streakDays),
+                    const SizedBox(height: 14),
+                  ],
+                  Text(
+                    headline,
+                    style: Theme.of(context).textTheme.displayLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    body,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
+                  ),
+                  const SizedBox(height: 22),
+                  FilledButton(
+                    key: const Key('start_recommended'),
+                    onPressed: () => _openScenario(context, recommended),
+                    child: Text(
+                      history.isEmpty
+                          ? 'Start practicing'
+                          : 'Continue practicing',
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  if (subscription != null &&
+                      subscription.showsFreeAllowance) ...[
+                    const SizedBox(height: 14),
+                    _FreeAllowance(subscription: subscription),
+                  ],
+                  const SizedBox(height: 36),
+                  Text(
+                    'Conversations',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 14),
+                  for (final scenario in scenarios) ...[
+                    _ScenarioRow(
+                      scenario: scenario,
+                      recommended: scenario == recommended,
+                      reps: history.recordsFor(scenario.id).length,
+                      bestScore: history.bestScoreFor(scenario.id),
+                      onTap: () => _openScenario(context, scenario),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                 ],
-                IconButton(
-                  key: const Key('open_progress'),
-                  tooltip: 'Your progress',
-                  onPressed: () => _openProgress(context),
-                  icon: const Icon(Icons.bar_chart_rounded),
-                  style: IconButton.styleFrom(foregroundColor: AppColors.ink),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (history.streakDays > 0) ...[
-              _StreakChip(days: history.streakDays),
-              const SizedBox(height: 14),
-            ],
-            Text(headline, style: Theme.of(context).textTheme.displayLarge),
-            const SizedBox(height: 12),
-            Text(
-              body,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
-            ),
-            const SizedBox(height: 22),
-            FilledButton(
-              key: const Key('start_recommended'),
-              onPressed: () => _openScenario(context, recommended),
-              child: Text(
-                history.isEmpty ? 'Start practicing' : 'Continue practicing',
               ),
             ),
-            if (subscription != null && subscription.showsFreeAllowance) ...[
-              const SizedBox(height: 14),
-              _FreeAllowance(subscription: subscription),
-            ],
-            const SizedBox(height: 36),
-            Text(
-              'Conversations',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 14),
-            for (final scenario in scenarios) ...[
-              _ScenarioRow(
-                scenario: scenario,
-                recommended: scenario == recommended,
-                reps: history.recordsFor(scenario.id).length,
-                bestScore: history.bestScoreFor(scenario.id),
-                onTap: () => _openScenario(context, scenario),
-              ),
-              const SizedBox(height: 10),
-            ],
           ],
         ),
       ),

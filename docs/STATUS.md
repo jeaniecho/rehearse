@@ -234,6 +234,14 @@ style and the prompts are in [`ILLUSTRATIONS.md`](ILLUSTRATIONS.md); the one
 emoji left in the app is the flame on the streak badge, which is why
 `tool/generate_screenshots.dart` still loads an emoji font.
 
+**The status bar asks for dark content, and the home header is fixed.** Both
+were wrong and both were invisible in a widget test, which renders no status
+bar and captures no scroll. The app bar is transparent, and Flutter estimates
+a transparent background as dark — so every screen with an app bar was asking
+the system for *white* status bar icons, on white. And home built its header
+as the first row of its `ListView`, so the logo scrolled away and the list
+rode up under the status bar. `test/widget_test.dart` now guards both.
+
 **The header logo is the paper mark, not a glyph in a square.** `BrandMark`
 showed `Icons.forum_rounded` on a forest rounded square; it now shows the
 `logo` illustration, so the app's own header is in the same material as
@@ -324,7 +332,7 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 230 Flutter + 14 server
+Tests            : 232 Flutter + 14 server
 TODO/FIXME       : none
 ```
 

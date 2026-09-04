@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rehearse/app.dart';
 import 'package:rehearse/data/scenarios.dart';
@@ -10,6 +11,7 @@ import 'package:rehearse/services/app_settings.dart';
 import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/services/speech_input_service.dart';
 import 'package:rehearse/theme/app_theme.dart';
+import 'package:rehearse/widgets/app_shell.dart';
 
 void main() {
   testWidgets('completes the recommended practice and shows coaching', (
@@ -269,6 +271,62 @@ void main() {
     final panel = find.byKey(const Key('response_panel'));
     expect(panel, findsOneWidget);
     expect(tester.getBottomLeft(panel).dy, 844);
+  });
+
+  testWidgets('the status bar is asked for dark content, with or without an '
+      'app bar', (tester) async {
+    // Every screen is white. An AppBar picks its own overlay style from the
+    // brightness of its background, and this one is transparent — which
+    // estimates as dark and asks for white icons on a white bar.
+    final settings = AppSettings(store: seenOnboarding());
+    addTearDown(settings.dispose);
+
+    // Whatever ran before this left a value behind, and so would whatever
+    // launched the app, so start from the wrong one. This asserts where the
+    // app ends up, not which widget put it there.
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+    await tester.pumpWidget(RehearseApp(settings: settings));
+    await tester.pumpAndSettle();
+
+    void expectDark(String where) {
+      expect(
+        SystemChrome.latestStyle?.statusBarIconBrightness,
+        Brightness.dark,
+        reason: 'Android would draw white status bar icons on $where',
+      );
+      expect(
+        SystemChrome.latestStyle?.statusBarBrightness,
+        Brightness.light,
+        reason: 'iOS would draw white status bar text on $where',
+      );
+    }
+
+    expectDark('the home screen');
+
+    await tester.tap(find.byKey(const Key('start_recommended')));
+    await tester.pumpAndSettle();
+    expectDark('the briefing');
+  });
+
+  testWidgets('the home header stays put while the list scrolls', (
+    tester,
+  ) async {
+    final settings = AppSettings(store: seenOnboarding());
+    addTearDown(settings.dispose);
+    await tester.pumpWidget(RehearseApp(settings: settings));
+    await tester.pumpAndSettle();
+
+    final header = find.byType(BrandMark);
+    final anchored = tester.getTopLeft(header);
+    final listTop = tester.getTopLeft(find.text('Conversations')).dy;
+
+    await tester.drag(find.byType(ListView), const Offset(0, -300));
+    await tester.pumpAndSettle();
+
+    // The list really moved, so the header holding still means something.
+    expect(tester.getTopLeft(find.text('Conversations')).dy, lessThan(listTop));
+    expect(header, findsOneWidget);
+    expect(tester.getTopLeft(header), anchored);
   });
 }
 
