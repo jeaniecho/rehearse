@@ -9,10 +9,8 @@ import 'services/practice_history.dart';
 import 'services/subscription.dart';
 import 'theme/app_theme.dart';
 import 'theme/brand_mark_painter.dart';
-import 'widgets/analytics_scope.dart';
 import 'widgets/app_settings_scope.dart';
-import 'widgets/practice_history_scope.dart';
-import 'widgets/subscription_scope.dart';
+import 'widgets/rehearse_scope.dart';
 
 class RehearseApp extends StatefulWidget {
   const RehearseApp({
@@ -86,22 +84,16 @@ class _RehearseAppState extends State<RehearseApp> {
 
   @override
   Widget build(BuildContext context) {
-    return PracticeHistoryScope(
+    return RehearseScope(
       history: _history,
-      child: AppSettingsScope(
-        settings: _settings,
-        child: SubscriptionScope(
-          subscription: _subscription,
-          child: AnalyticsScope(
-            analytics: _analytics,
-            child: MaterialApp(
-              title: 'Rehearse',
-              debugShowCheckedModeBanner: false,
-              theme: AppTheme.light,
-              home: const _Root(),
-            ),
-          ),
-        ),
+      settings: _settings,
+      subscription: _subscription,
+      analytics: _analytics,
+      child: MaterialApp(
+        title: 'Rehearse',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const _Root(),
       ),
     );
   }

@@ -19,8 +19,7 @@ import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/services/subscription_client.dart';
 import 'package:rehearse/theme/app_theme.dart';
-import 'package:rehearse/widgets/practice_history_scope.dart';
-import 'package:rehearse/widgets/subscription_scope.dart';
+import 'package:rehearse/widgets/rehearse_scope.dart';
 
 const _annual = SubscriptionPlan(
   id: r'$rc_annual',
@@ -319,12 +318,10 @@ void main() {
       }
 
       await tester.pumpWidget(
-        PracticeHistoryScope(
+        RehearseScope(
           history: history,
-          child: SubscriptionScope(
-            subscription: subscription,
-            child: MaterialApp(theme: AppTheme.light, home: screen),
-          ),
+          subscription: subscription,
+          child: MaterialApp(theme: AppTheme.light, home: screen),
         ),
       );
       await tester.pumpAndSettle();

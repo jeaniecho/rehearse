@@ -18,10 +18,9 @@ import 'package:rehearse/services/app_settings.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/services/subscription_client.dart';
-import 'package:rehearse/widgets/subscription_scope.dart';
 import 'package:rehearse/services/speech_output_service.dart';
 import 'package:rehearse/theme/app_theme.dart';
-import 'package:rehearse/widgets/practice_history_scope.dart';
+import 'package:rehearse/widgets/rehearse_scope.dart';
 
 /// A manager with larger system text should still be able to use the app.
 /// Flutter reports an overflow as a test failure, so simply laying every
@@ -67,16 +66,14 @@ void main() {
     await subscription.load();
 
     await tester.pumpWidget(
-      PracticeHistoryScope(
+      RehearseScope(
         history: history,
-        child: SubscriptionScope(
-          subscription: subscription,
-          child: MaterialApp(
-            theme: AppTheme.light,
-            home: MediaQuery(
-              data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-              child: screen,
-            ),
+        subscription: subscription,
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+            child: screen,
           ),
         ),
       ),

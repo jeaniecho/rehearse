@@ -7,6 +7,7 @@ import '../services/practice_history.dart';
 import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/subscription_scope.dart';
@@ -78,15 +79,7 @@ class HomeScreen extends StatelessWidget {
                   const Flexible(child: BrandMark()),
                   const Spacer(),
                   if (subscription?.isPro ?? false) ...[
-                    const Text(
-                      'PRO',
-                      style: TextStyle(
-                        color: AppColors.forest,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
+                    const Eyebrow('PRO', color: AppColors.forest),
                     const SizedBox(width: 12),
                   ],
                   IconButton(
@@ -304,15 +297,7 @@ class _ScenarioRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (recommended) ...[
-                      const Text(
-                        'START HERE',
-                        style: TextStyle(
-                          color: AppColors.forest,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
+                      const Eyebrow('START HERE', color: AppColors.forest),
                       const SizedBox(height: 5),
                     ],
                     Text(

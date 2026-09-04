@@ -32,11 +32,8 @@ import 'package:rehearse/services/coach_service.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/theme/app_theme.dart';
-import 'package:rehearse/widgets/analytics_scope.dart';
-import 'package:rehearse/widgets/app_settings_scope.dart';
 import 'package:rehearse/widgets/illustration.dart';
-import 'package:rehearse/widgets/practice_history_scope.dart';
-import 'package:rehearse/widgets/subscription_scope.dart';
+import 'package:rehearse/widgets/rehearse_scope.dart';
 
 /// 6.7" iPhone — the size App Store Connect requires. Play accepts it too.
 const _size = Size(1290, 2796);
@@ -179,21 +176,15 @@ void main() {
     await tester.pumpWidget(
       RepaintBoundary(
         key: boundary,
-        child: PracticeHistoryScope(
+        child: RehearseScope(
           history: history,
-          child: AppSettingsScope(
-            settings: settings,
-            child: SubscriptionScope(
-              subscription: subscription,
-              child: AnalyticsScope(
-                analytics: Analytics(sink: const NoopAnalyticsSink()),
-                child: MaterialApp(
-                  debugShowCheckedModeBanner: false,
-                  theme: _theme,
-                  home: screen,
-                ),
-              ),
-            ),
+          settings: settings,
+          subscription: subscription,
+          analytics: Analytics(sink: const NoopAnalyticsSink()),
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: _theme,
+            home: screen,
           ),
         ),
       ),

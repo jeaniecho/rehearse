@@ -84,15 +84,22 @@ riverpod, or bloc** — do not introduce one without a reason the PRD requires.
 
 ```text
 RehearseApp (StatefulWidget, owns the notifiers, calls load() in initState)
-  └── PracticeHistoryScope         (InheritedNotifier<PracticeHistory>)
-        └── AppSettingsScope       (InheritedNotifier<AppSettings>)
-              └── SubscriptionScope (InheritedNotifier<Subscription>)
-                    └── AnalyticsScope (InheritedNotifier<Analytics>)
-                          └── MaterialApp
+  └── RehearseScope — nests all four:
+        PracticeHistoryScope      (InheritedNotifier<PracticeHistory>)
+        AppSettingsScope          (InheritedNotifier<AppSettings>)
+        SubscriptionScope         (InheritedNotifier<Subscription>)
+        AnalyticsScope            (InheritedNotifier<Analytics>)
+          └── MaterialApp
 ```
 
 All four scopes sit **above** `MaterialApp`, so pushed routes still find them
 by walking up through the `Navigator`.
+
+`RehearseScope` exists because `app.dart` and every harness that wants a
+realistic tree were each writing that nest out by hand — four chances to leave
+one out and test something the app is not. Every service on it is **optional**,
+so a test can still supply only what the screen under test reads; an omitted
+one is simply absent, which is what hand-nesting gave you anyway.
 
 Each scope offers two accessors, and the difference matters:
 
@@ -393,6 +400,13 @@ the content cannot ride up under the status bar. The header carries its own
 bottom padding rather than leaning on the list's top padding, because the
 list's scrolls away and the first line passing underneath would be sliced
 against the logo.
+
+`Eyebrow` is the small all-caps label — the kicker above a screen title, and
+the smaller one inside a card. There were eleven of these written out by hand,
+all at 800 weight but spread across three sizes and six letter-spacings, which
+is how something meant to read as one element stops doing so. `SCORE` on the
+coaching report is deliberately **not** one: it is tracked much wider because
+it sits under a 64pt numeral.
 
 Two shared widgets carry accessibility rules worth preserving:
 

@@ -7,6 +7,7 @@ import '../widgets/app_settings_scope.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/subscription_scope.dart';
 import 'paywall_screen.dart';
@@ -102,14 +103,8 @@ class _BriefScreenState extends State<BriefScreen> {
               child: Illustration.scenario(scenario.id),
             ),
             const SizedBox(height: 18),
-            Text(
+            Eyebrow(
               '${scenario.skill.toUpperCase()}  ·  ${scenario.durationMinutes} MIN  ·  ${scenario.stakes.label.toUpperCase()}',
-              style: const TextStyle(
-                color: AppColors.coral,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.75,
-              ),
             ),
             const SizedBox(height: 14),
             Text(
@@ -137,15 +132,7 @@ class _BriefScreenState extends State<BriefScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'YOUR GOAL',
-                    style: TextStyle(
-                      color: AppColors.coral,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.9,
-                    ),
-                  ),
+                  const Eyebrow.small('YOUR GOAL'),
                   const SizedBox(height: 5),
                   Text(
                     scenario.goal,
@@ -491,14 +478,9 @@ class _PersonCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const Eyebrow.small(
                   'REHEARSING WITH',
-                  style: TextStyle(
-                    color: Color(0xFFAEC5B7),
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.9,
-                  ),
+                  color: AppColors.onForestMuted,
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -522,7 +504,7 @@ class _PersonCard extends StatelessWidget {
           ),
           const Icon(
             Icons.record_voice_over_outlined,
-            color: Color(0xFFAEC5B7),
+            color: AppColors.onForestMuted,
           ),
         ],
       ),

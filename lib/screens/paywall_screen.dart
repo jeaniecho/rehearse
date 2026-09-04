@@ -6,6 +6,7 @@ import '../services/analytics.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/subscription_scope.dart';
@@ -237,15 +238,7 @@ class _Header extends StatelessWidget {
       children: [
         const Illustration.proUnlock(),
         const SizedBox(height: 18),
-        const Text(
-          'REHEARSE PRO',
-          style: TextStyle(
-            color: AppColors.coral,
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.1,
-          ),
-        ),
+        const Eyebrow('REHEARSE PRO'),
         const SizedBox(height: 14),
         Text(
           offer?.headline ?? 'Keep going.',

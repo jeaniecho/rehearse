@@ -93,6 +93,9 @@ From `ROADMAP.md` §0, and they hold:
 - **Plain `StatefulWidget` + `ChangeNotifier` via `InheritedNotifier`.** No
   provider, riverpod, or bloc. Do not introduce one.
 - **Imperative `Navigator.push`.** No named routes, no router package.
+- **App-wide state reaches the tree through `RehearseScope`,** which nests the
+  four `InheritedNotifier` scopes. Build the nest by hand in nothing — a
+  harness that leaves a scope out is testing something the app is not.
 - Services are declared as an `abstract interface class` with a device
   implementation and an in-memory or fake counterpart, injected through an
   optional widget constructor parameter. Follow the pattern for anything new
@@ -161,7 +164,7 @@ lib/services   coach (remote/offline/resilient), speech in/out, history,
                settings, subscription + RevenueCat, analytics + PostHog
 lib/theme      AppColors tokens, Material 3 theme, and the brand mark painter
 lib/widgets    shared UI, the Illustration lookup, and the four
-               InheritedNotifier scopes
+               InheritedNotifier scopes behind one RehearseScope
 art            illustration masters; not bundled, see docs/ILLUSTRATIONS.md
 server         Node proxy: /health, /simulation/respond, /simulation/evaluate
 ```

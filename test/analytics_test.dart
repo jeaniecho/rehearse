@@ -16,8 +16,7 @@ import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/services/subscription_client.dart';
 import 'package:rehearse/theme/app_theme.dart';
-import 'package:rehearse/widgets/analytics_scope.dart';
-import 'package:rehearse/widgets/subscription_scope.dart';
+import 'package:rehearse/widgets/rehearse_scope.dart';
 
 /// A distinctive phrase typed as a manager response. Nothing resembling it
 /// may ever reach an analytics payload.
@@ -385,14 +384,12 @@ void main() {
       await subscription.load();
 
       await tester.pumpWidget(
-        AnalyticsScope(
+        RehearseScope(
           analytics: analytics,
-          child: SubscriptionScope(
-            subscription: subscription,
-            child: MaterialApp(
-              theme: AppTheme.light,
-              home: PaywallScreen(trigger: trigger),
-            ),
+          subscription: subscription,
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: PaywallScreen(trigger: trigger),
           ),
         ),
       );
@@ -502,7 +499,7 @@ void main() {
       await analytics.start();
 
       await tester.pumpWidget(
-        AnalyticsScope(
+        RehearseScope(
           analytics: analytics,
           child: MaterialApp(
             theme: AppTheme.light,

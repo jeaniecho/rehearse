@@ -8,6 +8,7 @@ import '../models/scenario.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/eyebrow.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_display.dart';
 import '../widgets/subscription_scope.dart';
@@ -131,15 +132,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Text(
-                  'COACHING REPORT',
-                  style: TextStyle(
-                    color: AppColors.coral,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.1,
-                  ),
-                ),
+                const Eyebrow('COACHING REPORT'),
                 const SizedBox(width: 12),
                 if (widget.mode == PracticeMode.freestyle)
                   Expanded(
@@ -390,25 +383,10 @@ class _NoteCard extends StatelessWidget {
             children: [
               Icon(icon, color: color, size: 17),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  eyebrow,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
-              Text(
+              Expanded(child: Eyebrow.small(eyebrow, color: color)),
+              Eyebrow.small(
                 'TURN ${note.turnIndex + 1}',
-                style: const TextStyle(
-                  color: AppColors.muted,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
-                ),
+                color: AppColors.muted,
               ),
             ],
           ),
@@ -427,15 +405,7 @@ class _NoteCard extends StatelessWidget {
           ),
           if (note.suggestion case final suggestion?) ...[
             const SizedBox(height: 14),
-            const Text(
-              'STRONGER',
-              style: TextStyle(
-                color: AppColors.ink,
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.8,
-              ),
-            ),
+            const Eyebrow.small('STRONGER', color: AppColors.ink),
             const SizedBox(height: 7),
             Container(
               width: double.infinity,

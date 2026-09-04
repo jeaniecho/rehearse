@@ -20,6 +20,9 @@ abstract final class AppColors {
 
   /// Semantic surfaces. Nothing here is decorative — a colour on screen
   /// should say what kind of thing it is.
+  /// Secondary text and icons on the forest card — what [muted] is on white.
+  static const onForestMuted = Color(0xFFAEC5B7);
+
   static const mint = Color(0xFFE3F5EB);
   static const peach = Color(0xFFFDECE0);
   static const butter = Color(0xFFFBF7A8);
