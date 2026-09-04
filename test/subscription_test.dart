@@ -12,7 +12,7 @@ import 'package:rehearse/screens/home_screen.dart';
 import 'package:rehearse/screens/paywall_screen.dart';
 import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/screens/practice_screen.dart';
-import 'package:rehearse/screens/progress_screen.dart';
+import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
 import 'package:rehearse/services/app_settings.dart';
 import 'package:rehearse/services/practice_history.dart';
@@ -574,7 +574,7 @@ void main() {
 
       await pump(
         tester,
-        const ProgressScreen(),
+        const YouScreen(),
         subscription: subscription,
         records: [_record()],
       );
@@ -582,7 +582,7 @@ void main() {
       expect(find.byKey(const Key('plan_card')), findsOneWidget);
       expect(find.text('2 of 3 free rehearsals left.'), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('restore_from_progress')));
+      await tester.tap(find.byKey(const Key('restore_from_settings')));
       await tester.pumpAndSettle();
 
       expect(subscription.isPro, isTrue);
@@ -631,7 +631,7 @@ void main() {
       expect(subscription.freeSessionsUsed, 0);
     });
 
-    testWidgets('the progress screen hides plans in an unconfigured build', (
+    testWidgets('the You tab hides plans in an unconfigured build', (
       tester,
     ) async {
       final subscription = await subscriptionWith(configured: false);
@@ -639,13 +639,15 @@ void main() {
 
       await pump(
         tester,
-        const ProgressScreen(),
+        const YouScreen(),
         subscription: subscription,
         records: [_record()],
       );
 
       expect(find.byKey(const Key('plan_card')), findsNothing);
-      expect(find.text('Session history'), findsOneWidget);
+      // The rest of the tab is still there — an unconfigured build has no
+      // plan to talk about, not nothing to say.
+      expect(find.byKey(const Key('clear_history')), findsOneWidget);
     });
   });
 }

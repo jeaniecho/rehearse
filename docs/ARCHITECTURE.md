@@ -477,6 +477,41 @@ Four masters come out of the generator, and each exists for a reason:
 1024 icon has no alpha channel — App Store Connect rejects one that does, at
 the last step of submission.
 
+## Navigation
+
+Three tabs, and everything else pushed over them.
+
+```text
+TabsScreen (IndexedStack + NavigationBar)
+  ├── HomeScreen      Practice — the scenario list
+  ├── ProgressScreen  Progress — streak, skills, session history
+  └── YouScreen       You — plan and Restore, preferences, your data
+```
+
+An `IndexedStack` rather than a swapped child, so each tab keeps its scroll
+position and its state. There is **no per-tab navigator and no router**:
+`BriefScreen`, `PracticeScreen`, `ResultsScreen` and `PaywallScreen` are all
+still imperative `Navigator.push` onto the root navigator, which is what puts
+them *over* the bar. A flow that covers the bar is the behaviour we want — a
+rehearsal is not a place you tab away from.
+
+Two consequences worth knowing. A tab root has nothing to pop, so
+`ProgressScreen` takes an optional `onPickScenario` and its empty state
+switches tab instead of popping; passed nothing, it falls back to
+`maybePop`, which is what lets it still be pumped on its own in a test. And
+`Scaffold` strips the bottom inset from its body when it has a
+`bottomNavigationBar`, so the screens inside see a bottom padding of zero and
+do not double-count the home indicator.
+
+The **You** tab exists because the progress screen was answering two
+questions at once — "how am I doing" and "what have you got of mine". Plan
+state, Restore, the spoken-replies preference and clearing your history are
+all there now. Restore in particular has to be reachable without an upgrade
+prompt in the way, which is a store requirement and was previously satisfied
+only by a card halfway down the progress screen.
+
+---
+
 ## The practice screen
 
 The one screen split across files. It was 1,356 lines, which is the only

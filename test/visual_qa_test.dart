@@ -10,7 +10,7 @@ import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/home_screen.dart';
 import 'package:rehearse/models/practice_record.dart';
 import 'package:rehearse/screens/practice_screen.dart';
-import 'package:rehearse/screens/progress_screen.dart';
+import 'package:rehearse/screens/tabs_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
 import 'package:rehearse/services/practice_history.dart';
@@ -60,7 +60,7 @@ void main() {
         .map((turn) => PracticeResponse.fromChoice(turn.choices.first, turn))
         .toList();
 
-    await render(tester, const HomeScreen(), 'rehearse-home-empty.png');
+    await render(tester, const TabsScreen(), 'rehearse-home-empty.png');
 
     for (var day = 0; day < 3; day++) {
       await history.add(
@@ -79,7 +79,11 @@ void main() {
     }
 
     await render(tester, const HomeScreen(), 'rehearse-home-refined.png');
-    await render(tester, const ProgressScreen(), 'rehearse-progress.png');
+    await render(
+      tester,
+      const TabsScreen(initialTab: 1),
+      'rehearse-progress.png',
+    );
     await render(
       tester,
       BriefScreen(scenario: scenario),

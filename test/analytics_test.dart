@@ -158,9 +158,9 @@ void main() {
     });
 
     test('a restore that found nothing is still a funnel step', () {
-      analytics.restoreCompleted(restored: false, from: RestoreSource.progress);
+      analytics.restoreCompleted(restored: false, from: RestoreSource.settings);
 
-      expect(sink.last.properties, {'restored': false, 'from': 'progress'});
+      expect(sink.last.properties, {'restored': false, 'from': 'settings'});
     });
 
     test('entitlement rides along on every later event', () {

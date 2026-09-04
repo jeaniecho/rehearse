@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'screens/home_screen.dart';
+import 'screens/tabs_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/analytics.dart';
 import 'services/app_settings.dart';
@@ -115,7 +115,7 @@ class _Root extends StatelessWidget {
       child: switch (settings) {
         AppSettings(isLoaded: false) => const _Launch(),
         AppSettings(onboardingCompleted: false) => const OnboardingScreen(),
-        _ => const HomeScreen(),
+        _ => const TabsScreen(),
       },
     );
   }

@@ -5,6 +5,8 @@ import 'package:rehearse/models/practice_record.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/screens/home_screen.dart';
 import 'package:rehearse/screens/progress_screen.dart';
+import 'package:rehearse/screens/tabs_screen.dart';
+import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/theme/app_theme.dart';
 import 'package:rehearse/widgets/practice_history_scope.dart';
@@ -111,20 +113,27 @@ void main() {
       expect(find.text('Keep the streak.\nOne conversation.'), findsOneWidget);
     });
 
-    testWidgets('opens the progress screen from the header', (tester) async {
+    testWidgets('reaches progress and back through the tab bar', (
+      tester,
+    ) async {
       await pumpApp(
         tester,
-        const HomeScreen(),
+        const TabsScreen(),
         records: [
           record(scenarioId: 'missed-deadlines', completedAt: today, score: 74),
         ],
       );
 
-      await tester.tap(find.byKey(const Key('open_progress')));
+      await tester.tap(find.text('Progress'));
       await tester.pumpAndSettle();
-
       expect(find.text('Your progress'), findsOneWidget);
       expect(find.text('Session history'), findsOneWidget);
+
+      // The scenario list is still built behind it — an IndexedStack keeps
+      // each tab alive so coming back does not reset the scroll.
+      await tester.tap(find.text('Practice'));
+      await tester.pumpAndSettle();
+      expect(find.text('Conversations'), findsOneWidget);
     });
   });
 
@@ -155,7 +164,6 @@ void main() {
       await pumpApp(tester, const ProgressScreen());
 
       expect(find.text('No rehearsals yet'), findsOneWidget);
-      expect(find.byKey(const Key('clear_history')), findsNothing);
     });
 
     testWidgets('lists every session with its score', (tester) async {
@@ -185,7 +193,7 @@ void main() {
     testWidgets('clearing history asks first, then empties', (tester) async {
       final history = await pumpApp(
         tester,
-        const ProgressScreen(),
+        const YouScreen(),
         records: [record(scenarioId: 'missed-deadlines', completedAt: today)],
       );
 
@@ -203,7 +211,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(history.isEmpty, isTrue);
-      expect(find.text('No rehearsals yet'), findsOneWidget);
+    });
+
+    testWidgets('clearing is offered but inert with nothing to clear', (
+      tester,
+    ) async {
+      await pumpApp(tester, const YouScreen());
+
+      final button = find.byKey(const Key('clear_history'));
+      expect(button, findsOneWidget);
+      expect(tester.widget<OutlinedButton>(button).onPressed, isNull);
     });
   });
 

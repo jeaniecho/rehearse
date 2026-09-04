@@ -14,7 +14,6 @@ import '../widgets/practice_history_scope.dart';
 import '../widgets/subscription_scope.dart';
 import 'brief_screen.dart';
 import 'paywall_screen.dart';
-import 'progress_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -40,12 +39,6 @@ class HomeScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => BriefScreen(scenario: scenario)),
     );
-  }
-
-  void _openProgress(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const ProgressScreen()));
   }
 
   @override
@@ -83,13 +76,6 @@ class HomeScreen extends StatelessWidget {
                     const Eyebrow('PRO', color: AppColors.forest),
                     const SizedBox(width: 12),
                   ],
-                  IconButton(
-                    key: const Key('open_progress'),
-                    tooltip: 'Your progress',
-                    onPressed: () => _openProgress(context),
-                    icon: const Icon(Icons.bar_chart_rounded),
-                    style: IconButton.styleFrom(foregroundColor: AppColors.ink),
-                  ),
                 ],
               ),
             ),

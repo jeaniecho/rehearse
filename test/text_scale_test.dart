@@ -11,6 +11,8 @@ import 'package:rehearse/screens/paywall_screen.dart';
 import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/screens/progress_screen.dart';
+import 'package:rehearse/screens/tabs_screen.dart';
+import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
 import 'package:rehearse/models/subscription.dart';
@@ -128,6 +130,16 @@ void main() {
 
       testWidgets('progress', (tester) async {
         await layOut(tester, const ProgressScreen(), textScale: textScale);
+      });
+
+      testWidgets('you', (tester) async {
+        await layOut(tester, const YouScreen(), textScale: textScale);
+      });
+
+      // The tab bar is the one piece of chrome on every screen, and its
+      // labels are the first thing a large scale pushes out of shape.
+      testWidgets('the tab bar', (tester) async {
+        await layOut(tester, const TabsScreen(), textScale: textScale);
       });
 
       testWidgets('paywall', (tester) async {

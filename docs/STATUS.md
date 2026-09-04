@@ -234,6 +234,21 @@ style and the prompts are in [`ILLUSTRATIONS.md`](ILLUSTRATIONS.md); the one
 emoji left in the app is the flame on the streak badge, which is why
 `tool/generate_screenshots.dart` still loads an emoji font.
 
+**Navigation is three tabs, and the progress screen stopped doing two jobs.**
+Practice / Progress / You. The plan card and Restore, the spoken-replies
+preference, and clearing your history moved to the new You tab; progress is
+now only progress. Two things this buys beyond navigation: Restore is
+somewhere a reviewer will look for it, and the app finally says in plain
+language what it keeps and what it sends — a summary of
+[`PRIVACY.md`](PRIVACY.md), which is still the published version and still
+needs hosting for the store listing.
+
+`PaywallTrigger.progressUpsell` became `settingsUpsell` and
+`RestoreSource.progress` became `settings`, so the funnel names the surface
+rather than a tab label. Nothing has been sent to a live PostHog yet, so this
+costs no historical data — but it has to be done before the first event, not
+after. See [`ANALYTICS.md`](ANALYTICS.md).
+
 **The status bar asks for dark content, and the home header is fixed.** Both
 were wrong and both were invisible in a widget test, which renders no status
 bar and captures no scroll. The app bar is transparent, and Flutter estimates
@@ -332,7 +347,7 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 232 Flutter + 14 server
+Tests            : 239 Flutter + 14 server
 TODO/FIXME       : none
 ```
 

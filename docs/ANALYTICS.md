@@ -85,6 +85,11 @@ never fires is worse than a missing one — it looks like a measured zero.
   score worse" indistinguishable from "hard settings score worse".
 - **`evaluation_requested` is folded into `simulation_message_sent`**, which
   already records the coach that scored the turn.
+- **`trigger` and `from` say `settings`, and the tab is called You.** The
+  plan card and Restore live on the You tab; the property values are named
+  for the kind of surface rather than the label on it, so a copy change to
+  the tab does not break a funnel. Values are `session_limit` / `home_upsell`
+  / `settings_upsell` for `trigger`, and `paywall` / `settings` for `from`.
 
 ---
 

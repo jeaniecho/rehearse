@@ -20,10 +20,9 @@ import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/models/scenario.dart';
 import 'package:rehearse/screens/brief_screen.dart';
-import 'package:rehearse/screens/home_screen.dart';
 import 'package:rehearse/screens/onboarding_screen.dart';
 import 'package:rehearse/screens/practice_screen.dart';
-import 'package:rehearse/screens/progress_screen.dart';
+import 'package:rehearse/screens/tabs_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
 import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/services/analytics_sink.dart';
@@ -212,7 +211,7 @@ void main() {
   }
 
   testWidgets('1 — the scenario list', (tester) async {
-    await shoot(tester, '01-home', const HomeScreen());
+    await shoot(tester, '01-home', const TabsScreen());
   });
 
   testWidgets('2 — the briefing', (tester) async {
@@ -245,7 +244,8 @@ void main() {
   });
 
   testWidgets('5 — progress', (tester) async {
-    await shoot(tester, '05-progress', const ProgressScreen());
+    // Through the shell, so the store sees the bar the app actually has.
+    await shoot(tester, '05-progress', const TabsScreen(initialTab: 1));
   });
 
   testWidgets('6 — the intro', (tester) async {

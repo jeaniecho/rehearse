@@ -233,6 +233,8 @@ class Analytics extends ChangeNotifier {
 
 /// Where someone reached the paywall from, so the forced and the voluntary
 /// paths can be told apart.
-enum PaywallTrigger { sessionLimit, homeUpsell, progressUpsell }
+/// Where the paywall was opened from. `settingsUpsell` is the You tab,
+/// which is where the plan card lives.
+enum PaywallTrigger { sessionLimit, homeUpsell, settingsUpsell }
 
-enum RestoreSource { paywall, progress }
+enum RestoreSource { paywall, settings }

@@ -143,7 +143,9 @@ flutter test tool/generate_screenshots.dart
 ```
 
 Six 1290×2796 PNGs land in `build/screenshots/` — the exact size App Store
-Connect requires for a 6.7" iPhone, and accepted by Play.
+Connect requires for a 6.7" iPhone, and accepted by Play. The home and
+progress shots are taken **through `TabsScreen`**, so the store sees the
+tab bar the app actually has rather than a screen without one.
 
 They are captures of the **real screens** with seeded data, not mockups, so
 they cannot drift from the app. The generator loads the system font and the
@@ -325,7 +327,7 @@ Run through this on a real device, on the build you are actually shipping:
 - [ ] Three free rehearsals, then the paywall
 - [ ] Real prices load, not placeholders
 - [ ] Sandbox purchase completes and unlocks
-- [ ] Delete, reinstall, restore — Pro comes back
+- [ ] Delete, reinstall, restore — Pro comes back, from the You tab
 - [ ] The transaction appears in RevenueCat
 
 **Telemetry**
