@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../data/scenarios.dart';
 import '../models/practice_summary.dart';
 import '../models/subscription.dart';
 import '../services/analytics.dart';
+import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
@@ -151,7 +153,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             const SizedBox(height: 4),
             _Header(offer: offer, weakest: weakest),
             const SizedBox(height: 20),
-            const _ValueList(),
+            const _Comparison(),
             const SizedBox(height: 20),
             if (!hasPlans)
               _Unavailable(
@@ -256,82 +258,133 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _ValueList extends StatelessWidget {
-  const _ValueList();
+/// Free against Pro, side by side.
+///
+/// Every row here is checked against `Subscription.canStartPractice`, which
+/// is the only gate the app actually has: Pro removes the session limit and
+/// changes nothing else. Scenarios, coaching and history are not gated, so
+/// they are ticked in both columns rather than crossed out of the free one.
+///
+/// That makes for a table with one differing row, which is the honest
+/// shape of this product. A cross against something the free tier really
+/// does have would be a false claim in a subscription disclosure, and
+/// CLAUDE.md's rule about not promising what the app does not do cuts both
+/// ways — overselling Pro is the same fault as underselling it.
+class _Comparison extends StatelessWidget {
+  const _Comparison();
 
-  static const _items = <(IconData, String, String)>[
-    (
-      Icons.all_inclusive_rounded,
-      'Unlimited rehearsals',
-      'Practice the same conversation until the wording is yours.',
-    ),
-    (
-      Icons.forum_outlined,
-      'Every scenario',
-      'The full library, including the high-stakes ones.',
-    ),
-    (
-      Icons.insights_rounded,
-      'Your full history',
-      'Every score and skill trend, kept on your device.',
-    ),
+  static const _freeColumn = 66.0;
+  static const _proColumn = 84.0;
+
+  /// A null value means "included", drawn as a tick.
+  static final _rows = <(String, String?, String?)>[
+    ('Rehearsals', '${Subscription.freeSessionLimit} total', 'Unlimited'),
+    ('All ${scenarios.length} conversations', null, null),
+    ('Coaching on what you actually said', null, null),
+    ('Scores, streak and history', null, null),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(17),
-        child: Column(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+        child: Stack(
           children: [
-            for (var index = 0; index < _items.length; index++) ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: AppColors.mint,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      _items[index].$1,
-                      color: AppColors.forest,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 13),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _items[index].$2,
-                          style: const TextStyle(
-                            color: AppColors.ink,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          _items[index].$3,
-                          style: const TextStyle(
-                            color: AppColors.muted,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            // Behind the Pro column, so it reads as the one being offered
+            // without needing a heavier treatment on every cell.
+            Positioned(
+              top: 0,
+              bottom: 0,
+              right: 0,
+              width: _proColumn,
+              child: const DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.mint,
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
               ),
-              if (index != _items.length - 1) const SizedBox(height: 16),
-            ],
+            ),
+            Column(
+              children: [
+                const _ComparisonRow(
+                  label: '',
+                  free: 'Free',
+                  pro: 'Pro',
+                  isHeader: true,
+                ),
+                for (final (label, free, pro) in _rows) ...[
+                  const Divider(color: AppColors.border, height: 1),
+                  _ComparisonRow(label: label, free: free, pro: pro),
+                ],
+              ],
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ComparisonRow extends StatelessWidget {
+  const _ComparisonRow({
+    required this.label,
+    required this.free,
+    required this.pro,
+    this.isHeader = false,
+  });
+
+  final String label;
+  final String? free;
+  final String? pro;
+  final bool isHeader;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: AppColors.ink,
+                fontSize: 14,
+                height: 1.3,
+                fontWeight: isHeader ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: _Comparison._freeColumn,
+            child: _cell(free, isHeader: isHeader),
+          ),
+          SizedBox(
+            width: _Comparison._proColumn,
+            child: _cell(pro, isHeader: isHeader, emphasis: true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cell(String? value, {required bool isHeader, bool emphasis = false}) {
+    if (value == null) {
+      return Icon(
+        Icons.check_rounded,
+        size: 19,
+        color: emphasis ? AppColors.forest : AppColors.muted,
+      );
+    }
+    return Text(
+      value,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: emphasis ? AppColors.forest : AppColors.muted,
+        fontSize: isHeader ? 12 : 13,
+        fontWeight: isHeader ? FontWeight.w800 : FontWeight.w700,
+        letterSpacing: isHeader ? 0.6 : 0,
       ),
     );
   }
