@@ -34,12 +34,23 @@ class DeviceSpeechOutputService implements SpeechOutputService {
     try {
       // Share the audio session so speaking does not stop the user's own
       // audio outright, and duck instead of interrupting.
+      //
+      // defaultToSpeaker is deliberately absent: iOS only accepts it with
+      // playAndRecord, and setting it here made the whole setCategory call
+      // fail. flutter_tts catches that failure and returns 0 rather than
+      // throwing, so the app carried on with no category applied at all —
+      // which is the default session, and the default session stops
+      // whatever the person was listening to. Playback already routes to
+      // the speaker, so nothing is lost by dropping it.
+      //
+      // mixWithOthers is implied by duckOthers, but stated because the
+      // point of this block is that other audio keeps playing.
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         await _tts.setSharedInstance(true);
         await _tts
             .setIosAudioCategory(IosTextToSpeechAudioCategory.playback, const [
+              IosTextToSpeechAudioCategoryOptions.mixWithOthers,
               IosTextToSpeechAudioCategoryOptions.duckOthers,
-              IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
             ]);
       }
 
