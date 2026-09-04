@@ -5,6 +5,7 @@ import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/models/scenario.dart';
 import 'package:rehearse/screens/brief_screen.dart';
+import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/services/analytics_sink.dart';
@@ -13,6 +14,7 @@ import 'package:rehearse/services/coach_service.dart';
 import 'package:rehearse/theme/app_theme.dart';
 import 'package:rehearse/widgets/analytics_scope.dart';
 import 'package:rehearse/widgets/app_settings_scope.dart';
+import 'package:rehearse/widgets/rehearse_scope.dart';
 
 final scenario = scenarios.first;
 
@@ -114,6 +116,39 @@ void main() {
       addTearDown(reloaded.dispose);
       await reloaded.load();
       expect(reloaded.difficulty, SimulationDifficulty.calm);
+    });
+
+    testWidgets('the You tab sets the level a briefing opens on', (
+      tester,
+    ) async {
+      final store = InMemorySettingsStore();
+      final settings = AppSettings(store: store);
+      addTearDown(settings.dispose);
+      await settings.load();
+
+      await tester.pumpWidget(
+        RehearseScope(
+          settings: settings,
+          child: MaterialApp(theme: AppTheme.light, home: const YouScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final target = find.byKey(const Key('default_difficulty_veryDefensive'));
+      await tester.ensureVisible(target);
+      await tester.pumpAndSettle();
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+
+      expect(settings.difficulty, SimulationDifficulty.veryDefensive);
+
+      // The briefing opens on it rather than on the default, which is the
+      // whole point of the setting being remembered.
+      await pumpBrief(tester, store: store);
+      expect(
+        find.text(SimulationDifficulty.veryDefensive.description),
+        findsOneWidget,
+      );
     });
 
     testWidgets('a corrupt stored value falls back rather than crashing', (

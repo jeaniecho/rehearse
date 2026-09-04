@@ -504,11 +504,21 @@ switches tab instead of popping; passed nothing, it falls back to
 do not double-count the home indicator.
 
 The **You** tab exists because the progress screen was answering two
-questions at once — "how am I doing" and "what have you got of mine". Plan
-state, Restore, the spoken-replies preference and clearing your history are
-all there now. Restore in particular has to be reachable without an upgrade
-prompt in the way, which is a store requirement and was previously satisfied
-only by a card halfway down the progress screen.
+questions at once — "how am I doing" and "what have you got of mine". It
+carries plan state and Restore, the two preferences, what the app keeps, and
+a way back to the intro. Restore in particular has to be reachable without an
+upgrade prompt in the way, which is a store requirement and was previously
+satisfied only by a card halfway down the progress screen.
+
+`DifficultyPicker` is shared with the briefing, because the same setting is
+reachable from both: the briefing sets it for this rehearsal, You sets what a
+briefing opens on. It takes a `keyPrefix` for one reason — the tabs stay built
+underneath a pushed briefing, so both copies are in the tree at once and a
+finder would otherwise match two.
+
+"Show the intro again" clears the onboarding flag and navigates nothing. The
+root already watches that flag and swaps itself, which is the same path a
+first run takes.
 
 ---
 

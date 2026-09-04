@@ -130,6 +130,24 @@ void main() {
       expect(sink.names, isNot(contains('onboarding_started')));
     });
 
+    testWidgets('can ask for the intro again from the You tab', (tester) async {
+      final (settings, _) = await pumpApp(tester, seenBefore: true);
+      expect(find.byType(OnboardingScreen), findsNothing);
+
+      await tester.tap(find.text('You'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('replay_intro')));
+      await tester.pumpAndSettle();
+
+      // Nothing navigates: the root watches the flag and swaps itself.
+      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(settings.onboardingCompleted, isFalse);
+
+      await tester.tap(find.byKey(const Key('skip_onboarding')));
+      await tester.pumpAndSettle();
+      expect(find.byType(HomeScreen), findsOneWidget);
+    });
+
     testWidgets('never flashes the intro while preferences load', (
       tester,
     ) async {

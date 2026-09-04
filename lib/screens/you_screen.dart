@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../app_info.dart';
 import '../models/subscription.dart';
 import '../services/analytics.dart';
+import '../services/practice_history.dart';
 import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_settings_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/difficulty_picker.dart';
 import '../widgets/eyebrow.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/subscription_scope.dart';
@@ -46,6 +49,8 @@ class YouScreen extends StatelessWidget {
             _Preferences(),
             SizedBox(height: 22),
             _YourData(),
+            SizedBox(height: 22),
+            _About(),
           ],
         ),
       ),
@@ -235,6 +240,44 @@ class _Preferences extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(17),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Pushback level',
+                  style: TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  // Guided mode has authored replies, so it cannot honour
+                  // this. Saying otherwise would be the cosmetic control
+                  // PRD §7.2 warns against.
+                  'Where a free-form rehearsal starts. You can still change '
+                  'it for any single rehearsal on its briefing.',
+                  style: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DifficultyPicker(
+                  keyPrefix: 'default_difficulty',
+                  selected: settings.difficulty,
+                  onChanged: settings.setDifficulty,
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -247,8 +290,10 @@ class _Preferences extends StatelessWidget {
 class _YourData extends StatelessWidget {
   const _YourData();
 
-  static Future<void> _confirmClear(BuildContext context) async {
-    final history = PracticeHistoryScope.of(context);
+  static Future<void> _confirmClear(
+    BuildContext context,
+    PracticeHistory history,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -280,7 +325,10 @@ class _YourData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final history = PracticeHistoryScope.of(context);
+    // Every other section here degrades when its scope is absent, and this
+    // one has to as well: the statement below is true either way, it is only
+    // the button that needs a store to act on.
+    final history = PracticeHistoryScope.maybeOf(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,9 +357,9 @@ class _YourData extends StatelessWidget {
                   width: double.infinity,
                   child: OutlinedButton(
                     key: const Key('clear_history'),
-                    onPressed: history.isEmpty
+                    onPressed: history == null || history.isEmpty
                         ? null
-                        : () => _confirmClear(context),
+                        : () => _confirmClear(context, history),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.coral,
                       minimumSize: const Size.fromHeight(44),
@@ -328,6 +376,80 @@ class _YourData extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// What this is, and a way back to the explanation of it.
+class _About extends StatelessWidget {
+  const _About();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = AppSettingsScope.maybeOf(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Eyebrow('ABOUT'),
+        const SizedBox(height: 10),
+        Card(
+          child: Column(
+            children: [
+              if (settings != null)
+                ListTile(
+                  key: const Key('replay_intro'),
+                  contentPadding: const EdgeInsets.fromLTRB(17, 4, 11, 4),
+                  onTap: settings.resetOnboarding,
+                  title: const Text(
+                    'Show the intro again',
+                    style: TextStyle(
+                      color: AppColors.ink,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'What a rehearsal is, and the four things it scores.',
+                    style: TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.muted,
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(17, 14, 17, 16),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Rehearse',
+                      style: TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      appVersion,
+                      key: const Key('app_version'),
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ],

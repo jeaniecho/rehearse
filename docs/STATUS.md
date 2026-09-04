@@ -243,6 +243,12 @@ language what it keeps and what it sends — a summary of
 [`PRIVACY.md`](PRIVACY.md), which is still the published version and still
 needs hosting for the store listing.
 
+The tab also carries the remembered pushback level and a way back to the
+intro, because with no store key — the demo build — plan state hides itself
+and the tab was left nearly empty. Both are existing state that nothing
+surfaced: `AppSettings.difficulty` was only reachable from a briefing, and
+`onboardingCompleted` was one-way until now.
+
 `PaywallTrigger.progressUpsell` became `settingsUpsell` and
 `RestoreSource.progress` became `settings`, so the funnel names the surface
 rather than a tab label. Nothing has been sent to a live PostHog yet, so this
@@ -347,7 +353,7 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter
-Tests            : 239 Flutter + 14 server
+Tests            : 242 Flutter + 14 server
 TODO/FIXME       : none
 ```
 

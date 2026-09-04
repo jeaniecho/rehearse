@@ -7,6 +7,7 @@ import '../widgets/app_settings_scope.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/difficulty_picker.dart';
 import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/subscription_scope.dart';
@@ -208,7 +209,7 @@ class _BriefScreenState extends State<BriefScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          _DifficultyPicker(
+                          DifficultyPicker(
                             selected: _difficulty,
                             onChanged: _setDifficulty,
                           ),
@@ -275,84 +276,6 @@ class _BriefScreenState extends State<BriefScreen> {
 
 /// Three levels as one compact row — the choice matters, but it should not
 /// take as much room as the briefing it sits under.
-class _DifficultyPicker extends StatelessWidget {
-  const _DifficultyPicker({required this.selected, required this.onChanged});
-
-  final SimulationDifficulty selected;
-  final ValueChanged<SimulationDifficulty> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            for (final level in SimulationDifficulty.values) ...[
-              if (level != SimulationDifficulty.values.first)
-                const SizedBox(width: 8),
-              Expanded(
-                child: Semantics(
-                  selected: level == selected,
-                  button: true,
-                  child: Material(
-                    color: level == selected
-                        ? AppColors.forest
-                        : AppColors.surface,
-                    borderRadius: BorderRadius.circular(14),
-                    child: InkWell(
-                      key: Key('difficulty_${level.name}'),
-                      onTap: () => onChanged(level),
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 12,
-                        ),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: level == selected
-                                ? AppColors.forest
-                                : AppColors.border,
-                          ),
-                        ),
-                        child: Text(
-                          level.label,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          style: TextStyle(
-                            color: level == selected
-                                ? Colors.white
-                                : AppColors.ink,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text(
-          selected.description,
-          key: const Key('difficulty_description'),
-          style: const TextStyle(
-            color: AppColors.muted,
-            fontSize: 13,
-            height: 1.4,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _ModeOption extends StatelessWidget {
   const _ModeOption({
     required this.icon,

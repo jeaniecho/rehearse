@@ -167,6 +167,19 @@ class AppSettings extends ChangeNotifier {
     }
   }
 
+  /// Puts the intro back. The root switches to it on the next build, which
+  /// is why there is no navigation here.
+  Future<void> resetOnboarding() async {
+    if (!_onboardingCompleted) return;
+    _onboardingCompleted = false;
+    notifyListeners();
+    try {
+      await _store.writeBool(_onboardingKey, false);
+    } on Object {
+      // It still applies to this session.
+    }
+  }
+
   Future<void> setSpokenRepliesEnabled(bool value) async {
     if (_spokenRepliesEnabled == value) return;
     _spokenRepliesEnabled = value;

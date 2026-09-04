@@ -85,6 +85,10 @@ never fires is worse than a missing one — it looks like a measured zero.
   score worse" indistinguishable from "hard settings score worse".
 - **`evaluation_requested` is folded into `simulation_message_sent`**, which
   already records the coach that scored the turn.
+- **Setting the default pushback level on You is not an event.** The funnel
+  cares about the level a rehearsal actually ran at, which `simulation_started`
+  already carries. `difficulty_selected` stays what it is: a choice made about
+  a specific scenario, on its briefing.
 - **`trigger` and `from` say `settings`, and the tab is called You.** The
   plan card and Restore live on the You tab; the property values are named
   for the kind of surface rather than the label on it, so a copy change to
