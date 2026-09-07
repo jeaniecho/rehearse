@@ -46,7 +46,7 @@ Square, 1024x1024.
 
 ---
 
-## 2. The eleven subjects
+## 2. The fifteen subjects
 
 Append one line to the block above. Filenames are load-bearing — the code
 looks them up by scenario id.
@@ -61,13 +61,18 @@ looks them up by scenario id.
 | `high-performer.png` | A faceted cut gemstone on a flat base, one facet edge sharper than the rest. |
 | `resignation.png` | A sealed envelope standing upright, a single door key leaning against it. |
 | `delegation.png` | A shallow out-tray holding one thick sheet, the sheet sitting slightly proud of the tray as though just set down. |
+| `after-hours.png` | A single speech bubble with a crescent moon cut cleanly out of its centre. |
+| `below-bar.png` | A spirit level lying flat, its bubble sitting well off centre. |
+| `disagree-commit.png` | A closed ring binder with one thick sheet still protruding from it. |
+| `overloaded.png` | A drinking glass filled past its rim, the surface bulging above the edge. |
 | `empty-progress.png` | A bar chart with only the first, shortest bar present. |
 | `pro-unlock.png` | An open padlock resting on its side, shackle lifted. |
 | `logo.png` | Two overlapping speech bubbles, the left deep green and the right warm off-white, with a small muted amber bubble showing in the gap between them. |
 
-The first eight are the scenarios, shown at 40pt in the home list and on
-the briefing. `empty-progress` is the progress screen before the first
-rehearsal, and `pro-unlock` heads the paywall; both are shown at 120pt.
+The first twelve are the scenarios, shown at 40pt on the briefing, 56pt in
+the home grid and 88pt on the card for whatever is next.
+`empty-progress` is the progress screen before the first rehearsal, and
+`pro-unlock` heads the paywall; both are shown at 120pt.
 
 `logo` is the mark in the `BrandMark` lockup — the app's own header, on
 home, onboarding and the coaching report — at 44pt. It is the app icon's

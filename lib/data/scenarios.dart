@@ -1119,4 +1119,570 @@ const scenarios = <Scenario>[
       ),
     ],
   ),
+  Scenario(
+    id: 'after-hours',
+    title: 'The midnight messages',
+    subtitle:
+        'Set an expectation about time off without asking someone to care less.',
+    skill: 'Protecting time',
+    durationMinutes: 3,
+    stakes: ScenarioStakes.challenging,
+    icon: Icons.bedtime_outlined,
+    tint: AppColors.subtle,
+    personName: 'Tomás Ferreira',
+    personRole: 'Support lead',
+    personInitials: 'TF',
+    context:
+        'Tomás posts to the team channel at all hours and follows up when nobody answers. Two people have started replying at 1am. Tomás is also the most responsive person you have, and knows it.',
+    goal:
+        'Set a clear expectation about response times outside working hours, and keep the urgency you actually want.',
+    watchFor:
+        'You have answered plenty of those midnight messages yourself. Tomás learned this somewhere.',
+    openingLine:
+        'Is this about last night? I only pinged the channel because the queue was backing up and I didn’t want it landing on you in the morning.',
+    turns: [
+      DialogueTurn(
+        employeeLine:
+            'Is this about last night? I only pinged the channel because the queue was backing up and I didn’t want it landing on you in the morning.',
+        prompt: 'How do you answer?',
+        choices: [
+          ResponseChoice(
+            text:
+                'I believe that, and it still has to change. Nothing in that channel needs an answer before nine unless you page someone.',
+            scoreDelta: 12,
+            feedback:
+                'You accepted the good intent and set the expectation anyway — the two are not in competition.',
+            clarity: 2,
+            empathy: 1,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'It’s fine — I’d rather you over-communicate than sit on something.',
+            scoreDelta: -6,
+            feedback:
+                'You called the thing you came to fix a preference. Nothing about tonight will be different.',
+            clarity: -2,
+            empathy: 1,
+            directness: -2,
+            confidence: -1,
+          ),
+          ResponseChoice(
+            text:
+                'People are answering you at one in the morning. That is not okay.',
+            scoreDelta: -3,
+            feedback:
+                'The problem is real, but you made Tomás the culprit for caring, and the expectation still went unsaid.',
+            clarity: 1,
+            empathy: -2,
+            directness: 2,
+            confidence: 0,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine:
+            'So I should let it sit? You answer me at midnight all the time. I assumed that was the job.',
+        prompt: 'Tomás has a point. What next?',
+        choices: [
+          ResponseChoice(
+            text:
+                'That’s fair, and it’s on me. I have been modelling something I don’t actually want from you.',
+            scoreDelta: 10,
+            feedback:
+                'Owning it cost you nothing and bought you the only version of this rule anyone will follow.',
+            clarity: 1,
+            empathy: 2,
+            directness: 1,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'That’s different — I’m the manager. My hours are my problem.',
+            scoreDelta: -5,
+            feedback:
+                'A rule that exempts the person setting it is not a rule, and Tomás heard exactly that.',
+            clarity: 0,
+            empathy: -2,
+            directness: 1,
+            confidence: -1,
+          ),
+          ResponseChoice(
+            text: 'Let’s not make this about me. The point is the channel.',
+            scoreDelta: -4,
+            feedback:
+                'You ducked a fair observation, which reads as less certain than saying nothing would have.',
+            clarity: 0,
+            empathy: -1,
+            directness: 1,
+            confidence: -2,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine:
+            'Okay. But if something actually breaks at 2am, I’m not going to sit there watching it.',
+        prompt: 'Close it.',
+        choices: [
+          ResponseChoice(
+            text:
+                'Right — that’s what the pager is for. Page whoever is on call and leave the channel until morning.',
+            scoreDelta: 14,
+            feedback:
+                'You named the one exception and the route it takes, so the boundary survives its first hard night.',
+            clarity: 2,
+            empathy: 1,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'Use your judgement. If it feels urgent, put it in the channel and someone will pick it up.',
+            scoreDelta: -8,
+            feedback:
+                '“Use your judgement” handed the boundary straight back to the person whose judgement brought you here.',
+            clarity: -2,
+            empathy: 0,
+            directness: -2,
+            confidence: -1,
+          ),
+          ResponseChoice(
+            text: 'Then page me directly, and nobody else.',
+            scoreDelta: -2,
+            feedback:
+                'You protected the team by making yourself the exception. That holds until the week you are unreachable.',
+            clarity: 1,
+            empathy: 1,
+            directness: 1,
+            confidence: -2,
+          ),
+        ],
+      ),
+    ],
+  ),
+  Scenario(
+    id: 'below-bar',
+    title: 'The work that isn’t at the level',
+    subtitle:
+        'Say that the work is below the bar, after months of saying it was nearly there.',
+    skill: 'Straight talk',
+    durationMinutes: 4,
+    stakes: ScenarioStakes.highStakes,
+    icon: Icons.fact_check_outlined,
+    tint: AppColors.subtle,
+    personName: 'Marta Nowak',
+    personRole: 'Content strategist',
+    personInitials: 'MN',
+    context:
+        'Marta is eight months into the role. Three of the last four briefs came back needing a rewrite you did yourself, and you called each one “nearly there”. Marta believes this is going well.',
+    goal:
+        'Say plainly that the work is not yet at the level the role needs, and describe what being at the level would look like.',
+    watchFor:
+        'You have called this work nearly there three times. Whatever you say now contradicts you, and Marta will hear that first.',
+    openingLine:
+        'Before we start — thanks for the note on the Q3 brief. Good to know it landed. I feel like I’m finally getting the hang of these.',
+    turns: [
+      DialogueTurn(
+        employeeLine:
+            'Before we start — thanks for the note on the Q3 brief. Good to know it landed. I feel like I’m finally getting the hang of these.',
+        prompt: 'How do you open?',
+        choices: [
+          ResponseChoice(
+            text:
+                'That’s the thing I need to correct today. I rewrote most of that brief before it went out, and I should have told you at the time.',
+            scoreDelta: 12,
+            feedback:
+                'You corrected the record in the first sentence, which is the only place it could have gone without becoming a bigger lie.',
+            clarity: 2,
+            empathy: 1,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'You are getting the hang of them. There are just a few things I wanted to touch on.',
+            scoreDelta: -6,
+            feedback:
+                'That is the fourth time you have softened it. Marta now has four reasons to disbelieve the fifth.',
+            clarity: -2,
+            empathy: 1,
+            directness: -2,
+            confidence: -2,
+          ),
+          ResponseChoice(
+            text: 'Honestly, none of the last four briefs were usable.',
+            scoreDelta: -4,
+            feedback:
+                'True, and delivered as eight months of withheld feedback in one sentence.',
+            clarity: 1,
+            empathy: -2,
+            directness: 2,
+            confidence: 1,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine:
+            'You rewrote it? You told me it was nearly there. If it was that bad, why has nobody said anything for eight months?',
+        prompt: 'The fair question. Answer it.',
+        choices: [
+          ResponseChoice(
+            text:
+                'Because I kept softening it, and that is on me. Let me show you the brief you sent next to the one that went out.',
+            scoreDelta: 10,
+            feedback:
+                'You answered the question and then made the bar something Marta can see rather than something you assert.',
+            clarity: 2,
+            empathy: 1,
+            directness: 1,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'I didn’t want to knock your confidence while you were still settling in.',
+            scoreDelta: -5,
+            feedback:
+                'Kindly meant, and it cost Marta eight months in which the work could have improved.',
+            clarity: -1,
+            empathy: 1,
+            directness: -2,
+            confidence: -2,
+          ),
+          ResponseChoice(
+            text:
+                'Let’s focus forward rather than relitigating the last eight months.',
+            scoreDelta: -4,
+            feedback:
+                'You skipped past the one question Marta is entitled to an answer to, and it will be back.',
+            clarity: -1,
+            empathy: -1,
+            directness: 0,
+            confidence: -1,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine: 'Okay. So am I on some kind of warning here, or not?',
+        prompt: 'Be plain.',
+        choices: [
+          ResponseChoice(
+            text:
+                'Not yet, and I am not going to pretend it isn’t on the table. Two briefs by the end of the month with no rewrites from me — then we both know where we stand.',
+            scoreDelta: 14,
+            feedback:
+                'You told the truth about the stakes and gave it a shape Marta can actually pass or fail.',
+            clarity: 2,
+            empathy: 1,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'No, nothing like that. Let’s keep talking and see how it goes.',
+            scoreDelta: -8,
+            feedback:
+                'You spent the whole conversation getting to the truth and then took it back in the last line.',
+            clarity: -2,
+            empathy: 1,
+            directness: -2,
+            confidence: -2,
+          ),
+          ResponseChoice(
+            text: 'Not a warning. But I need to see a real change, and soon.',
+            scoreDelta: -2,
+            feedback:
+                '“Real change, soon” is not something anyone can act on, and Marta will read it as whatever is least alarming.',
+            clarity: 0,
+            empathy: 1,
+            directness: 1,
+            confidence: 0,
+          ),
+        ],
+      ),
+    ],
+  ),
+  Scenario(
+    id: 'disagree-commit',
+    title: 'The decision that won’t stay closed',
+    subtitle:
+        'Close a decision without shutting down the person who disagreed.',
+    skill: 'Alignment',
+    durationMinutes: 4,
+    stakes: ScenarioStakes.challenging,
+    icon: Icons.replay_rounded,
+    tint: AppColors.subtle,
+    personName: 'Daniel Kowalski',
+    personRole: 'Staff engineer',
+    personInitials: 'DK',
+    context:
+        'The team agreed six weeks ago to consolidate on one deployment pipeline. Daniel argued against it, lost, and has raised it again in three of the last four team meetings. Daniel may also be right.',
+    goal:
+        'Close the decision for now, and give the objection a legitimate route that is not the team meeting.',
+    watchFor:
+        'Winning this by authority costs you the one person who tells you when you are wrong.',
+    openingLine:
+        'I know you think this is settled. I just don’t think we ever answered the rollback question, and I’m not going to pretend I’m comfortable with it.',
+    turns: [
+      DialogueTurn(
+        employeeLine:
+            'I know you think this is settled. I just don’t think we ever answered the rollback question, and I’m not going to pretend I’m comfortable with it.',
+        prompt: 'How do you answer?',
+        choices: [
+          ResponseChoice(
+            text:
+                'You’re right that we never answered it. The decision still stands, and the rollback gap is a real thing I want written down.',
+            scoreDelta: 12,
+            feedback:
+                'You separated the objection from the decision, so you could hold one and take the other seriously.',
+            clarity: 2,
+            empathy: 1,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'We decided this. I need you to get behind it and stop bringing it up.',
+            scoreDelta: -6,
+            feedback:
+                'Authority closed the meeting and taught your most careful engineer to stop flagging risk out loud.',
+            clarity: 1,
+            empathy: -2,
+            directness: 2,
+            confidence: -1,
+          ),
+          ResponseChoice(
+            text:
+                'Maybe we should put it back on the agenda and look at it properly.',
+            scoreDelta: -4,
+            feedback:
+                'Reopening it on the fourth ask teaches the team that decisions last until someone is persistent enough.',
+            clarity: -2,
+            empathy: 1,
+            directness: -2,
+            confidence: -2,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine:
+            'So it stands even though the concern is real. That’s the part I don’t understand.',
+        prompt: 'Explain the difference.',
+        choices: [
+          ResponseChoice(
+            text:
+                'Because being right about the risk and being right about the timing are not the same thing. Own the rollback plan and I will back it in the next review.',
+            scoreDelta: 10,
+            feedback:
+                'You gave the objection somewhere real to go, which is what makes “the decision stands” something other than a brush-off.',
+            clarity: 2,
+            empathy: 1,
+            directness: 1,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'Honestly, I don’t have the energy to reopen this. Can you let it go?',
+            scoreDelta: -5,
+            feedback:
+                'You made your own fatigue the reason, which is the one justification nobody can respect.',
+            clarity: 0,
+            empathy: 0,
+            directness: -1,
+            confidence: -2,
+          ),
+          ResponseChoice(
+            text:
+                'The concern isn’t that real. The pipeline has rolled back fine twice already.',
+            scoreDelta: -3,
+            feedback:
+                'You argued the technical point down instead of closing the decision, and now you are losing on both.',
+            clarity: 1,
+            empathy: -1,
+            directness: 1,
+            confidence: 1,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine:
+            'Fine. I’ll write it up. But if this bites us in November, I want it on record that I said so.',
+        prompt: 'Close it.',
+        choices: [
+          ResponseChoice(
+            text:
+                'Put it in the doc with your name on it. If it bites us, I want the record to say you called it.',
+            scoreDelta: 14,
+            feedback:
+                'You made dissent a thing that gets credited rather than tolerated, which is how you keep hearing it.',
+            clarity: 2,
+            empathy: 1,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'Let’s not do the on-record thing. If it goes wrong we’ll deal with it then.',
+            scoreDelta: -8,
+            feedback:
+                'You refused the one thing Daniel asked for, and it was the cheapest thing in the conversation.',
+            clarity: -2,
+            empathy: -1,
+            directness: -2,
+            confidence: -2,
+          ),
+          ResponseChoice(
+            text: 'Noted. Send it over when it’s done.',
+            scoreDelta: -2,
+            feedback:
+                'Daniel was asking to be trusted, and you answered the logistics.',
+            clarity: 1,
+            empathy: -1,
+            directness: 1,
+            confidence: 0,
+          ),
+        ],
+      ),
+    ],
+  ),
+  Scenario(
+    id: 'overloaded',
+    title: 'The person who never says no',
+    subtitle: 'Take work off someone without taking their standing with it.',
+    skill: 'Workload',
+    durationMinutes: 3,
+    stakes: ScenarioStakes.warmUp,
+    icon: Icons.layers_outlined,
+    tint: AppColors.subtle,
+    personName: 'Hana Sato',
+    personRole: 'Implementation consultant',
+    personInitials: 'HS',
+    context:
+        'Hana has said yes to four things this month, two of which were not Hana’s to take. The work is still good. Last week Hana apologised for a slow reply at 7am on a Sunday.',
+    goal:
+        'Take two things off Hana’s plate, and make it unmistakable that this is about load rather than performance.',
+    watchFor:
+        'Hana will hear “let me take that back” as “you couldn’t handle it”. Say which one you mean.',
+    openingLine:
+        'I’m fine, honestly. The migration is the only heavy one and it’s nearly done. I’d rather be busy than bored.',
+    turns: [
+      DialogueTurn(
+        employeeLine:
+            'I’m fine, honestly. The migration is the only heavy one and it’s nearly done. I’d rather be busy than bored.',
+        prompt: 'How do you answer?',
+        choices: [
+          ResponseChoice(
+            text:
+                'I believe you could carry all of it. I’m not willing to find out what it costs you.',
+            scoreDelta: 12,
+            feedback:
+                'You did not argue about whether Hana is coping — you made the decision yours, which is where it belongs.',
+            clarity: 1,
+            empathy: 2,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text: 'Okay — shout if it gets to be too much.',
+            scoreDelta: -6,
+            feedback:
+                'You asked the person who never says no to say no. Nothing changes.',
+            clarity: -2,
+            empathy: 0,
+            directness: -2,
+            confidence: -1,
+          ),
+          ResponseChoice(
+            text:
+                'You’re not fine. You apologised for a slow reply at 7am on a Sunday.',
+            scoreDelta: -3,
+            feedback:
+                'The observation is the right one, delivered as evidence in a case against Hana.',
+            clarity: 2,
+            empathy: -1,
+            directness: 2,
+            confidence: 1,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine:
+            'If you take the migration off me, what does that say to everyone else? I asked for that one.',
+        prompt: 'Hana is asking about status, not workload.',
+        choices: [
+          ResponseChoice(
+            text:
+                'It says I gave you the migration and then put three more things on top of it. That’s my error to fix, not yours to absorb.',
+            scoreDelta: 10,
+            feedback:
+                'You put the story on your own decision-making, which is the only version that does not cost Hana standing.',
+            clarity: 2,
+            empathy: 2,
+            directness: 1,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text: 'Nobody is going to read anything into it.',
+            scoreDelta: -5,
+            feedback:
+                'You told someone their worry was imaginary. They will keep it and stop mentioning it.',
+            clarity: -1,
+            empathy: -2,
+            directness: 0,
+            confidence: 0,
+          ),
+          ResponseChoice(
+            text:
+                'Let’s not overthink the optics. I’m reassigning it either way.',
+            scoreDelta: -4,
+            feedback:
+                'You got the decision right and spent all its goodwill dismissing a legitimate question.',
+            clarity: 1,
+            empathy: -2,
+            directness: 2,
+            confidence: 1,
+          ),
+        ],
+      ),
+      DialogueTurn(
+        employeeLine:
+            'Okay. But I don’t want this to be the thing that comes up when we talk about promotion.',
+        prompt: 'Close it.',
+        choices: [
+          ResponseChoice(
+            text:
+                'It won’t, because this isn’t a performance conversation. What will come up is whether you can tell me you’re at capacity before I have to notice.',
+            scoreDelta: 14,
+            feedback:
+                'You closed the fear and named the actual skill you want, so the load conversation became a development one.',
+            clarity: 2,
+            empathy: 1,
+            directness: 2,
+            confidence: 2,
+          ),
+          ResponseChoice(
+            text:
+                'Let’s worry about promotion later. Right now just get the migration handed over.',
+            scoreDelta: -8,
+            feedback:
+                'Hana raised the thing they were most afraid of and you moved it to the bottom of the agenda.',
+            clarity: 0,
+            empathy: -2,
+            directness: 1,
+            confidence: -2,
+          ),
+          ResponseChoice(
+            text: 'Of course not. This is a good thing, I promise.',
+            scoreDelta: -2,
+            feedback:
+                'A promise with nothing behind it. Hana will believe the four items on the plate over the reassurance.',
+            clarity: -1,
+            empathy: 1,
+            directness: -1,
+            confidence: -1,
+          ),
+        ],
+      ),
+    ],
+  ),
 ];

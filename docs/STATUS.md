@@ -4,17 +4,18 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-05, after the delegation mark closed the red
-> suite and Android release signing was wired.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (**249 passing,
-> none failing**), `cd server && npm test` (14 passing), `flutter build
-> appbundle --release` and `flutter build ios --no-codesign` (both succeed).
+> **Last audited:** 2026-09-07, after the scenario library was taken to
+> twelve (§4). The suite is **red pending four illustration masters** — see
+> §2 Broken before anything else.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (**251 passing,
+> 26 failing**, all on the missing marks; 277 passing against stand-in
+> masters), `cd server && npm test` (14 passing).
 
 ---
 
 ## 1. The one-paragraph summary
 
-The **practice loop runs end to end and is genuinely polished**: seven curated
+The **practice loop runs end to end and is genuinely polished**: twelve curated
 scenarios, a briefing, a three-turn conversation in guided or free-form mode,
 AI or offline scoring, and a coaching report. **Monetization is now built**:
 RevenueCat, a three-rehearsal free limit, and a contextual paywall, all
@@ -41,7 +42,7 @@ real model — and the **release checklist**.
 
 ### Already complete
 
-- Curated scenario library — 7 scenarios, guarded by `test/scenarios_test.dart`.
+- Curated scenario library — 12 scenarios, guarded by `test/scenarios_test.dart`.
 - Scenario briefing screen with context, goal, and the trap to watch for.
 - Conversation UI: chat layout, progress, auto-scroll, safe areas, disabled
   send while a reply is in flight, transcript preserved on error.
@@ -104,7 +105,7 @@ real model — and the **release checklist**.
 |---|---|---|
 | **Conversation length** | fixed 3 turns | 4–7 manager turns, with the model able to declare resolved or stalled |
 | **Retry** | restarts the scenario from turn 1; the report names the weak turn but does not scroll to it | highlight the weak moment in a transcript, then retry (P1, PRD §12) |
-| **Scenario coverage** | all 8 seeded categories, since `delegation` landed | boundary and saying-no are still collapsed into one scenario (see §4) |
+| **Scenario coverage** | 12 scenarios; every seeded category has its own, and boundary is no longer shared with saying-no | nothing outstanding — PRD §7.1 asks for 6–12 (see §4) |
 | **Malformed AI output** | falls back to the offline coach; a fabricated quote is dropped on both sides | server-side repair/retry once (PRD §26) — currently it degrades rather than repairs |
 | **Empty states / transitions** | present on home and progress | haptics and an animated score reveal are not built |
 
@@ -138,8 +139,24 @@ three simulation items are not the P0 gaps this section used to call them.
 
 ### Broken
 
-Nothing. 249 Flutter tests and 14 server tests pass, analysis is clean, and
-both the Android bundle and the iOS build succeed.
+**26 Flutter tests are red, and it is the illustration trap again.** The four
+scenarios added to reach twelve (§4) have no paper masters, so
+`art/illustrations/{after-hours,below-bar,disagree-commit,overloaded}.png`
+do not exist. Four of the failures are `scenarios_test.dart` asking for the
+derived variants; the other 22 are every widget test that renders home,
+because `Image.asset` throws on a mark that is not there.
+
+Analysis is clean and the server suite passes. The scenarios themselves are
+verified — scoring bands, one-best-answer, briefing shape and the confidence
+axis all pass, and the whole suite went green (277 tests) against stand-in
+masters, which were then deleted rather than committed. **The only missing
+input is artwork**: generate the four subjects from
+[`ILLUSTRATIONS.md`](ILLUSTRATIONS.md) §2 and run
+`flutter test tool/generate_illustrations.dart`.
+
+No placeholder was committed on purpose. A flat stand-in would turn the suite
+green while leaving the home list off-style, which is the failure this
+section exists to catch.
 
 The `delegation` illustration that made this section red was added
 2026-09-05. It is worth recording *how* that failure hid: the master had
@@ -175,27 +192,39 @@ untouched.
 
 ## 4. Scenario coverage against the Day 1 seed list
 
-Target was 8 across six categories. Eight exist.
+Target was 8 across six categories. **Twelve exist**, which is the top of the
+range PRD §7.1 actually asks for — "Ship roughly **6–12** curated scenarios."
 
 | Roadmap category | Covered by | |
 |---|---|---|
 | Difficult feedback ×2 | `missed-deadlines`, `high-performer` | ✅ |
-| Performance ×2 | `missed-deadlines`, `promotion-denied` | 🟡 one is a career conversation, not a performance one |
-| Boundary ×1 | `say-no` | 🟡 shared |
-| Saying no ×1 | `say-no` | 🟡 same scenario as boundary |
-| Conflict ×1 | `peer-conflict` | ✅ |
-| Delegation ×1 | `delegation` | ✅ |
+| Performance ×2 | `missed-deadlines`, `below-bar` | ✅ |
+| Boundary ×1 | `after-hours` | ✅ |
+| Saying no ×1 | `say-no` | ✅ |
+| Conflict ×1 | `peer-conflict`, `disagree-commit` | ✅ |
+| Delegation ×1 | `delegation`, `overloaded` | ✅ |
 
-Beyond the seed list: `upward-feedback` and `resignation`.
+Beyond the seed list: `upward-feedback`, `resignation`, `promotion-denied`.
 
-One write would close this: splitting **boundary** from **saying no** — an
-after-hours-messages boundary is a distinct conversation from declining a
-request, and `say-no` is currently doing both jobs. The delegation gap was
-closed 2026-09-04 by `delegation`, which is PRD §7.1 category 6,
-"delegating instead of taking work back".
+Both 🟡 rows this table used to carry are closed. **Boundary is no longer
+shared with saying-no** — `after-hours` is the response-time conversation the
+previous audit said "one write would close this", and `say-no` is now only
+declining a request. **Performance ×2 is genuinely covered** — it used to
+lean on `promotion-denied`, which is a career conversation; `below-bar` is
+the work-quality one.
 
-The PRD is explicit that this should stop around 10: "Ten excellent scenarios
-beat fifty generic scenarios."
+The two additions past the seed list pair with scenarios that already
+existed: `disagree-commit` is a decision that will not stay closed, distinct
+from `peer-conflict`'s repair, and `overloaded` is the mirror of
+`delegation` — taking work back without taking someone's standing with it.
+
+Stakes now sit 4 / 4 / 4 across warm-up, challenging and high-stakes, which
+is what the home screen's three rails want.
+
+**This is where the library stops.** The PRD is explicit: "Ten excellent
+scenarios beat fifty generic scenarios", ROADMAP §0 priority 5 lists a broad
+scenario library as P2, and twelve is already the top of §7.1's range.
+Anything further is quality work on the twelve, not a thirteenth.
 
 ---
 
