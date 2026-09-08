@@ -62,9 +62,9 @@ looks them up by scenario id.
 | `resignation.png` | A sealed envelope standing upright, a single door key leaning against it. |
 | `delegation.png` | A shallow out-tray holding one thick sheet, the sheet sitting slightly proud of the tray as though just set down. |
 | `after-hours.png` | A single speech bubble with a crescent moon cut cleanly out of its centre. |
-| `below-bar.png` | A spirit level lying flat, its bubble sitting well off centre. |
+| `below-bar.png` | A spirit level angled diagonally in three-quarter view to fill the square, its oversized bubble pressed hard against one end. |
 | `disagree-commit.png` | A closed ring binder with one thick sheet still protruding from it. |
-| `overloaded.png` | A drinking glass filled past its rim, the surface bulging above the edge. |
+| `overloaded.png` | A shallow office in-tray buckling under a dense stack of thick sheets piled far above its side walls. |
 | `empty-progress.png` | A bar chart with only the first, shortest bar present. |
 | `pro-unlock.png` | An open padlock resting on its side, shackle lifted. |
 | `logo.png` | Two overlapping speech bubbles, the left deep green and the right warm off-white, with a small muted amber bubble showing in the gap between them. |
@@ -80,7 +80,7 @@ subject drawn on a transparent ground, which is why the two look related
 and why this one has no background of its own. It replaced a forest square
 with a Material `forum` glyph in it; the wordmark beside it is still type.
 
-### Two subjects that had to be replaced
+### Three subjects that had to be replaced
 
 Recorded so they are not proposed again.
 
@@ -94,9 +94,17 @@ possible one for drawing something that is not there.
 the angle. A relationship that subtle does not survive generation, let alone
 40pt.
 
-The rule both of them break: **put the meaning in the object, not in a
-spatial relationship between objects.** A torn disc and an empty box each
-say one thing on their own.
+**A drinking glass filled past its rim** was the first attempt at
+`overloaded`. An opaque paper vessel cannot show a fill level, so the liquid
+surface became a green dome that read as a lid. The result looked like a waste
+bin or plant pot — a harmful association for a scenario about someone at
+capacity. The replacement makes the excess visible as positive shapes: a work
+tray physically overwhelmed by a stack rising beyond its walls.
+
+The rule behind all three replacements: **put the meaning in visible parts of
+the object, not in an absence, transparency, or subtle spatial relationship.**
+A torn disc, an empty box and an overloaded tray each say one thing on their
+own.
 
 ---
 

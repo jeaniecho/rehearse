@@ -429,26 +429,31 @@ an interface with a device implementation and a fake, so replacing the plugin
 with a platform channel touches one file and moves no tests. Voice is P2 and
 `ROADMAP` §1 says not to extend it, so this waits.
 
-**`overloaded` reads as a waste bin at 88pt, and shipped anyway.** The brief
-asked for "a drinking glass filled past its rim, the surface bulging above
-the edge". An opaque paper vessel cannot show a fill level, so the bulge
-rendered as a domed lid on a tub — at the size it is actually drawn it says
-bin, not capacity, which is the wrong signal for a scenario about someone at
-their limit. The brief was the fault, not the generation: it broke
-[`ILLUSTRATIONS.md`](ILLUSTRATIONS.md) §2's own rule by depending on
-transparency, which is not a property this style has.
+**`below-bar` is soft at the size it is drawn.** A squat horizontal object in
+a square frame renders visibly smaller than its neighbours, and the
+off-centre bubble carrying the whole meaning is lost by 88pt. It currently
+reads as a green brick with an amber dot.
 
-`below-bar` is soft for a different reason — a squat horizontal object in a
-square frame renders visibly smaller than its neighbours, and the off-centre
-bubble carrying the whole meaning is lost by 88pt.
+[`ILLUSTRATIONS.md`](ILLUSTRATIONS.md) §2 already carries the replacement
+brief — angled three-quarter to fill the square, with an oversized bubble
+hard against one end — so **the prompt is ahead of the master**. Regenerating
+it is one image plus
+`flutter test tool/generate_illustrations.dart`; until then that row of the
+table describes what the mark should be rather than what it is.
 
-Both were seen at size and shipped deliberately, to keep the twelve-scenario
-library moving. The replacement for `overloaded` wants an object whose
-silhouette carries the overload — an overstuffed folder that cannot close is
-the candidate; `below-bar` wants reframing rather than re-conceiving, angled
-three-quarter from above to fill the square with a larger bubble hard against
-one end. Neither blocks submission, and both are cheap: one master each, then
-`flutter test tool/generate_illustrations.dart`.
+`overloaded` was the same kind of defect and is fixed. Its first brief asked
+for a glass filled past the rim, which an opaque paper vessel cannot show —
+the bulge rendered as a domed lid and the mark read as a waste bin, a bad
+association for a scenario about someone at capacity. Replacing it with a
+tray physically overwhelmed by a stack puts the excess in positive shapes,
+which is what this style can draw. The dead subject is recorded in
+[`ILLUSTRATIONS.md`](ILLUSTRATIONS.md) §2 beside the step-ladder and the
+office chairs, and the rule there now covers transparency as well as absence.
+
+One cost worth knowing: `overloaded`, `delegation` and `say-no` are now three
+tray-or-stack marks. They separate at 88pt — a tall ragged stack, a flat
+slab, and a stack with a folder floating clear of it — but the set has no
+room for a fourth.
 
 **No dark theme.** `lib/app.dart` sets `theme:` only. `AppColors` are const
 values referenced directly across 20 files in `lib/`, so adding one is a
