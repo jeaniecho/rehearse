@@ -25,8 +25,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 277 tests — 26 red until the four new
-                                # scenario marks exist; see STATUS.md §2 Broken
+flutter test                    # 277 tests
 cd server && npm test           # 14 tests
 ```
 

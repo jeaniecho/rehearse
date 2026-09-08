@@ -4,12 +4,10 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-07, after the scenario library was taken to
-> twelve (§4). The suite is **red pending four illustration masters** — see
-> §2 Broken before anything else.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (**251 passing,
-> 26 failing**, all on the missing marks; 277 passing against stand-in
-> masters), `cd server && npm test` (14 passing).
+> **Last audited:** 2026-09-08, after the four marks for the twelve-scenario
+> library landed and closed the red suite.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (**277 passing,
+> none failing**), `cd server && npm test` (14 passing).
 
 ---
 
@@ -139,24 +137,13 @@ three simulation items are not the P0 gaps this section used to call them.
 
 ### Broken
 
-**26 Flutter tests are red, and it is the illustration trap again.** The four
-scenarios added to reach twelve (§4) have no paper masters, so
-`art/illustrations/{after-hours,below-bar,disagree-commit,overloaded}.png`
-do not exist. Four of the failures are `scenarios_test.dart` asking for the
-derived variants; the other 22 are every widget test that renders home,
-because `Image.asset` throws on a mark that is not there.
+Nothing. 277 Flutter tests and 14 server tests pass, and analysis is clean.
 
-Analysis is clean and the server suite passes. The scenarios themselves are
-verified — scoring bands, one-best-answer, briefing shape and the confidence
-axis all pass, and the whole suite went green (277 tests) against stand-in
-masters, which were then deleted rather than committed. **The only missing
-input is artwork**: generate the four subjects from
-[`ILLUSTRATIONS.md`](ILLUSTRATIONS.md) §2 and run
-`flutter test tool/generate_illustrations.dart`.
-
-No placeholder was committed on purpose. A flat stand-in would turn the suite
-green while leaving the home list off-style, which is the failure this
-section exists to catch.
+The four marks for the scenarios added in §4 landed 2026-09-08, closing a
+red suite that ran 251/26 — four asset tests plus every widget test that
+renders home, because `Image.asset` throws on a missing mark. One mark
+shipped below the standard the rest of the set holds; that is a quality
+defect, recorded in §6, not breakage.
 
 The `delegation` illustration that made this section red was added
 2026-09-05. It is worth recording *how* that failure hid: the master had
@@ -165,8 +152,8 @@ was green while a clean checkout was still red. A suite passing where the
 asset was generated says nothing about the repository — check `git
 ls-files` for a new binary, not the test output.
 
-Two known **defects** remain, both in §6 rather than here because they are
-quality and future-risk issues rather than breakage.
+Known **defects** are in §6 rather than here, because they are quality and
+future-risk issues rather than breakage.
 
 ---
 
@@ -404,8 +391,8 @@ change, not just a refactor.
 
 ## 6. Known quality defects
 
-Measured, not guessed. Neither is in the PRD, so neither is P0 — and one
-of the two turned out to be already fixed.
+Measured, not guessed. None is in the PRD, so none is P0 — and one of them
+turned out to be already fixed.
 
 **Contrast — fixed, and this entry used to say otherwise.** Three pairs were
 recorded here as failing WCAG AA. The paper redesign darkened `coral` to
@@ -441,6 +428,27 @@ CocoaPods fallback. The insurance already exists — `SpeechOutputService` is
 an interface with a device implementation and a fake, so replacing the plugin
 with a platform channel touches one file and moves no tests. Voice is P2 and
 `ROADMAP` §1 says not to extend it, so this waits.
+
+**`overloaded` reads as a waste bin at 88pt, and shipped anyway.** The brief
+asked for "a drinking glass filled past its rim, the surface bulging above
+the edge". An opaque paper vessel cannot show a fill level, so the bulge
+rendered as a domed lid on a tub — at the size it is actually drawn it says
+bin, not capacity, which is the wrong signal for a scenario about someone at
+their limit. The brief was the fault, not the generation: it broke
+[`ILLUSTRATIONS.md`](ILLUSTRATIONS.md) §2's own rule by depending on
+transparency, which is not a property this style has.
+
+`below-bar` is soft for a different reason — a squat horizontal object in a
+square frame renders visibly smaller than its neighbours, and the off-centre
+bubble carrying the whole meaning is lost by 88pt.
+
+Both were seen at size and shipped deliberately, to keep the twelve-scenario
+library moving. The replacement for `overloaded` wants an object whose
+silhouette carries the overload — an overstuffed folder that cannot close is
+the candidate; `below-bar` wants reframing rather than re-conceiving, angled
+three-quarter from above to fill the square with a larger bubble hard against
+one end. Neither blocks submission, and both are cheap: one master each, then
+`flutter test tool/generate_illustrations.dart`.
 
 **No dark theme.** `lib/app.dart` sets `theme:` only. `AppColors` are const
 values referenced directly across 20 files in `lib/`, so adding one is a
