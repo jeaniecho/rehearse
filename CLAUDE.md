@@ -26,7 +26,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 flutter pub get
 flutter analyze                 # must be clean
 flutter test                    # 414 tests
-cd server && npm test           # 14 tests
+cd server && npm test           # 24 tests
 ```
 
 ```bash
@@ -44,6 +44,18 @@ With the AI coach:
 ```bash
 cd server && OPENAI_API_KEY=... npm start
 flutter run --dart-define=REHEARSE_COACH_URL=http://127.0.0.1:8787
+```
+
+`REHEARSE_COACH_URL` is `String.fromEnvironment` — compile-time. A shell
+variable does nothing; it has to be a `--dart-define`, and a wrong value
+fails silently into the offline coach.
+
+The server deploys to Cloudflare Workers (`server/worker.mjs`); `npm start`
+is the local Node shell of the same routes. Both go through
+`server/handler.mjs`, so add a route or a rule there, not in a shell.
+
+```bash
+cd server && npx wrangler secret put OPENAI_API_KEY && npm run deploy
 ```
 
 To regenerate the store screenshots:

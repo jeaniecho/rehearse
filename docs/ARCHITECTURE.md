@@ -69,10 +69,15 @@ lib/
   theme/app_theme.dart   AppColors tokens + the Material 3 theme
   widgets/               shared UI + the four InheritedNotifier scopes
 server/
-  server.mjs           http server: GET /health, POST /simulation/respond,
-                       POST /simulation/evaluate
+  handler.mjs          routes, validation, error shaping — no runtime
+  worker.mjs           Cloudflare shell (production)
+  server.mjs           Node shell (local `npm start`)
   coach.mjs            prompt construction and OpenAI Responses call
+  wrangler.toml        deployment config
 ```
+
+Three routes, two shells, one set of decisions: `GET /health`,
+`POST /simulation/respond`, `POST /simulation/evaluate`.
 
 ---
 
@@ -174,6 +179,45 @@ used to be a generic sentence.
            └── POST /simulation/evaluate   once at the end, 30s
                  the whole transcript, scored, with quoted critique
 ```
+
+### Where it runs
+
+Cloudflare Workers. The evaluation call can take most of the 30s the client
+allows, and Workers bills **CPU time, not wall time** — waiting on OpenAI is
+free. What this actually computes (parse, build a request, ground a handful
+of quotes) sits well inside the free tier's 10ms budget, and one external
+subrequest per call is nothing against a limit of 50.
+
+That suits code with no dependencies and no state: nothing here needs a
+process that stays warm.
+
+```bash
+cd server
+npx wrangler secret put OPENAI_API_KEY   # a secret, never a var
+npm run deploy
+```
+
+`handler.mjs` holds every decision; `worker.mjs` and `server.mjs` only
+translate to and from their runtime's request type. That split is deliberate
+— two shells each owning a copy of the routing is how `/health` once ended
+up reporting a model the app was not using.
+
+> **The key is the whole reason a backend exists.** `--dart-define` values are
+> compiled into `libapp.so` as plain text and come straight back out of a
+> release build with `strings`. There is no version of shipping the provider
+> key in the client that is safe.
+
+Two things to set before it is reachable from the internet: `ALLOWED_ORIGIN`,
+which falls back to `*`, and a rate limit. An unauthenticated proxy to a paid
+API is a bill anyone can run up, and moving the key server-side does not
+change that.
+
+### Node, locally
+
+`npm start` still runs the same routes through `server.mjs` for development,
+reading `process.env` where the worker reads its `env` argument. `coach.mjs`
+knows about neither — the shells pass `apiKey` and `model` in explicitly,
+which is what keeps it runtime-agnostic.
 
 ### The model
 

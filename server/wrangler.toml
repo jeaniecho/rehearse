@@ -1,0 +1,21 @@
+name = "rehearse-coach"
+main = "worker.mjs"
+compatibility_date = "2026-09-01"
+
+# `coach.mjs` hashes the session id with `createHash` from `node:crypto` for
+# OpenAI's `safety_identifier`. Web Crypto would work too, but `subtle.digest`
+# is async and would turn `safeIdentifier` — and both request builders — into
+# async functions for no gain. This flag is the cheaper answer.
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# The origin allowed to call this. Leave it unset and `corsHeaders` falls back
+# to "*", which on a public proxy to a paid API means anyone can run up the
+# bill. Set it to the app's origin before this is reachable from the internet.
+# ALLOWED_ORIGIN = "https://rehearse.app"
+
+# Overrides DEFAULT_MODEL in coach.mjs. `/health` reports whichever is live.
+# OPENAI_MODEL = "gpt-5-nano"
+
+# OPENAI_API_KEY is a secret, not a var — never put it in this file:
+#   npx wrangler secret put OPENAI_API_KEY
