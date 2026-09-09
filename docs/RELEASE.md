@@ -23,7 +23,7 @@ decision.
 | ✅ | Screenshots generated ([§4](#4-screenshots)) |
 | ❌ | Signing, both platforms |
 | ❌ | Store records created, metadata entered |
-| ❌ | Coach server deployed — code and `wrangler.toml` are ready, needs a Cloudflare account and `OPENAI_API_KEY` set as a secret |
+| ❌ | Coach server deployed — code, rate limits and `wrangler.toml` are ready; needs a Cloudflare account, `OPENAI_API_KEY` as a secret, and `ALLOWED_ORIGIN` set |
 | ❌ | Subscriptions configured ([`REVENUECAT.md`](REVENUECAT.md)) |
 | ❌ | TestFlight / internal testing build |
 

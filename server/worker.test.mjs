@@ -193,3 +193,130 @@ test("an oversized body is refused", async () => {
 
   assert.equal(response.status, 502);
 });
+
+
+/** A limiter binding that records its keys and answers [allow]. */
+function limiter(allow) {
+  const keys = [];
+  return { keys, limit: async ({ key }) => (keys.push(key), { success: allow }) };
+}
+
+test("a refused caller never reaches the model", async () => {
+  // The point of the limit. If this ever calls fetch, the limit is costing
+  // money instead of saving it.
+  let called = false;
+  const response = await withStubbedFetch(
+    async () => {
+      called = true;
+      throw new Error("should not have been called");
+    },
+    () =>
+      worker.fetch(post("/simulation/respond", respondBody), {
+        OPENAI_API_KEY: "sk-test",
+        RESPOND_LIMITER: limiter(false),
+      }),
+  );
+
+  assert.equal(response.status, 429);
+  assert.equal(called, false);
+});
+
+test("the two endpoints draw on separate buckets", async () => {
+  // A rehearsal sends three replies and one evaluation. Sharing one bucket
+  // would let the cheap call starve the expensive one.
+  const respond = limiter(true);
+  const evaluate = limiter(false);
+
+  const allowed = await withStubbedFetch(
+    modelReturning({ reply: "Go on.", emotion: "calm", resolution: "continuing" }),
+    () =>
+      worker.fetch(post("/simulation/respond", respondBody), {
+        OPENAI_API_KEY: "sk-test",
+        RESPOND_LIMITER: respond,
+        EVALUATE_LIMITER: evaluate,
+      }),
+  );
+
+  assert.equal(allowed.status, 200);
+  assert.equal(respond.keys.length, 1);
+  assert.equal(evaluate.keys.length, 0, "the other bucket was untouched");
+});
+
+test("the limit is keyed on the caller, not the whole world", async () => {
+  const bucket = limiter(true);
+  await withStubbedFetch(
+    modelReturning({ reply: "Go on.", emotion: "calm", resolution: "continuing" }),
+    () =>
+      worker.fetch(
+        new Request("https://coach.test/simulation/respond", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "cf-connecting-ip": "203.0.113.7",
+          },
+          body: JSON.stringify(respondBody),
+        }),
+        { OPENAI_API_KEY: "sk-test", RESPOND_LIMITER: bucket },
+      ),
+  );
+
+  assert.deepEqual(bucket.keys, ["203.0.113.7"]);
+});
+
+test("a caller with no attributable address shares one bucket", async () => {
+  const bucket = limiter(true);
+  await withStubbedFetch(
+    modelReturning({ reply: "Go on.", emotion: "calm", resolution: "continuing" }),
+    () =>
+      worker.fetch(post("/simulation/respond", respondBody), {
+        OPENAI_API_KEY: "sk-test",
+        RESPOND_LIMITER: bucket,
+      }),
+  );
+
+  assert.deepEqual(bucket.keys, ["unattributed"]);
+});
+
+test("health and preflight are never rate limited", async () => {
+  // Refusing these buys nothing — neither calls a model — and a health check
+  // that can be rate limited is a monitoring problem.
+  const bucket = limiter(false);
+  const env = {
+    RESPOND_LIMITER: bucket,
+    EVALUATE_LIMITER: bucket,
+    OPENAI_API_KEY: "sk-test",
+  };
+
+  const health = await worker.fetch(new Request("https://coach.test/health"), env);
+  const preflight = await worker.fetch(
+    new Request("https://coach.test/simulation/respond", { method: "OPTIONS" }),
+    env,
+  );
+
+  assert.equal(health.status, 200);
+  assert.equal(preflight.status, 204);
+  assert.equal(bucket.keys.length, 0);
+});
+
+test("an unknown path cannot burn someone's quota", async () => {
+  const bucket = limiter(true);
+  const response = await worker.fetch(post("/nope", respondBody), {
+    RESPOND_LIMITER: bucket,
+  });
+
+  assert.equal(response.status, 404);
+  assert.equal(bucket.keys.length, 0);
+});
+
+test("no binding means no limit, not no service", async () => {
+  // `wrangler dev` and the Node shell run without bindings.
+  const response = await withStubbedFetch(
+    modelReturning({ reply: "Go on.", emotion: "calm", resolution: "continuing" }),
+    () =>
+      worker.fetch(post("/simulation/respond", respondBody), {
+        OPENAI_API_KEY: "sk-test",
+      }),
+  );
+
+  assert.equal(response.status, 200);
+});

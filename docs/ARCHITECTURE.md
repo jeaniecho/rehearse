@@ -207,10 +207,39 @@ up reporting a model the app was not using.
 > release build with `strings`. There is no version of shipping the provider
 > key in the client that is safe.
 
-Two things to set before it is reachable from the internet: `ALLOWED_ORIGIN`,
-which falls back to `*`, and a rate limit. An unauthenticated proxy to a paid
-API is a bill anyone can run up, and moving the key server-side does not
-change that.
+### The rate limit
+
+Unauthenticated and spends money, so this is the only thing between a script
+and the OpenAI bill. Two Cloudflare rate-limit bindings, keyed on client IP,
+sized from real usage rather than a round number:
+
+| Bucket | Limit | Why |
+|---|---|---|
+| `RESPOND_LIMITER` | 30 / 60s | a person going quickly sends ~2/min |
+| `EVALUATE_LIMITER` | 10 / 60s | exactly one per rehearsal, and the expensive half |
+
+Separate buckets so the cheap call cannot starve the expensive one. The
+headroom is for carrier NAT — roughly fifteen people can share one address
+before anybody legitimate is refused.
+
+It caps a saturating IP at **about $14 a day** against no ceiling at all.
+Cloudflare counts per location and is explicit that this is eventually
+consistent, so that is the right order of magnitude rather than a guarantee.
+`/health` and preflight are never limited: neither calls a model, and a
+health check that can be rate limited is a monitoring problem.
+
+Which routes are limited lives in `handler.mjs` with the other route rules;
+only the mechanism is in `worker.mjs`, because only Cloudflare has one. Local
+Node passes no limiter, so `npm start` is unlimited.
+
+> A refusal is a 429, and `ResilientCoachService` treats every non-200 the
+> same way — it falls back to the offline coach without saying so. Someone
+> rate limited gets the demo coach and no explanation. That is the right
+> trade for a limit this generous, but it is the reason the limits have
+> headroom rather than being tight.
+
+`ALLOWED_ORIGIN` still needs setting before this is public. The rate limit
+bounds the damage; CORS narrows who can try.
 
 ### Node, locally
 

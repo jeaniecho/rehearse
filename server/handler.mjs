@@ -56,8 +56,19 @@ export function corsHeaders(allowedOrigin = "*") {
  * `options` carries `apiKey` and `model` from wherever the shell keeps its
  * environment — `process.env` on Node, the `env` argument on Workers. Passing
  * them explicitly is what lets `coach.mjs` stay free of both.
+ *
+ * `checkRateLimit(path)` returns false to refuse the request. The mechanism
+ * belongs to the shell — Cloudflare has a binding for it, local Node has
+ * nothing and passes none — but *which* routes are limited, and what a
+ * refusal looks like, are decided here with every other route rule.
  */
-export async function handleCoachRequest({ method, path, readBody, options = {} }) {
+export async function handleCoachRequest({
+  method,
+  path,
+  readBody,
+  options = {},
+  checkRateLimit,
+}) {
   if (method === "OPTIONS") return { status: 204, body: null };
 
   if (method === "GET" && path === "/health") {
@@ -73,6 +84,17 @@ export async function handleCoachRequest({ method, path, readBody, options = {} 
 
   const route = method === "POST" ? routes[path] : undefined;
   if (!route) return { status: 404, body: { error: "Not found." } };
+
+  // After routing so a wrong path cannot burn someone's quota, and before
+  // the body is read so a flood does not get parsed on the way to being
+  // refused. Only the two model-calling routes are limited: `/health` and
+  // preflight cost nothing and are worth keeping answerable.
+  if (checkRateLimit && !(await checkRateLimit(path))) {
+    return {
+      status: 429,
+      body: { error: "Too many requests. Try again in a moment." },
+    };
+  }
 
   try {
     const payload = await readBody();

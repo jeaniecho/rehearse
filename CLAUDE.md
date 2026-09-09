@@ -26,7 +26,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 flutter pub get
 flutter analyze                 # must be clean
 flutter test                    # 414 tests
-cd server && npm test           # 24 tests
+cd server && npm test           # 31 tests
 ```
 
 ```bash
