@@ -177,8 +177,46 @@ used to be a generic sentence.
 
 ### During the conversation
 
-`respond()` carries the chosen `SimulationDifficulty` and returns only what
-the other person says.
+`respond()` carries the chosen `SimulationDifficulty` and returns what the
+other person says, plus a `SimulationResolution` — `continuing`, `resolved`
+or `breakdown`.
+
+That second field is PRD §9's first three end conditions, and it is the only
+thing that lets a conversation stop before the turns run out. It never
+reaches the screen: §7.3 says the simulation must not explain itself while it
+runs, so it decides whether there is another turn and nothing else. It is
+also ignored on the opening exchange — a model that declares victory after
+one message would take away the practice the person came for.
+
+### How a conversation ends, and how that is reported
+
+Two different questions, answered in two different places, because they can
+disagree — a manager can handle a conversation well and still lose the room.
+
+| | Where it comes from |
+|---|---|
+| **Ending early** (§9) | `SimulationResolution` from `respond()`, free-form only |
+| **The outcome** (§11) | `SessionOutcome` on `PracticeSummary` |
+
+`SessionOutcome` is success / partial / unresolved / escalated, and is
+**never derived from the score** — that would make the report claim the
+simulation modelled something it did not. Every value traces to one of three
+sources:
+
+- **Free-form, online.** `/simulation/evaluate` returns it, judged on the
+  transcript. An unreadable value falls back to `unresolved` rather than to
+  whatever the score implies.
+- **Guided.** Authored on the closing `ResponseChoice.resolution`. A guided
+  conversation cannot end early — the authored turns always run out — so the
+  closing move is what the other person is left with. `scenarios_test.dart`
+  asserts every scenario's last turn carries one, that no earlier turn does,
+  and that all four values are reachable somewhere in the library.
+- **Free-form, offline.** The closing message is matched to the nearest
+  authored closing choice by `_closestChoice`, the same mechanism the offline
+  scores already use, and that choice's authored resolution is the outcome.
+  Below the similarity floor nothing authored applies and the answer is
+  `unresolved` — not a failure verdict, just the honest statement that
+  nothing here saw the expectation land.
 
 > **Stakes and difficulty are different things.** `Scenario.stakes`
 > (warm-up / challenging / high-stakes) is how heavy the situation is, and is

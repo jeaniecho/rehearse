@@ -1,5 +1,6 @@
 import 'practice_response.dart';
 import 'practice_summary.dart';
+import 'session_outcome.dart';
 
 /// One finished rehearsal, kept on the device so progress survives restarts.
 class PracticeRecord {
@@ -13,6 +14,7 @@ class PracticeRecord {
     required this.directness,
     required this.usedAi,
     this.confidence,
+    this.outcome,
   });
 
   factory PracticeRecord.fromSummary({
@@ -31,6 +33,7 @@ class PracticeRecord {
       directness: summary.directness,
       confidence: summary.confidence,
       usedAi: summary.usedAi,
+      outcome: summary.outcome,
     );
   }
 
@@ -67,6 +70,14 @@ class PracticeRecord {
       // Genuinely absent from those records rather than neutral, so it is
       // left out of averages instead of dragging them toward 50.
       confidence: json['confidence'] is num ? score('confidence', 50) : null,
+      // Absent on records written before the report gained an outcome. Left
+      // null rather than guessed: nothing measured how those ended.
+      outcome: json['outcome'] is String
+          ? SessionOutcomeLabel.fromName(
+              json['outcome'],
+              or: SessionOutcome.unresolved,
+            )
+          : null,
       usedAi: json['usedAi'] == true,
     );
   }
@@ -81,6 +92,9 @@ class PracticeRecord {
 
   /// Null on records written before the rubric gained this dimension.
   final int? confidence;
+
+  /// Null on records written before the report gained an outcome (PRD §11).
+  final SessionOutcome? outcome;
   final bool usedAi;
 
   Map<String, dynamic> toJson() => {
@@ -92,6 +106,7 @@ class PracticeRecord {
     'empathy': empathy,
     'directness': directness,
     'confidence': ?confidence,
+    'outcome': ?outcome?.name,
     'usedAi': usedAi,
   };
 }

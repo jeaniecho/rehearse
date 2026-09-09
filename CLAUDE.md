@@ -25,7 +25,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 277 tests
+flutter test                    # 414 tests
 cd server && npm test           # 14 tests
 ```
 
@@ -132,6 +132,13 @@ From `ROADMAP.md` §0, and they hold:
   merge them — see `docs/ARCHITECTURE.md`, The coach.
 - **Never show a quote the manager did not say.** Both the server and
   `CoachingNote.isGroundedIn` drop ungrounded notes; do not weaken either.
+- **The session outcome is never derived from the score.** PRD §9's four
+  outcomes say how the conversation *ended*; the score says how well it was
+  *handled*, and they are allowed to disagree. Each outcome traces to
+  authored content (`ResponseChoice.resolution`), to `/simulation/evaluate`,
+  or to the nearest authored close when offline — never to a band. A
+  malformed one falls back to `unresolved`, not to whatever the score
+  implies.
 - **Scoring lives in `PracticeSummary`**, so the report and the stored record
   cannot disagree. Do not recompute it in a widget. The rubric is PRD §10's
   four dimensions: clarity, empathy, directness, confidence.

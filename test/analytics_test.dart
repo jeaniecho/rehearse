@@ -5,6 +5,7 @@ import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/models/scenario.dart';
 import 'package:rehearse/models/practice_summary.dart';
+import 'package:rehearse/models/session_outcome.dart';
 import 'package:rehearse/models/subscription.dart';
 import 'package:rehearse/screens/paywall_screen.dart';
 import 'package:rehearse/screens/practice_screen.dart';
@@ -95,6 +96,7 @@ void main() {
         durationSeconds: 214,
         summary: const PracticeSummary(
           score: 74,
+          outcome: SessionOutcome.partial,
           clarity: 66,
           empathy: 90,
           directness: 58,
@@ -124,6 +126,7 @@ void main() {
           mode: PracticeMode.guided,
           summary: PracticeSummary(
             score: score,
+            outcome: SessionOutcome.success,
             clarity: score,
             empathy: score,
             directness: score,

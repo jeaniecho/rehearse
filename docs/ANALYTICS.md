@@ -43,7 +43,7 @@ Fired today, in funnel order.
 | `simulation_started` | the conversation screen mounts | `difficulty`, `is_retry` |
 | `retry_started` | as above, when `is_retry` | |
 | `simulation_message_sent` | one manager turn is committed | `turn_index`, `response_length`, `coach` |
-| `simulation_completed` | the last turn is answered | `turn_count`, `simulation_duration_seconds`, the four dimension scores, `score_band` |
+| `simulation_completed` | the conversation ends — the turns run out, or the simulation declares it resolved or broken down (PRD §9) | `turn_count`, `simulation_duration_seconds`, the four dimension scores, `score_band`, `outcome` |
 | `retry_completed` | as above, when `is_retry` | |
 | `simulation_abandoned` | the screen is left before the report | `turn_reached`, `simulation_duration_seconds` |
 | `evaluation_viewed` | the coaching report is shown | scores, `score_band` |
@@ -73,10 +73,14 @@ never fires is worse than a missing one — it looks like a measured zero.
 
 ### Deliberate naming differences from the PRD
 
-- **`score_band`, not `outcome`.** PRD §9 describes success / partial /
-  unresolved / escalated. The simulation has no outcome model yet, so this is
-  the score band (`strong` / `solid` / `mixed` / `struggled`) named for what
-  it actually is. Rename it when outcomes are real.
+- **`score_band` and `outcome` are both sent, and they are not the same
+  measure.** `score_band` buckets the score (`strong` / `solid` / `mixed` /
+  `struggled`); `outcome` is PRD §9's success / partial / unresolved /
+  escalated, judged on how the conversation ended rather than on how well it
+  was handled. They disagree often, and that gap is the interesting one — a
+  funnel that only had the band could not tell a manager who handled it well
+  and still lost the room from one who did neither. This note used to say the
+  simulation had no outcome model; it does now.
 - **`scenario_skill`, not `scenario_category`.** Scenarios carry a skill, not
   a category.
 - **`scenario_stakes` and `difficulty` are separate.** The first is how heavy

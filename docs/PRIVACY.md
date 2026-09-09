@@ -96,6 +96,8 @@ What an event can contain:
 - Which resistance level and practice mode you chose
 - How many turns a conversation ran, how long it took, and **how many
   characters** your message was — never the characters themselves
+- How the conversation ended, as one of four fixed words — resolved, partly
+  resolved, unresolved, or escalated
 - Your scores
 - Whether you have a subscription, and how many free rehearsals remain
 

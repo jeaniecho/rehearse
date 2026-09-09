@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/practice_response.dart';
 import '../models/practice_summary.dart';
 import '../models/scenario.dart';
+import '../models/session_outcome.dart';
 import '../services/analytics.dart';
 import '../services/app_settings.dart';
 import '../services/coach_service.dart';
@@ -240,7 +241,16 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _pendingManagerLine = null;
       _isThinking = false;
     });
-    _commit(response);
+    _commit(
+      response,
+      // PRD §9: the conversation can be over before the turns are. Not on the
+      // opening exchange though — one message is not a rehearsal, and a model
+      // that declares victory immediately would take away the practice the
+      // person came for.
+      endEarly:
+          reply.resolution != SimulationResolution.continuing &&
+          _turnIndex >= _earliestResolvableTurn,
+    );
   }
 
   Future<void> _toggleListening() async {
@@ -328,8 +338,19 @@ class _PracticeScreenState extends State<PracticeScreen> {
     unawaited(_commit(response));
   }
 
+  /// The soonest a declared resolution is honoured. Index 1 is the second
+  /// manager message.
+  static const _earliestResolvableTurn = 1;
+
   /// Records a finished turn, then either moves on or closes the session.
-  Future<void> _commit(PracticeResponse response) async {
+  ///
+  /// [endEarly] is PRD §9's first three end conditions — the other person
+  /// accepted, or the conversation broke down. The fourth, running out of
+  /// turns, is the `_turnIndex` check below.
+  Future<void> _commit(
+    PracticeResponse response, {
+    bool endEarly = false,
+  }) async {
     _responses.add(response);
     _analytics?.simulationMessageSent(
       widget.scenario,
@@ -339,7 +360,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       source: response.source,
     );
 
-    if (_turnIndex < widget.scenario.turns.length - 1) {
+    if (!endEarly && _turnIndex < widget.scenario.turns.length - 1) {
       setState(() {
         _turnIndex += 1;
         _responseController.clear();
