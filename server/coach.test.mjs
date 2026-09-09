@@ -167,6 +167,22 @@ test("returns the employee reply", async () => {
   assert.equal(result.emotion, "defensive");
 });
 
+test("the declared resolution reaches the client", async () => {
+  // PRD §9's end conditions are carried by this one field. The mapping is an
+  // allowlist, so a field can be in the schema, returned by the model, and
+  // still silently dropped here — which is exactly what happened.
+  const result = await respondWithOpenAI(respondPayload, {
+    apiKey: "test-key",
+    fetchImpl: respondWith({
+      reply: "Fine. I hear you.",
+      emotion: "resigned",
+      resolution: "resolved",
+    }),
+  });
+
+  assert.equal(result.resolution, "resolved");
+});
+
 test("keeps notes that quote the transcript and drops ones that do not", () => {
   const notes = [
     { quote: "we still need to address the missed handoffs", comment: "good" },

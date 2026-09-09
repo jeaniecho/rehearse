@@ -327,7 +327,14 @@ export async function respondWithOpenAI(payload, options = {}) {
     apiKey,
     fetchImpl,
   });
-  return { reply: result.reply, emotion: result.emotion };
+  // Named rather than spread, so nothing the model volunteers reaches the
+  // client by accident. Anything added to `replySchema` has to be added here
+  // too — `resolution` was missed once already.
+  return {
+    reply: result.reply,
+    emotion: result.emotion,
+    resolution: result.resolution,
+  };
 }
 
 export async function evaluateWithOpenAI(payload, options = {}) {
