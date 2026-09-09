@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 
-const DEFAULT_MODEL = "gpt-5.6-sol";
+// Both endpoints run on this. Nano is the cheapest model in the family —
+// about 2% of what gpt-5.6-sol cost — and OpenAI positions it for
+// summarization and classification rather than work like the quoted
+// critique, so the evaluation prompt is the one to watch. Override per
+// deployment with OPENAI_MODEL.
+export const DEFAULT_MODEL = "gpt-5-nano";
 
 // --- Simulation -----------------------------------------------------------
 

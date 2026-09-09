@@ -1,6 +1,10 @@
 import { createServer } from "node:http";
 
-import { evaluateWithOpenAI, respondWithOpenAI } from "./coach.mjs";
+import {
+  DEFAULT_MODEL,
+  evaluateWithOpenAI,
+  respondWithOpenAI,
+} from "./coach.mjs";
 
 const port = Number(process.env.PORT ?? 8787);
 const host = process.env.HOST ?? "127.0.0.1";
@@ -62,7 +66,7 @@ const server = createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/health") {
     sendJson(response, 200, {
       ok: true,
-      model: process.env.OPENAI_MODEL ?? "gpt-5.6-sol",
+      model: process.env.OPENAI_MODEL ?? DEFAULT_MODEL,
       routes: Object.keys(routes),
     });
     return;

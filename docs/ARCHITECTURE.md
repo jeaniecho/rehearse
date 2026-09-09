@@ -175,6 +175,28 @@ used to be a generic sentence.
                  the whole transcript, scored, with quoted critique
 ```
 
+### The model
+
+Both endpoints run `gpt-5-nano`, set once as `DEFAULT_MODEL` in
+`server/coach.mjs` and overridable per deployment with `OPENAI_MODEL`.
+`/health` reports whichever is live — it imports the constant rather than
+repeating it, because a health check that names the wrong model is worse
+than one that names none.
+
+It is the cheapest model in the family: about **$0.001 per rehearsal**
+against $0.054 on `gpt-5.6-sol`, measured on the real payloads — 3 respond
+calls at ~2,100 input and 900 output tokens, one evaluate at ~950 and 1,200.
+Output dominates, which is why the evaluation call is over half the bill on
+any model.
+
+OpenAI positions nano for summarization and classification and points at
+`gpt-5.6-luna` for more demanding work, so the evaluation prompt is the one
+under the most strain here: it has to hold a strict `json_schema` and copy
+the manager's words character for character for the quoted critique. If that
+degrades, `/simulation/evaluate` is the endpoint to move up first — the two
+build functions already take a model argument, so splitting them is a small
+change rather than a rewrite.
+
 ### During the conversation
 
 `respond()` carries the chosen `SimulationDifficulty` and returns what the
