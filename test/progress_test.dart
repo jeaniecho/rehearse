@@ -15,16 +15,20 @@ PracticeRecord record({
   required String scenarioId,
   required DateTime completedAt,
   int score = 72,
+  int? clarity,
+  int? empathy,
+  int? directness,
+  int? confidence,
 }) {
   return PracticeRecord(
     scenarioId: scenarioId,
     completedAt: completedAt,
     mode: PracticeMode.freestyle,
     score: score,
-    clarity: score,
-    empathy: score,
-    directness: score,
-    confidence: score,
+    clarity: clarity ?? score,
+    empathy: empathy ?? score,
+    directness: directness ?? score,
+    confidence: confidence ?? score,
     usedAi: false,
   );
 }
@@ -221,6 +225,91 @@ void main() {
       final button = find.byKey(const Key('clear_history'));
       expect(button, findsOneWidget);
       expect(tester.widget<OutlinedButton>(button).onPressed, isNull);
+    });
+
+    // The summary sentence is a claim about the numbers, so it may only name
+    // a skill the numbers actually single out.
+    group('skill summary', () {
+      testWidgets('names a skill that alone holds the extreme', (tester) async {
+        await pumpApp(
+          tester,
+          const ProgressScreen(),
+          records: [
+            record(
+              scenarioId: 'below-bar',
+              completedAt: today,
+              score: 43,
+              empathy: 86,
+              confidence: 30,
+            ),
+          ],
+        );
+
+        expect(
+          find.text(
+            'Empathy is carrying you. Confidence is where the '
+            'next point is.',
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('claims no winner when the top is shared', (tester) async {
+        await pumpApp(
+          tester,
+          const ProgressScreen(),
+          records: [
+            record(
+              scenarioId: 'below-bar',
+              completedAt: today,
+              score: 43,
+              confidence: 30,
+            ),
+          ],
+        );
+
+        // Clarity, empathy and directness are level at 43.
+        expect(find.textContaining('is carrying you'), findsNothing);
+        expect(
+          find.text('Confidence is where the next point is.'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('says nothing stands out when every skill ties', (
+        tester,
+      ) async {
+        await pumpApp(
+          tester,
+          const ProgressScreen(),
+          records: [
+            record(scenarioId: 'below-bar', completedAt: today, score: 43),
+          ],
+        );
+
+        expect(
+          find.text('Evenly balanced so far. Keep going to see a pattern.'),
+          findsOneWidget,
+        );
+      });
+    });
+
+    // The other two seed history before the first build, which is the one
+    // path the app never takes: the You tab is built at launch, inside the
+    // IndexedStack, with nothing stored yet. Clearing has to wake up when a
+    // rehearsal lands, or the privacy action is unreachable until relaunch.
+    testWidgets('clearing wakes up when the first rehearsal lands', (
+      tester,
+    ) async {
+      final history = await pumpApp(tester, const YouScreen());
+
+      final button = find.byKey(const Key('clear_history'));
+      expect(tester.widget<OutlinedButton>(button).onPressed, isNull);
+
+      await history.add(record(scenarioId: 'below-bar', completedAt: today));
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<OutlinedButton>(button).onPressed, isNotNull);
     });
   });
 

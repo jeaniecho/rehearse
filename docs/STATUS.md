@@ -4,9 +4,10 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-08, after the four marks for the twelve-scenario
-> library landed and closed the red suite.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (**277 passing,
+> **Last audited:** 2026-09-11, after a full pass on a real simulator — the
+> first time the paywall and the plan card have been rendered rather than
+> asserted.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (**281 passing,
 > none failing**), `cd server && npm test` (14 passing).
 
 ---
@@ -124,11 +125,12 @@ three simulation items are not the P0 gaps this section used to call them.
   model sketch. The app carries the same prose in `Scenario.context` and
   sends it to both endpoints, so this is a shape difference rather than
   missing information — see §5.
-- **Signing** — iOS only now. Android reads a release config out of
-  `android/key.properties` as of 2026-09-05, falling back to the debug key
-  when that file is absent so a clone still runs; Play rejects the fallback,
-  which is the right place to fail. iOS still needs a distribution
-  certificate and profile.
+- **Signing** — iOS only now. **Android is done and verified**: `flutter
+  build appbundle --release` produces a 61.5 MB bundle signed with the
+  `UPLOAD` key, not the debug fallback, on a certificate valid to 2054 —
+  past Play's 25-year floor. (The certificate's DN is all `CN=Unknown`,
+  which Play does not read.) iOS still needs a distribution certificate and
+  profile; `DEVELOPMENT_TEAM` and automatic signing are already set.
 - **Store records**, with the metadata from [`RELEASE.md`](RELEASE.md) §3
   entered, and the privacy policy hosted at a public URL.
 - OneSignal reminders *(P1)*.
@@ -394,6 +396,36 @@ change, not just a refactor.
 Measured, not guessed. None is in the PRD, so none is P0 — and one of them
 turned out to be already fixed.
 
+**Clearing your history was unreachable — fixed 2026-09-11, and the lesson is
+worth more than the bug.** `PracticeHistoryScope.maybeOf` did not subscribe:
+alone among the four scopes it used `getElementForInheritedWidgetOfExactType`,
+which reads the notifier without depending on it. The comment called that an
+optimisation for the one-off write in `ResultsScreen`. In `_YourData` it meant
+the You tab rendered the history the app had at launch — empty — and never
+looked again, so `Clear practice history` stayed disabled for the life of the
+process. A privacy action that `PRIVACY.md` promises, dead in every real
+session.
+
+Both existing tests passed throughout, because both seeded history **before
+the first build** — the one path the app never takes. The You tab is built at
+launch inside the `IndexedStack`, and history arrives afterwards: first from
+the disk read, then from each finished rehearsal. **A widget test that seeds
+state before pumping proves nothing about state that arrives after.** When
+what you are testing is a rebuild, the write has to come after the pump;
+`test/progress_test.dart` now has that case.
+
+The fix was to make `maybeOf` subscribe, matching `AppSettingsScope` and
+`SubscriptionScope`. `AnalyticsScope` is the one that legitimately does not,
+because nothing reads it back — so the rule is that a scope whose value is
+rendered subscribes, and only the write-only one does not.
+
+**"Clarity is carrying you" named a winner the numbers did not have — fixed
+2026-09-11.** `_SkillTrends` reduced to the first entry holding the maximum,
+so a device pass scoring 43 / 43 / 43 / 30 announced clarity as the strength
+over two dimensions level with it. It now names a skill only where that skill
+alone holds the extreme, and says nothing where the top is shared. The
+guard that existed only caught all four being equal.
+
 **Contrast — fixed, and this entry used to say otherwise.** Three pairs were
 recorded here as failing WCAG AA. The paper redesign darkened `coral` to
 `#B3400F` and took all three past the 4.5:1 floor for body text, and nobody
@@ -466,29 +498,46 @@ addition.
 
 Ordered by what moves the submission, not by what is most interesting.
 
-**Nothing on this list is a missing P0 feature.** Items 1–3 are verification
-against live services; the rest is release and depth.
+**Nothing on this list is a missing P0 feature.** Items 1–2 are hard release
+blockers found on the 2026-09-11 device pass; 3–5 are verification against
+live services; the rest is release and depth.
 
-1. **Finish RevenueCat in the dashboards and complete a sandbox purchase.**
-   Follow [`REVENUECAT.md`](REVENUECAT.md) §2–§6. The code is done; this is
-   store configuration plus one device test, and until it happens the
-   monetization is unproven.
-2. **Point analytics at a real PostHog project and watch the funnel fill.**
+1. **Deploy the coach and compile its URL into the release build.**
+   `createCoachService` reads `REHEARSE_COACH_URL` with **no default**
+   ([`coach_service.dart:47`](../lib/services/coach_service.dart)), so a
+   build made without it ships as the offline demo — which is what the store
+   description sells against. The release entry in `.vscode/launch.json`
+   does not pass it. Nothing downstream can be verified until the server has
+   a public home.
+2. **Put Terms of Use and Privacy Policy links on the paywall.** Apple 3.1.2
+   requires both at the point of purchase for an auto-renewing subscription,
+   and the footer currently ends at the billing sentence. This is a
+   first-pass rejection, and it needs the hosted URLs from
+   [`RELEASE.md`](RELEASE.md) §2 first.
+3. **Complete a sandbox purchase.** The dashboards are further along than
+   this file used to say: offerings now return real prices on iOS (Annual
+   $59.99, Monthly $8.99), so App Store Connect products and their metadata
+   exist. What is unproven is a purchase, a restore, and a transaction
+   arriving in RevenueCat — [`REVENUECAT.md`](REVENUECAT.md) §2–§6.
+4. **Point analytics at a real PostHog project and watch the funnel fill.**
    One `--dart-define` ([`ANALYTICS.md`](ANALYTICS.md) §Setup). Do it at the
    same time as the sandbox purchase so the monetization funnel is verified
    in one pass.
-3. **Run a real conversation against a real model.** Start the server with an
-   `OPENAI_API_KEY` and play all three difficulty levels. Everything about the
-   simulation and the quoted critique is verified against fakes; none of it
-   has met an actual model. This is where prompt quality gets judged, and
-   ROADMAP §5's test matrix is the checklist.
-4. **Work through [`RELEASE.md`](RELEASE.md).** The copy, the policy, the
+5. **Run a real conversation against a real model.** Play all three
+   difficulty levels. Everything about the simulation and the quoted critique
+   is verified against fakes; none of it has met an actual model. The device
+   pass showed why this matters — the offline coach's report contradicted
+   itself, praising the transcript for naming the issue under a headline
+   saying it had not. Harmless behind "Private demo scoring", and no evidence
+   either way about the real prompts. ROADMAP §5's test matrix is the
+   checklist.
+6. **Work through [`RELEASE.md`](RELEASE.md).** The copy, the policy, the
    screenshots and the privacy answers are written, and Android signing is
-   wired. What is left needs an Apple account, a Play account, iOS signing,
+   done. What is left needs an Apple account, a Play account, iOS signing,
    and somewhere to host the policy.
-5. Dark theme, if there is time before submission. The contrast half of
+7. Dark theme, if there is time before submission. The contrast half of
    this item is done — see §6.
-6. Product depth the PRD lists but does not require for P0: a delegation
+8. Product depth the PRD lists but does not require for P0: a delegation
    scenario, 4–7 turn conversations, session outcomes, and simulation state.
 
 ---

@@ -259,6 +259,12 @@ class _BannerDivider extends StatelessWidget {
   }
 }
 
+/// The skill that alone scores [value], or null when it is shared.
+PracticeSkill? _soleHolder(Map<PracticeSkill, int> skills, int value) {
+  final holders = skills.entries.where((entry) => entry.value == value);
+  return holders.length == 1 ? holders.first.key : null;
+}
+
 class _SkillTrends extends StatelessWidget {
   const _SkillTrends({required this.history});
 
@@ -267,10 +273,18 @@ class _SkillTrends extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skills = history.averageSkills;
-    final strongest = skills.entries.reduce(
-      (a, b) => a.value >= b.value ? a : b,
-    );
-    final weakest = skills.entries.reduce((a, b) => a.value <= b.value ? a : b);
+    final best = skills.values.reduce((a, b) => a >= b ? a : b);
+    final worst = skills.values.reduce((a, b) => a <= b ? a : b);
+
+    // Name a skill only where it alone holds the extreme. Reducing to the
+    // first of a tie used to announce "Clarity is carrying you" off three
+    // dimensions level at 43 — a winner the numbers do not have.
+    final strongest = best == worst ? null : _soleHolder(skills, best);
+    final weakest = best == worst ? null : _soleHolder(skills, worst);
+    final claims = [
+      if (strongest != null) '${strongest.label} is carrying you.',
+      if (weakest != null) '${weakest.label} is where the next point is.',
+    ];
 
     return Card(
       child: Padding(
@@ -284,10 +298,9 @@ class _SkillTrends extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              strongest.value == weakest.value
+              claims.isEmpty
                   ? 'Evenly balanced so far. Keep going to see a pattern.'
-                  : '${strongest.key.label} is carrying you. '
-                        '${weakest.key.label} is where the next point is.',
+                  : claims.join(' '),
               style: const TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 18),

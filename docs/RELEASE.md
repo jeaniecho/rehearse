@@ -3,9 +3,10 @@
 Everything between a green build and a submitted app. Drafted ahead of time
 so none of it is discovered at 2am on deadline day.
 
-**Nothing here is done.** The items marked ✅ are code and assets that exist
-in the repo; every unchecked box needs an account, a certificate, or a human
-decision.
+Most of this is not done. The items marked ✅ are code and assets that exist
+in the repo — Android signing is the only one verified end to end, against a
+real `--release` bundle. Most unchecked boxes need an account, a certificate,
+or a human decision; two need code, and are called out as such.
 
 ---
 
@@ -21,25 +22,36 @@ decision.
 | ✅ | Privacy policy written ([`PRIVACY.md`](PRIVACY.md)) — **not yet hosted** |
 | ✅ | Store copy drafted ([§3](#3-store-listing)) |
 | ✅ | Screenshots generated ([§4](#4-screenshots)) |
-| ❌ | Signing, both platforms |
+| ✅ | Android release signing — verified against a real `--release` bundle |
+| ❌ | iOS signing: distribution certificate and profile |
 | ❌ | Store records created, metadata entered |
-| ❌ | Subscriptions configured ([`REVENUECAT.md`](REVENUECAT.md)) |
+| 🟡 | Subscriptions: offerings return real prices; no purchase yet |
+| ❌ | Terms of Use and Privacy Policy links on the paywall (Apple 3.1.2) |
+| ❌ | Coach server deployed, `REHEARSE_COACH_URL` in the release build |
 | ❌ | TestFlight / internal testing build |
 
 ---
 
 ## 2. Before anything else
 
-Three things gate everything downstream, in this order:
+Four things gate everything downstream, in this order:
 
-1. **Host the privacy policy.** Both stores need a public URL, and App Store
-   Connect will not accept a submission without a reachable one. Replace the
-   two placeholders in [`PRIVACY.md`](PRIVACY.md) first.
-2. **Set up subscriptions.** [`REVENUECAT.md`](REVENUECAT.md) §2–4. Products
+1. **Deploy the coach server.** `REHEARSE_COACH_URL` has no default, so a
+   release build without it ships on the offline demo coach and the app does
+   not do what §3's description says it does. Everything in §9's "The
+   product" checklist needs this first, and so does judging whether the
+   prompts are any good.
+2. **Host the privacy policy, and a Terms of Use URL.** Both stores need a
+   reachable policy URL, and Apple 3.1.2 wants both linked from the paywall
+   itself for an auto-renewing subscription. Replace the two placeholders in
+   [`PRIVACY.md`](PRIVACY.md) first. Apple's standard EULA is an acceptable
+   Terms URL.
+3. **Finish subscriptions.** [`REVENUECAT.md`](REVENUECAT.md) §2–4. Products
    sit in "Missing Metadata" until their localizations and review screenshot
    are filled in, and offerings come back empty until then — which looks
-   exactly like a bug in the app.
-3. **Decide the free limit.** Currently 3 completed rehearsals, lifetime. It
+   exactly like a bug in the app. As of 2026-09-11 iOS offerings *do* return
+   real prices, so this is mostly done; the gap is a completed purchase.
+4. **Decide the free limit.** Currently 3 completed rehearsals, lifetime. It
    is one constant, `Subscription.freeSessionLimit`, and changing it later
    means shipping a build; changing the *price* does not, because that comes
    from RevenueCat.

@@ -20,14 +20,19 @@ class PracticeHistoryScope extends InheritedNotifier<PracticeHistory> {
     return history!;
   }
 
-  /// The nearest history without subscribing, or null when the tree has no
-  /// scope. For one-off writes that should not trigger a rebuild.
+  /// The nearest history, or null when the tree has no scope — lets a screen
+  /// be pumped standalone in a test.
+  ///
+  /// This subscribes, like every other scope whose value is rendered. It used
+  /// not to, which read as a harmless optimisation for the write in
+  /// `ResultsScreen` and was a bug everywhere else: history arrives after the
+  /// first build — from the initial disk read, then from each finished
+  /// rehearsal — so a caller that does not subscribe renders the state the
+  /// app had at launch, forever. `AnalyticsScope` is the one that genuinely
+  /// does not need to subscribe, because nothing reads it back.
   static PracticeHistory? maybeOf(BuildContext context) {
-    final scope =
-        context
-                .getElementForInheritedWidgetOfExactType<PracticeHistoryScope>()
-                ?.widget
-            as PracticeHistoryScope?;
-    return scope?.notifier;
+    return context
+        .dependOnInheritedWidgetOfExactType<PracticeHistoryScope>()
+        ?.notifier;
   }
 }
