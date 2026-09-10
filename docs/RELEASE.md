@@ -6,7 +6,7 @@ so none of it is discovered at 2am on deadline day.
 Most of this is not done. The items marked ✅ are code and assets that exist
 in the repo — Android signing is the only one verified end to end, against a
 real `--release` bundle. Most unchecked boxes need an account, a certificate,
-or a human decision; two need code, and are called out as such.
+or a human decision; one needs code, and is called out as such.
 
 ---
 
@@ -19,14 +19,14 @@ or a human decision; two need code, and are called out as such.
 | ✅ | App icon, adaptive icon, themed icon, favicon, PWA icons |
 | ✅ | Launch screen on both platforms |
 | ✅ | Crash reporting wired ([§6](#6-crash-reporting)) |
-| ✅ | Privacy policy written ([`PRIVACY.md`](PRIVACY.md)) — **not yet hosted** |
+| ✅ | Privacy policy and terms written and built as pages — **not yet deployed** |
 | ✅ | Store copy drafted ([§3](#3-store-listing)) |
 | ✅ | Screenshots generated ([§4](#4-screenshots)) |
 | ✅ | Android release signing — verified against a real `--release` bundle |
 | ❌ | iOS signing: distribution certificate and profile |
 | ❌ | Store records created, metadata entered |
 | 🟡 | Subscriptions: offerings return real prices; no purchase yet |
-| ❌ | Terms of Use and Privacy Policy links on the paywall (Apple 3.1.2) |
+| ✅ | Terms of Use and Privacy Policy links on the paywall (Apple 3.1.2) |
 | ❌ | Coach server deployed, `REHEARSE_COACH_URL` in the release build |
 | ❌ | TestFlight / internal testing build |
 
@@ -41,11 +41,11 @@ Four things gate everything downstream, in this order:
    not do what §3's description says it does. Everything in §9's "The
    product" checklist needs this first, and so does judging whether the
    prompts are any good.
-2. **Host the privacy policy, and a Terms of Use URL.** Both stores need a
-   reachable policy URL, and Apple 3.1.2 wants both linked from the paywall
-   itself for an auto-renewing subscription. Replace the two placeholders in
-   [`PRIVACY.md`](PRIVACY.md) first. Apple's standard EULA is an acceptable
-   Terms URL.
+2. **Deploy the legal pages.** Both are written and build clean —
+   `/rehearse-privacy` and `/rehearse-terms` in the `jeanie-dev` repository,
+   which Firebase serves from `react/dist`. Both stores need a reachable
+   policy URL, and the paywall already links both, so until `firebase deploy`
+   runs those links 404.
 3. **Finish subscriptions.** [`REVENUECAT.md`](REVENUECAT.md) §2–4. Products
    sit in "Missing Metadata" until their localizations and review screenshot
    are filled in, and offerings come back empty until then — which looks

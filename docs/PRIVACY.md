@@ -1,11 +1,11 @@
 # Rehearse — Privacy Policy
 
-**Last updated: 3 September 2026**
+**Last updated: 11 September 2026**
 
-> **Before publishing:** replace `[SUPPORT EMAIL]` and `[LEGAL ENTITY]` below,
-> then host this at a stable public URL. Both stores require a reachable
-> privacy policy link, and App Store Connect will not accept a submission
-> without one.
+> **Published at** <https://jeanie.dev/rehearse-privacy>, rendered from this
+> file by `react/src/pages/terms/RehearsePrivacy.tsx` in the `jeanie-dev`
+> repository. The two have to be changed together — this file is the source of
+> truth for the wording, and the page is what the stores and the app link to.
 >
 > This describes the app as built. If you change what is sent anywhere, this
 > file has to change in the same commit — `docs/RELEASE.md` says why that
@@ -34,7 +34,7 @@ deleted when you delete the app:
   aloud and how much resistance you last chose
 - How many free rehearsals you have used
 
-You can erase your practice history at any time from the progress screen. That
+You can erase your practice history at any time from the **You** tab. That
 deletes it permanently from the device.
 
 **We never store what you actually said in a rehearsal**, on your device or
@@ -150,7 +150,7 @@ your country.
 Because there is no account, most of your data is already entirely under your
 control:
 
-- **Practice history** — erase it in the app, from the progress screen.
+- **Practice history** — erase it in the app, from the You tab.
 - **Everything on the device** — deleting the app removes all of it.
 - **Analytics and crash reports** — email us and we will delete records
   associated with your installation.
@@ -170,5 +170,5 @@ the change in the app's release notes.
 
 ## Contact
 
-[LEGAL ENTITY]
-[SUPPORT EMAIL]
+Jeanie Cho
+support@example.invalid

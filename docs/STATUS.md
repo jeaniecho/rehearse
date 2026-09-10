@@ -7,7 +7,7 @@
 > **Last audited:** 2026-09-11, after a full pass on a real simulator — the
 > first time the paywall and the plan card have been rendered rather than
 > asserted.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (**281 passing,
+> **Verified by:** `flutter analyze` (clean), `flutter test` (**283 passing,
 > none failing**), `cd server && npm test` (14 passing).
 
 ---
@@ -93,6 +93,10 @@ real model — and the **release checklist**.
 - **Release drafting**: privacy policy, store listing copy, both stores'
   privacy questionnaires answered, and a screenshot generator that captures
   the real screens at 1290×2796. See [`RELEASE.md`](RELEASE.md).
+- **Legal links on the paywall**: Terms of Use and Privacy Policy beside the
+  price, which Apple 3.1.2 requires for an auto-renewing subscription. Behind
+  a `LinkService` interface with a fake, padded to a 44pt tap target, and the
+  app says so rather than dying quietly when a link will not open.
 - **Difficulty**: Calm / Defensive / Very defensive, chosen before a free-form
   rehearsal and remembered. Each level is a different set of behavioural
   instructions in the simulation prompt, asserted distinct by a server test.
@@ -509,11 +513,12 @@ live services; the rest is release and depth.
    description sells against. The release entry in `.vscode/launch.json`
    does not pass it. Nothing downstream can be verified until the server has
    a public home.
-2. **Put Terms of Use and Privacy Policy links on the paywall.** Apple 3.1.2
-   requires both at the point of purchase for an auto-renewing subscription,
-   and the footer currently ends at the billing sentence. This is a
-   first-pass rejection, and it needs the hosted URLs from
-   [`RELEASE.md`](RELEASE.md) §2 first.
+2. **Deploy the legal pages.** The paywall now links Terms of Use and
+   Privacy Policy, as Apple 3.1.2 requires at the point of purchase, and both
+   pages are written — `/rehearse-privacy` and `/rehearse-terms` in the
+   `jeanie-dev` repository, rendered from [`PRIVACY.md`](PRIVACY.md) and their
+   own source. They are not deployed, so the links 404 until `firebase deploy`
+   runs. Verified working on a simulator against the live host.
 3. **Complete a sandbox purchase.** The dashboards are further along than
    this file used to say: offerings now return real prices on iOS (Annual
    $59.99, Monthly $8.99), so App Store Connect products and their metadata
@@ -556,8 +561,9 @@ Analytics        : PostHog behind a provider-agnostic sink, key via
                    --dart-define, no-op without one
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
-                   purchases_flutter, posthog_flutter
-Tests            : 242 Flutter + 14 server
+                   purchases_flutter, posthog_flutter, sentry_flutter,
+                   url_launcher
+Tests            : 283 Flutter + 14 server
 TODO/FIXME       : none
 ```
 

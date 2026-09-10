@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../data/legal_links.dart';
 import '../data/scenarios.dart';
 import '../models/practice_summary.dart';
 import '../models/subscription.dart';
 import '../services/analytics.dart';
+import '../services/link_service.dart';
 import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
@@ -22,11 +24,18 @@ import '../widgets/subscription_scope.dart';
 /// Plans and prices come from the RevenueCat offering, never from code, so
 /// packaging can be changed and experimented on from the dashboard.
 class PaywallScreen extends StatefulWidget {
-  const PaywallScreen({required this.trigger, super.key});
+  const PaywallScreen({
+    required this.trigger,
+    this.links = const DeviceLinkService(),
+    super.key,
+  });
 
   /// How this person got here, so a forced paywall and a voluntary one can
   /// be told apart in the funnel.
   final PaywallTrigger trigger;
+
+  /// Opens the published terms and privacy policy.
+  final LinkService links;
 
   /// Shows the paywall as a full-screen page. Resolves true if the person
   /// came away with Pro.
@@ -107,6 +116,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
     _settle(outcome);
   }
 
+  /// A link that will not open is the person's problem to work around, so
+  /// say so rather than leaving a dead tap.
+  void _reportLinkFailure() {
+    if (!mounted) return;
+    setState(
+      () => _notice = 'Could not open that page. It is also at jeanie.dev.',
+    );
+  }
+
   void _settle(PurchaseOutcome outcome) {
     if (outcome.unlocksPro) {
       Navigator.of(context).pop(true);
@@ -181,6 +199,35 @@ class _PaywallScreenState extends State<PaywallScreen> {
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(fontSize: 11),
+            ),
+            const SizedBox(height: 6),
+            // Apple 3.1.2 wants both reachable from the point of purchase for
+            // an auto-renewing subscription, so they sit with the price
+            // rather than only in the You tab.
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _LegalLink(
+                  key: const Key('paywall_terms'),
+                  label: 'Terms of Use',
+                  url: LegalLinks.terms,
+                  onFailed: _reportLinkFailure,
+                  links: widget.links,
+                ),
+                Text(
+                  ' · ',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 11),
+                ),
+                _LegalLink(
+                  key: const Key('paywall_privacy'),
+                  label: 'Privacy Policy',
+                  url: LegalLinks.privacy,
+                  onFailed: _reportLinkFailure,
+                  links: widget.links,
+                ),
+              ],
             ),
           ],
         ),
@@ -565,6 +612,47 @@ class _Notice extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// One of the two documents the store requires beside the price.
+class _LegalLink extends StatelessWidget {
+  const _LegalLink({
+    required this.label,
+    required this.url,
+    required this.onFailed,
+    required this.links,
+    super.key,
+  });
+
+  final String label;
+  final Uri url;
+  final VoidCallback onFailed;
+  final LinkService links;
+
+  @override
+  Widget build(BuildContext context) {
+    // 11pt type is a 14pt tap target. Padded out to 44 so a finger — and a
+    // reviewer checking the links work — can actually hit it.
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        if (!await links.open(url)) onFailed();
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 6),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: 11,
+            color: AppColors.forest,
+            fontWeight: FontWeight.w700,
+            decoration: TextDecoration.underline,
+            decorationColor: AppColors.forest,
+          ),
+        ),
       ),
     );
   }

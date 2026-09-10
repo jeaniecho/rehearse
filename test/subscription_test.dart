@@ -9,7 +9,9 @@ import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/models/subscription.dart';
 import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/home_screen.dart';
+import 'package:rehearse/data/legal_links.dart';
 import 'package:rehearse/screens/paywall_screen.dart';
+import 'package:rehearse/services/link_service.dart';
 import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/screens/you_screen.dart';
@@ -440,6 +442,56 @@ void main() {
       await tester.tap(find.byKey(const Key(r'plan_$rc_monthly')));
       await tester.pumpAndSettle();
       expect(find.text('Unlock unlimited practice'), findsOneWidget);
+    });
+
+    // Apple 3.1.2: an auto-renewing subscription has to link both documents
+    // from the point of purchase. Losing these is a rejection, not a nitpick.
+    testWidgets('the paywall links the terms and the privacy policy', (
+      tester,
+    ) async {
+      final subscription = await subscriptionWith(used: 3);
+      addTearDown(subscription.dispose);
+      final links = FakeLinkService();
+
+      await pump(
+        tester,
+        PaywallScreen(trigger: PaywallTrigger.sessionLimit, links: links),
+        subscription: subscription,
+      );
+
+      expect(find.text('Terms of Use'), findsOneWidget);
+      expect(find.text('Privacy Policy'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('paywall_terms')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('paywall_privacy')));
+      await tester.pumpAndSettle();
+
+      expect(links.opened, [LegalLinks.terms, LegalLinks.privacy]);
+      expect(
+        links.opened.every((url) => url.scheme == 'https'),
+        isTrue,
+        reason: 'the store will not accept an unreachable policy link',
+      );
+    });
+
+    testWidgets('a link that will not open says so', (tester) async {
+      final subscription = await subscriptionWith(used: 3);
+      addTearDown(subscription.dispose);
+
+      await pump(
+        tester,
+        PaywallScreen(
+          trigger: PaywallTrigger.sessionLimit,
+          links: FakeLinkService(succeeds: false),
+        ),
+        subscription: subscription,
+      );
+
+      await tester.tap(find.byKey(const Key('paywall_privacy')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Could not open that page'), findsOneWidget);
     });
 
     testWidgets('the paywall names the pattern your own history shows', (
