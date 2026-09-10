@@ -117,6 +117,64 @@ include conversation content.
 
 ---
 
+## Why we are allowed to do this
+
+If you are somewhere with a data protection law that asks for a lawful basis —
+the UK and the EU among them — these are ours:
+
+| What | Basis |
+|---|---|
+| Answering and scoring a free-form rehearsal | **Performance of a contract.** It is the thing you asked the app to do. |
+| Keeping your history, streak and preferences | **Performance of a contract**, and it never leaves the device. |
+| Subscriptions | **Performance of a contract**, and a **legal obligation** to keep tax and purchase records. |
+| Usage analytics | **Legitimate interests** — knowing which parts of the app work. No conversation content is included, and you can object at any time by emailing us. |
+| Crash reports | **Legitimate interests** in the app not being broken. |
+
+We do not rely on consent for anything, so there is nothing to agree to beyond
+using the app. The flip side is that analytics is on whenever the app has been
+built with an analytics key: **there is no in-app toggle yet.** Email us and we
+will exclude your installation and delete what has already been recorded.
+
+---
+
+## Where in the world your data goes
+
+Nothing holds your rehearsals, but the services that answer and count them are
+not all in one country. If you are in the UK or the EU, these involve a
+transfer outside it:
+
+| Who | Where | What reaches them |
+|---|---|---|
+| OpenAI | United States | The words of a free-form rehearsal, in the moment |
+| PostHog | United States | Usage events, never conversation content |
+| RevenueCat | United States | Purchase status and an anonymous identifier |
+| Sentry | United States | Crash diagnostics |
+| Apple, Google | Varies | Payment, and dictation if you use it |
+
+Transfers to the United States rely on the European Commission's **standard
+contractual clauses**, or on a provider's certification under the **EU–US Data
+Privacy Framework** where it holds one. Ask and we will tell you which applies
+to a given provider.
+
+> **Maintainer's note.** PostHog's region is `REHEARSE_POSTHOG_HOST`, which
+> defaults to `us.i.posthog.com`. Point it at `eu.i.posthog.com` and this row
+> becomes European Union — which is one fewer transfer to justify. Change the
+> table in the same commit.
+
+---
+
+## How long anything is kept
+
+| What | For how long |
+|---|---|
+| What you said in a rehearsal | Not kept. It exists only for the length of the request. |
+| Your history, streak and preferences | Until you erase them, or delete the app |
+| Usage events | Up to 12 months |
+| Crash reports | Up to 90 days |
+| Purchase records | As long as tax law requires — typically 5–7 years |
+
+---
+
 ## What we never do
 
 - We do not sell your data.
@@ -139,25 +197,57 @@ include conversation content.
 
 ## Children
 
-Rehearse is made for working adults and is not directed at children. We do not
-knowingly collect anything from anyone under 13, or under the minimum age in
-your country.
+Rehearse is made for working adults and is not directed at children. You need
+to be **16 or older** to use it, or the minimum age of digital consent where
+you live if that is lower — 13 in some countries. We do not knowingly collect
+anything from anyone below that age. If you believe a child has used the app,
+email us and we will delete whatever we hold.
 
 ---
 
 ## Your rights
 
+**These apply wherever you live.** We do not ask you to prove a jurisdiction
+before we act, and we do not charge for it.
+
 Because there is no account, most of your data is already entirely under your
-control:
+own control:
 
 - **Practice history** — erase it in the app, from the You tab.
 - **Everything on the device** — deleting the app removes all of it.
 - **Analytics and crash reports** — email us and we will delete records
-  associated with your installation.
+  associated with your installation, or stop collecting from it.
 - **Purchases** — managed through your Apple or Google account.
 
-If you are in the UK, EU, or California, you have additional rights of access,
-correction, deletion, and objection. Write to us and we will act on them.
+Beyond that, write to us and we will honour any of the following within 30
+days: **access** to what we hold, **correction**, **deletion**, **a copy in a
+portable form**, **restriction** of processing, and **objection** to it —
+including objecting to analytics specifically.
+
+Nothing in the app gets worse because you exercised any of this.
+
+Because there is no account, we often hold nothing that identifies you, and we
+will say so rather than invent a record. If we cannot identify you from what
+you send, we will explain what we would need.
+
+### If a named law covers you
+
+None of this adds to or subtracts from the list above. It names the statute so
+you can cite it.
+
+- **UK and EU (UK GDPR, GDPR)** — the rights above are Articles 15 to 22. You
+  may also **complain to a supervisory authority**: the ICO in the UK, or your
+  national authority in the EU. You do not have to come to us first.
+- **California (CCPA/CPRA)** — know, delete, correct, and opt out. **We do not
+  sell or share personal information, and never have**, so there is no opt-out
+  to exercise. We offer no financial incentive for data.
+- **Korea (PIPA)**, **Brazil (LGPD)**, **Canada (PIPEDA)**, **Australia
+  (Privacy Act)**, **Japan (APPI)** and comparable laws elsewhere — the same
+  requests, honoured the same way. Each also lets you complain to a national
+  regulator.
+
+**We have not appointed an EU or UK representative under GDPR Article 27.**
+Recorded here rather than left for you to discover.
 
 ---
 
