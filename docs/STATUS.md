@@ -6,9 +6,11 @@
 >
 > **Last audited:** 2026-09-11, after a full pass on a real simulator — the
 > first time the paywall and the plan card have been rendered rather than
-> asserted.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (**283 passing,
-> none failing**), `cd server && npm test` (14 passing).
+> asserted — and after session outcome and PRD §9's end conditions landed.
+> Every item PRD §11 lists under `Required:` now exists.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (**420 passing,
+> none failing**), `cd server && npm test` (31 passing), `flutter build
+> appbundle --release` and `flutter build ios --no-codesign` (both succeed).
 
 ---
 
@@ -25,6 +27,11 @@ needs App Store Connect and Play Console configuration. See
 **Analytics is now built too** — the PRD §17 funnel, with the "never send
 transcript content" rule enforced by the type system rather than by
 discipline. See [`ANALYTICS.md`](ANALYTICS.md).
+
+**Every PRD §11 `Required:` item is now met too**, since session outcome
+landed with §9's end conditions: a free-form conversation can end because the
+other person accepted or because it broke down, and the report says which of
+the four outcomes it was.
 
 **Every PRD §34 product-loop acceptance criterion is now met.** The coach
 rework closed the last three: four scored dimensions, feedback that quotes the
@@ -97,6 +104,14 @@ real model — and the **release checklist**.
   price, which Apple 3.1.2 requires for an auto-renewing subscription. Behind
   a `LinkService` interface with a fake, padded to a 44pt tap target, and the
   app says so rather than dying quietly when a link will not open.
+- **Session outcome** (PRD §11 `Required:`): success / partial / unresolved /
+  escalated on the report, never derived from the score. Authored on the
+  closing choice in guided mode, returned by `/simulation/evaluate` in
+  free-form, and borrowed from the nearest authored close when offline.
+  Stored on `PracticeRecord`, and sent to analytics as a fixed enum.
+- **PRD §9 end conditions**: `/simulation/respond` reports whether the
+  conversation is `continuing`, `resolved` or in `breakdown`, and a free-form
+  rehearsal ends when it is not continuing. Never on the opening exchange.
 - **Difficulty**: Calm / Defensive / Very defensive, chosen before a free-form
   rehearsal and remembered. Each level is a different set of behavioural
   instructions in the simulation prompt, asserted distinct by a server test.
@@ -106,7 +121,7 @@ real model — and the **release checklist**.
 
 | Item | What exists | What the PRD wants |
 |---|---|---|
-| **Conversation length** | fixed 3 turns | 4–7 manager turns, with the model able to declare resolved or stalled |
+| **Conversation length** | up to 3 turns, and the model *can* now declare resolved or stalled (PRD §9) | 4–7 manager turns — the ceiling is still 3, so early ending has little room to matter yet |
 | **Retry** | restarts the scenario from turn 1; the report names the weak turn but does not scroll to it | highlight the weak moment in a transcript, then retry (P1, PRD §12) |
 | **Scenario coverage** | 12 scenarios; every seeded category has its own, and boundary is no longer shared with saying-no | nothing outstanding — PRD §7.1 asks for 6–12 (see §4) |
 | **Malformed AI output** | falls back to the offline coach; a fabricated quote is dropped on both sides | server-side repair/retry once (PRD §26) — currently it degrades rather than repairs |
@@ -120,9 +135,6 @@ three simulation items are not the P0 gaps this section used to call them.
 
 - Two PRD §16 events cannot fire yet because the feature does not exist:
   `reminder_created`, `notification_opened`.
-- **Session outcome** (success / partial / unresolved / escalated) — listed
-  under a hard `Required:` in §11, and the only item on that list the app
-  does not have. Not addable as a label: see §5.
 - **Simulation state** (trust, tension, clarity, goal progress) — §8, and
   *not* P0. This section asserted it was.
 - **Employee background** as a named `Scenario` field, per the PRD §7.1
@@ -237,18 +249,16 @@ PRD, 2026-09-04:
   and §8's own language is advisory: "should maintain", "*Suggested* values",
   "For MVP, structured LLM output is acceptable if reliable". Simulation state
   is depth, not P0.
-- **Session outcome is the one real gap**, because §11 lists it under
-  `Required:` and every other item on that list exists — score, four
-  dimensions, strengths, improvements, quoted wording, why it was weak,
-  improved wording, the retry CTA. §34 does not mention it, which is where
-  the disagreement came from.
-- **It cannot be shipped as a label.** `practice_screen.dart:342` ends a
-  session one way: the authored turns run out. Of §9's four end conditions
-  only "maximum turn count is reached" ever fires — goal-reached and
-  breakdown are not detected — so three of the four outcomes could never
-  occur, and deriving one from the score band is exactly what the "do not let
-  the UI promise what the app does not do" invariant forbids. "Add session
-  outcome" means "implement §9's end conditions", which is simulation work.
+- **Session outcome was the one real gap**, because §11 lists it under
+  `Required:` and every other item on that list existed. It was built
+  2026-09-09 and §11 is now complete.
+- **It could not be shipped as a label, and was not.** The reasoning that
+  blocked it still stands and is why the built version looks the way it does:
+  deriving an outcome from the score band is what the "do not let the UI
+  promise what the app does not do" invariant forbids, so nothing does. §9's
+  end conditions were implemented alongside it, and each of the three outcome
+  sources traces to authored content or to the coach's own judgement — see
+  [`ARCHITECTURE.md`](ARCHITECTURE.md), "How a conversation ends".
 
 **The scenario context does reach the model, and should stay where it is.**
 Worth recording because it looks like a bug twice over. `coach.mjs` never
@@ -264,10 +274,10 @@ instructions", and custom scenarios are a listed P2 — the moment scenario
 prose is user-authored, inlining it into the instruction block is a
 prompt-injection vector. Leave the shape alone.
 
-So `CLAUDE.md` and §7 hold, §2 was wrong, and nothing about the shipping
-order changes: session outcome plus §9 end conditions is the best-justified
-thing to build after submission, ahead of dark theme, because it is the only
-item the PRD calls required.
+So `CLAUDE.md` and §7 held and §2 was wrong. Session outcome plus §9's end
+conditions was named here as the best-justified thing to build after
+submission, and it has now been built; what is left of that list is dark
+theme and 4–7 turn conversations, neither of which the PRD calls required.
 
 **The app is set in two families, which the PRD does not mention.** Plus
 Jakarta Sans throughout, plus Literata on the results screen only — the quote
@@ -543,7 +553,10 @@ live services; the rest is release and depth.
 7. Dark theme, if there is time before submission. The contrast half of
    this item is done — see §6.
 8. Product depth the PRD lists but does not require for P0: a delegation
-   scenario, 4–7 turn conversations, session outcomes, and simulation state.
+   scenario, 4–7 turn conversations, and simulation state. Session outcome
+   is done — and raising the turn ceiling is now worth more than it was,
+   because a conversation that can end early has almost no room to do so
+   inside three turns.
 
 ---
 
@@ -553,7 +566,9 @@ live services; the rest is release and depth.
 State management : plain StatefulWidget + ChangeNotifier via InheritedNotifier
                    (no provider / riverpod / bloc)
 Navigation       : imperative Navigator.push, no named routes or router package
-Backend          : Node http server in server/, OpenAI Responses API
+Backend          : Cloudflare Worker in server/ (worker.mjs), with a local
+                   Node shell (server.mjs) over the same handler.mjs routes,
+                   OpenAI Responses API
 Persistence      : shared_preferences
 Monetization     : RevenueCat (purchases_flutter), entitlement `pro`,
                    3 free completed rehearsals, keys via --dart-define
@@ -563,7 +578,7 @@ Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter, sentry_flutter,
                    url_launcher
-Tests            : 283 Flutter + 14 server
+Tests            : 420 Flutter + 31 server
 TODO/FIXME       : none
 ```
 

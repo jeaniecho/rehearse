@@ -69,10 +69,15 @@ lib/
   theme/app_theme.dart   AppColors tokens + the Material 3 theme
   widgets/               shared UI + the four InheritedNotifier scopes
 server/
-  server.mjs           http server: GET /health, POST /simulation/respond,
-                       POST /simulation/evaluate
+  handler.mjs          routes, validation, error shaping — no runtime
+  worker.mjs           Cloudflare shell (production)
+  server.mjs           Node shell (local `npm start`)
   coach.mjs            prompt construction and OpenAI Responses call
+  wrangler.toml        deployment config
 ```
+
+Three routes, two shells, one set of decisions: `GET /health`,
+`POST /simulation/respond`, `POST /simulation/evaluate`.
 
 ---
 
@@ -175,10 +180,138 @@ used to be a generic sentence.
                  the whole transcript, scored, with quoted critique
 ```
 
+### Where it runs
+
+Cloudflare Workers. The evaluation call can take most of the 30s the client
+allows, and Workers bills **CPU time, not wall time** — waiting on OpenAI is
+free. What this actually computes (parse, build a request, ground a handful
+of quotes) sits well inside the free tier's 10ms budget, and one external
+subrequest per call is nothing against a limit of 50.
+
+That suits code with no dependencies and no state: nothing here needs a
+process that stays warm.
+
+```bash
+cd server
+npx wrangler secret put OPENAI_API_KEY   # a secret, never a var
+npm run deploy
+```
+
+`handler.mjs` holds every decision; `worker.mjs` and `server.mjs` only
+translate to and from their runtime's request type. That split is deliberate
+— two shells each owning a copy of the routing is how `/health` once ended
+up reporting a model the app was not using.
+
+> **The key is the whole reason a backend exists.** `--dart-define` values are
+> compiled into `libapp.so` as plain text and come straight back out of a
+> release build with `strings`. There is no version of shipping the provider
+> key in the client that is safe.
+
+### The rate limit
+
+Unauthenticated and spends money, so this is the only thing between a script
+and the OpenAI bill. Two Cloudflare rate-limit bindings, keyed on client IP,
+sized from real usage rather than a round number:
+
+| Bucket | Limit | Why |
+|---|---|---|
+| `RESPOND_LIMITER` | 30 / 60s | a person going quickly sends ~2/min |
+| `EVALUATE_LIMITER` | 10 / 60s | exactly one per rehearsal, and the expensive half |
+
+Separate buckets so the cheap call cannot starve the expensive one. The
+headroom is for carrier NAT — roughly fifteen people can share one address
+before anybody legitimate is refused.
+
+It caps a saturating IP at **about $14 a day** against no ceiling at all.
+Cloudflare counts per location and is explicit that this is eventually
+consistent, so that is the right order of magnitude rather than a guarantee.
+`/health` and preflight are never limited: neither calls a model, and a
+health check that can be rate limited is a monitoring problem.
+
+Which routes are limited lives in `handler.mjs` with the other route rules;
+only the mechanism is in `worker.mjs`, because only Cloudflare has one. Local
+Node passes no limiter, so `npm start` is unlimited.
+
+> A refusal is a 429, and `ResilientCoachService` treats every non-200 the
+> same way — it falls back to the offline coach without saying so. Someone
+> rate limited gets the demo coach and no explanation. That is the right
+> trade for a limit this generous, but it is the reason the limits have
+> headroom rather than being tight.
+
+`ALLOWED_ORIGIN` still needs setting before this is public. The rate limit
+bounds the damage; CORS narrows who can try.
+
+### Node, locally
+
+`npm start` still runs the same routes through `server.mjs` for development,
+reading `process.env` where the worker reads its `env` argument. `coach.mjs`
+knows about neither — the shells pass `apiKey` and `model` in explicitly,
+which is what keeps it runtime-agnostic.
+
+### The model
+
+Both endpoints run `gpt-5-nano`, set once as `DEFAULT_MODEL` in
+`server/coach.mjs` and overridable per deployment with `OPENAI_MODEL`.
+`/health` reports whichever is live — it imports the constant rather than
+repeating it, because a health check that names the wrong model is worse
+than one that names none.
+
+It is the cheapest model in the family: about **$0.001 per rehearsal**
+against $0.054 on `gpt-5.6-sol`, measured on the real payloads — 3 respond
+calls at ~2,100 input and 900 output tokens, one evaluate at ~950 and 1,200.
+Output dominates, which is why the evaluation call is over half the bill on
+any model.
+
+OpenAI positions nano for summarization and classification and points at
+`gpt-5.6-luna` for more demanding work, so the evaluation prompt is the one
+under the most strain here: it has to hold a strict `json_schema` and copy
+the manager's words character for character for the quoted critique. If that
+degrades, `/simulation/evaluate` is the endpoint to move up first — the two
+build functions already take a model argument, so splitting them is a small
+change rather than a rewrite.
+
 ### During the conversation
 
-`respond()` carries the chosen `SimulationDifficulty` and returns only what
-the other person says.
+`respond()` carries the chosen `SimulationDifficulty` and returns what the
+other person says, plus a `SimulationResolution` — `continuing`, `resolved`
+or `breakdown`.
+
+That second field is PRD §9's first three end conditions, and it is the only
+thing that lets a conversation stop before the turns run out. It never
+reaches the screen: §7.3 says the simulation must not explain itself while it
+runs, so it decides whether there is another turn and nothing else. It is
+also ignored on the opening exchange — a model that declares victory after
+one message would take away the practice the person came for.
+
+### How a conversation ends, and how that is reported
+
+Two different questions, answered in two different places, because they can
+disagree — a manager can handle a conversation well and still lose the room.
+
+| | Where it comes from |
+|---|---|
+| **Ending early** (§9) | `SimulationResolution` from `respond()`, free-form only |
+| **The outcome** (§11) | `SessionOutcome` on `PracticeSummary` |
+
+`SessionOutcome` is success / partial / unresolved / escalated, and is
+**never derived from the score** — that would make the report claim the
+simulation modelled something it did not. Every value traces to one of three
+sources:
+
+- **Free-form, online.** `/simulation/evaluate` returns it, judged on the
+  transcript. An unreadable value falls back to `unresolved` rather than to
+  whatever the score implies.
+- **Guided.** Authored on the closing `ResponseChoice.resolution`. A guided
+  conversation cannot end early — the authored turns always run out — so the
+  closing move is what the other person is left with. `scenarios_test.dart`
+  asserts every scenario's last turn carries one, that no earlier turn does,
+  and that all four values are reachable somewhere in the library.
+- **Free-form, offline.** The closing message is matched to the nearest
+  authored closing choice by `_closestChoice`, the same mechanism the offline
+  scores already use, and that choice's authored resolution is the outcome.
+  Below the similarity floor nothing authored applies and the answer is
+  `unresolved` — not a failure verdict, just the honest statement that
+  nothing here saw the expectation land.
 
 > **Stakes and difficulty are different things.** `Scenario.stakes`
 > (warm-up / challenging / high-stakes) is how heavy the situation is, and is

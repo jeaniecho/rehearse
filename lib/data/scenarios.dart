@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/scenario.dart';
+import '../models/session_outcome.dart';
 import '../theme/app_theme.dart';
 
 const scenarios = <Scenario>[
@@ -119,6 +120,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 2,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text: 'Just do your best and keep me posted.',
@@ -129,6 +131,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -2,
             confidence: -2,
+            resolution: SessionOutcome.unresolved,
           ),
           ResponseChoice(
             text: 'Friday is the deadline. I expect you to figure it out.',
@@ -139,6 +142,7 @@ const scenarios = <Scenario>[
             empathy: -2,
             directness: 1,
             confidence: 1,
+            resolution: SessionOutcome.escalated,
           ),
         ],
       ),
@@ -257,6 +261,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 2,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text: 'Great, I’ll get something over to you soon.',
@@ -267,6 +272,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -1,
             confidence: -2,
+            resolution: SessionOutcome.unresolved,
           ),
           ResponseChoice(
             text: 'Okay, but I want it noted that this still isn’t realistic.',
@@ -277,6 +283,7 @@ const scenarios = <Scenario>[
             empathy: -1,
             directness: 0,
             confidence: -1,
+            resolution: SessionOutcome.partial,
           ),
         ],
       ),
@@ -395,6 +402,7 @@ const scenarios = <Scenario>[
             empathy: 2,
             directness: 1,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text: 'Absolutely. Let’s just start fresh next time.',
@@ -405,6 +413,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -1,
             confidence: -1,
+            resolution: SessionOutcome.partial,
           ),
           ResponseChoice(
             text: 'Sure—as long as you keep the criticism constructive too.',
@@ -415,6 +424,7 @@ const scenarios = <Scenario>[
             empathy: -1,
             directness: 1,
             confidence: 0,
+            resolution: SessionOutcome.unresolved,
           ),
         ],
       ),
@@ -536,6 +546,7 @@ const scenarios = <Scenario>[
             empathy: 2,
             directness: 1,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text:
@@ -547,6 +558,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -2,
             confidence: -2,
+            resolution: SessionOutcome.unresolved,
           ),
           ResponseChoice(
             text: 'Just stop posting decisions in the channel.',
@@ -557,6 +569,7 @@ const scenarios = <Scenario>[
             empathy: -2,
             directness: 1,
             confidence: 0,
+            resolution: SessionOutcome.escalated,
           ),
         ],
       ),
@@ -676,6 +689,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 2,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text: 'Keep doing what you’re doing. It’ll come around.',
@@ -686,6 +700,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -2,
             confidence: -2,
+            resolution: SessionOutcome.unresolved,
           ),
           ResponseChoice(
             text:
@@ -697,6 +712,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -2,
             confidence: -1,
+            resolution: SessionOutcome.partial,
           ),
         ],
       ),
@@ -815,6 +831,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 2,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text: 'Let’s not get ahead of ourselves. I’m sure it’ll be fine.',
@@ -825,6 +842,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -2,
             confidence: -2,
+            resolution: SessionOutcome.unresolved,
           ),
           ResponseChoice(
             text: 'Then we’ll be having a very different conversation.',
@@ -835,6 +853,7 @@ const scenarios = <Scenario>[
             empathy: -1,
             directness: 2,
             confidence: 1,
+            resolution: SessionOutcome.escalated,
           ),
         ],
       ),
@@ -953,6 +972,7 @@ const scenarios = <Scenario>[
             empathy: 2,
             directness: 1,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text: 'I’m sorry to hear that. Well — we’ll miss you.',
@@ -963,6 +983,7 @@ const scenarios = <Scenario>[
             empathy: 0,
             directness: -2,
             confidence: -1,
+            resolution: SessionOutcome.unresolved,
           ),
           ResponseChoice(
             text:
@@ -974,6 +995,7 @@ const scenarios = <Scenario>[
             empathy: -2,
             directness: -1,
             confidence: -2,
+            resolution: SessionOutcome.escalated,
           ),
         ],
       ),
@@ -1093,6 +1115,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 2,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text:
@@ -1104,6 +1127,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -2,
             confidence: -2,
+            resolution: SessionOutcome.unresolved,
           ),
           ResponseChoice(
             text: 'Good. Thursday, ten o’clock, you’re presenting.',
@@ -1114,6 +1138,7 @@ const scenarios = <Scenario>[
             empathy: -2,
             directness: 2,
             confidence: 1,
+            resolution: SessionOutcome.partial,
           ),
         ],
       ),
@@ -1235,6 +1260,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 2,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text:
@@ -1246,6 +1272,7 @@ const scenarios = <Scenario>[
             empathy: 0,
             directness: -2,
             confidence: -1,
+            resolution: SessionOutcome.unresolved,
           ),
           ResponseChoice(
             text: 'Then page me directly, and nobody else.',
@@ -1256,6 +1283,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 1,
             confidence: -2,
+            resolution: SessionOutcome.partial,
           ),
         ],
       ),
@@ -1376,6 +1404,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 2,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text:
@@ -1387,6 +1416,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -2,
             confidence: -2,
+            resolution: SessionOutcome.unresolved,
           ),
           ResponseChoice(
             text: 'Not a warning. But I need to see a real change, and soon.',
@@ -1397,6 +1427,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 1,
             confidence: 0,
+            resolution: SessionOutcome.partial,
           ),
         ],
       ),
@@ -1519,6 +1550,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 2,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text:
@@ -1530,6 +1562,7 @@ const scenarios = <Scenario>[
             empathy: -1,
             directness: -2,
             confidence: -2,
+            resolution: SessionOutcome.escalated,
           ),
           ResponseChoice(
             text: 'Noted. Send it over when it’s done.',
@@ -1540,6 +1573,7 @@ const scenarios = <Scenario>[
             empathy: -1,
             directness: 1,
             confidence: 0,
+            resolution: SessionOutcome.partial,
           ),
         ],
       ),
@@ -1659,6 +1693,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: 2,
             confidence: 2,
+            resolution: SessionOutcome.success,
           ),
           ResponseChoice(
             text:
@@ -1670,6 +1705,7 @@ const scenarios = <Scenario>[
             empathy: -2,
             directness: 1,
             confidence: -2,
+            resolution: SessionOutcome.escalated,
           ),
           ResponseChoice(
             text: 'Of course not. This is a good thing, I promise.',
@@ -1680,6 +1716,7 @@ const scenarios = <Scenario>[
             empathy: 1,
             directness: -1,
             confidence: -1,
+            resolution: SessionOutcome.partial,
           ),
         ],
       ),

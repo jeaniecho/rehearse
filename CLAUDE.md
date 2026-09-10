@@ -25,8 +25,8 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 277 tests
-cd server && npm test           # 14 tests
+flutter test                    # 420 tests
+cd server && npm test           # 31 tests
 ```
 
 ```bash
@@ -44,6 +44,18 @@ With the AI coach:
 ```bash
 cd server && OPENAI_API_KEY=... npm start
 flutter run --dart-define=REHEARSE_COACH_URL=http://127.0.0.1:8787
+```
+
+`REHEARSE_COACH_URL` is `String.fromEnvironment` — compile-time. A shell
+variable does nothing; it has to be a `--dart-define`, and a wrong value
+fails silently into the offline coach.
+
+The server deploys to Cloudflare Workers (`server/worker.mjs`); `npm start`
+is the local Node shell of the same routes. Both go through
+`server/handler.mjs`, so add a route or a rule there, not in a shell.
+
+```bash
+cd server && npx wrangler secret put OPENAI_API_KEY && npm run deploy
 ```
 
 To regenerate the store screenshots:
@@ -132,6 +144,13 @@ From `ROADMAP.md` §0, and they hold:
   merge them — see `docs/ARCHITECTURE.md`, The coach.
 - **Never show a quote the manager did not say.** Both the server and
   `CoachingNote.isGroundedIn` drop ungrounded notes; do not weaken either.
+- **The session outcome is never derived from the score.** PRD §9's four
+  outcomes say how the conversation *ended*; the score says how well it was
+  *handled*, and they are allowed to disagree. Each outcome traces to
+  authored content (`ResponseChoice.resolution`), to `/simulation/evaluate`,
+  or to the nearest authored close when offline — never to a band. A
+  malformed one falls back to `unresolved`, not to whatever the score
+  implies.
 - **Scoring lives in `PracticeSummary`**, so the report and the stored record
   cannot disagree. Do not recompute it in a widget. The rubric is PRD §10's
   four dimensions: clarity, empathy, directness, confidence.

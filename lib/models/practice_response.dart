@@ -1,4 +1,5 @@
 import 'scenario.dart';
+import 'session_outcome.dart';
 
 enum EvaluationSource { guided, ai, offline }
 
@@ -22,6 +23,7 @@ class PracticeResponse {
     required this.source,
     this.employeeReply,
     this.suggestion,
+    this.resolution,
   });
 
   /// [turn] is needed so a weak choice can point at the strongest wording
@@ -44,6 +46,7 @@ class PracticeResponse {
       confidence: choice.confidence,
       source: EvaluationSource.guided,
       suggestion: identical(best, choice) ? null : best.text,
+      resolution: choice.resolution,
     );
   }
 
@@ -53,6 +56,7 @@ class PracticeResponse {
     required String text,
     required String employeeReply,
     required EvaluationSource source,
+    SessionOutcome? resolution,
   }) {
     return PracticeResponse(
       text: text,
@@ -64,6 +68,7 @@ class PracticeResponse {
       confidence: 0,
       source: source,
       employeeReply: employeeReply,
+      resolution: resolution,
     );
   }
 
@@ -114,6 +119,11 @@ class PracticeResponse {
   /// Stronger wording for this turn, when the coach or the authored content
   /// has one to offer.
   final String? suggestion;
+
+  /// How the conversation lands if it ends here. Set on the closing turn of
+  /// a guided rehearsal, where it is authored; null everywhere else, because
+  /// a free-form conversation is judged as a whole at the end instead.
+  final SessionOutcome? resolution;
 }
 
 enum PracticeMode { freestyle, guided }

@@ -4,6 +4,7 @@ import '../models/coaching_note.dart';
 import '../models/practice_record.dart';
 import '../models/practice_response.dart';
 import '../models/practice_summary.dart';
+import '../models/session_outcome.dart';
 import '../models/scenario.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
@@ -283,11 +284,68 @@ class _ScoreBlock extends StatelessWidget {
             letterSpacing: -3,
           ),
         ),
+        const SizedBox(height: 14),
+        _OutcomePill(outcome: summary.outcome),
         const SizedBox(height: 16),
         Text(
           summary.headline,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium,
+        ),
+      ],
+    );
+  }
+}
+
+/// How the conversation ended (PRD §11), which is not how well it was
+/// handled — the two sit next to each other here precisely because they can
+/// disagree. A careful manager can still end unresolved.
+class _OutcomePill extends StatelessWidget {
+  const _OutcomePill({required this.outcome});
+
+  final SessionOutcome outcome;
+
+  /// Every pair measured against the 4.5:1 floor for body text: forest on
+  /// mint 6.43, forest on sky 6.08, coral on peach 4.99, muted on subtle
+  /// 4.77. Re-measure if the palette moves — see `STATUS.md` §6.
+  (Color, Color) get _colors => switch (outcome) {
+    SessionOutcome.success => (AppColors.forest, AppColors.mint),
+    SessionOutcome.partial => (AppColors.forest, AppColors.sky),
+    SessionOutcome.unresolved => (AppColors.muted, AppColors.subtle),
+    SessionOutcome.escalated => (AppColors.coral, AppColors.peach),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final (ink, tint) = _colors;
+    return Column(
+      children: [
+        Container(
+          key: const Key('session_outcome'),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+          decoration: BoxDecoration(
+            color: tint,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            outcome.label.toUpperCase(),
+            style: TextStyle(
+              color: ink,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.1,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          outcome.description,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.muted,
+            fontSize: 13,
+            height: 1.35,
+          ),
         ),
       ],
     );

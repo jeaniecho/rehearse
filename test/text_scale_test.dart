@@ -28,8 +28,6 @@ import 'package:rehearse/widgets/rehearse_scope.dart';
 /// Flutter reports an overflow as a test failure, so simply laying every
 /// screen out at an accessibility text size is the assertion.
 void main() {
-  final scenario = scenarios.first;
-
   Future<void> layOut(
     WidgetTester tester,
     Widget screen, {
@@ -93,40 +91,46 @@ void main() {
         await layOut(tester, const OnboardingScreen(), textScale: textScale);
       });
 
-      testWidgets('briefing', (tester) async {
-        await layOut(
-          tester,
-          BriefScreen(scenario: scenario),
-          textScale: textScale,
-        );
-      });
+      for (final scenario in scenarios) {
+        testWidgets('briefing ${scenario.id}', (tester) async {
+          await layOut(
+            tester,
+            BriefScreen(scenario: scenario),
+            textScale: textScale,
+          );
+        });
+      }
 
-      testWidgets('practice', (tester) async {
-        await layOut(
-          tester,
-          PracticeScreen(
-            scenario: scenario,
-            mode: PracticeMode.freestyle,
-            coachService: OfflineCoachService(),
-            speechOutputService: _SilentVoice(),
-          ),
-          textScale: textScale,
-        );
-      });
+      for (final scenario in scenarios) {
+        testWidgets('practice ${scenario.id}', (tester) async {
+          await layOut(
+            tester,
+            PracticeScreen(
+              scenario: scenario,
+              mode: PracticeMode.freestyle,
+              coachService: OfflineCoachService(),
+              speechOutputService: _SilentVoice(),
+            ),
+            textScale: textScale,
+          );
+        });
+      }
 
-      testWidgets('coaching report', (tester) async {
-        await layOut(
-          tester,
-          ResultsScreen(
-            scenario: scenario,
-            summary: PracticeSummary.fromResponses([
-              for (final turn in scenario.turns)
-                PracticeResponse.fromChoice(turn.choices.first, turn),
-            ]),
-          ),
-          textScale: textScale,
-        );
-      });
+      for (final scenario in scenarios) {
+        testWidgets('coaching report ${scenario.id}', (tester) async {
+          await layOut(
+            tester,
+            ResultsScreen(
+              scenario: scenario,
+              summary: PracticeSummary.fromResponses([
+                for (final turn in scenario.turns)
+                  PracticeResponse.fromChoice(turn.choices.first, turn),
+              ]),
+            ),
+            textScale: textScale,
+          );
+        });
+      }
 
       testWidgets('progress', (tester) async {
         await layOut(tester, const ProgressScreen(), textScale: textScale);

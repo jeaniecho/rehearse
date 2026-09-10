@@ -128,6 +128,7 @@ class Analytics extends ChangeNotifier {
       'mode': mode.name,
       'is_retry': isRetry,
       'turn_count': turnCount,
+      'outcome': summary.outcome.name,
       'simulation_duration_seconds': durationSeconds,
       ..._summaryProperties(summary),
     };

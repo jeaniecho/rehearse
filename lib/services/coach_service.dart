@@ -8,6 +8,7 @@ import '../models/coaching_note.dart';
 import '../models/practice_response.dart';
 import '../models/practice_summary.dart';
 import '../models/scenario.dart';
+import '../models/session_outcome.dart';
 import 'crash_reporter.dart';
 
 /// What the other person says back, and nothing else.
@@ -17,10 +18,19 @@ import 'crash_reporter.dart';
 /// mid-sentence is the opposite of the pressure the product exists to
 /// recreate.
 class EmployeeReply {
-  const EmployeeReply({required this.text, required this.source});
+  const EmployeeReply({
+    required this.text,
+    required this.source,
+    this.resolution = SimulationResolution.continuing,
+  });
 
   final String text;
   final EvaluationSource source;
+
+  /// Whether the conversation has anywhere left to go (PRD §9). Decides
+  /// whether there is another turn; never shown, because §7.3 says the
+  /// simulation must not explain itself while it runs.
+  final SimulationResolution resolution;
 }
 
 /// The coach: two distinct jobs, deliberately not one prompt.
@@ -102,7 +112,11 @@ class RemoteCoachService implements CoachService {
     if (reply is! String || reply.trim().isEmpty) {
       throw const FormatException('Coach returned no reply.');
     }
-    return EmployeeReply(text: reply.trim(), source: EvaluationSource.ai);
+    return EmployeeReply(
+      text: reply.trim(),
+      source: EvaluationSource.ai,
+      resolution: SimulationResolutionParse.fromName(decoded['resolution']),
+    );
   }
 
   @override
@@ -212,6 +226,13 @@ PracticeSummary parseEvaluation(
 
   return PracticeSummary.fromEvaluation(
     score: score('overall_score'),
+    // A conversation can be handled well and still end badly, so an
+    // unreadable outcome falls back to the honest answer rather than to
+    // whatever the score implies.
+    outcome: SessionOutcomeLabel.fromName(
+      json['outcome'],
+      or: SessionOutcome.unresolved,
+    ),
     skills: {
       PracticeSkill.clarity: score('clarity'),
       PracticeSkill.empathy: score('empathy'),
@@ -376,6 +397,7 @@ class OfflineCoachService implements CoachService {
         PracticeSkill.confidence: dimension((score) => score.confidence),
       },
       summary: '',
+      outcome: _outcomeFor(scenario, history),
       strengths: ranked.isEmpty
           ? const []
           : [_noteFor(scenario, history, ranked.first.$1, strength: true)],
@@ -384,6 +406,29 @@ class OfflineCoachService implements CoachService {
           : [_noteFor(scenario, history, ranked.last.$1, strength: false)],
       usedAi: false,
     );
+  }
+
+  /// Grounded in authored content, the same way the scores are: the closing
+  /// message is matched to the nearest authored closing choice and that
+  /// choice's authored resolution is the outcome.
+  ///
+  /// Below the similarity floor nothing authored applies. The answer is then
+  /// [SessionOutcome.unresolved] — not because it went badly, but because
+  /// nothing here saw the expectation land, and inventing a better outcome
+  /// from the heuristic score is the one thing this must not do.
+  SessionOutcome _outcomeFor(
+    Scenario scenario,
+    List<PracticeResponse> history,
+  ) {
+    if (history.isEmpty || scenario.turns.isEmpty) {
+      return SessionOutcome.unresolved;
+    }
+
+    final closing =
+        scenario.turns[min(history.length, scenario.turns.length) - 1].choices;
+    final (choice, similarity) = _closestChoice(closing, history.last.text);
+    if (similarity < 0.2) return SessionOutcome.unresolved;
+    return choice.resolution ?? SessionOutcome.unresolved;
   }
 
   /// The quote is whatever the manager actually typed; the suggestion is the

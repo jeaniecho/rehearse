@@ -27,7 +27,7 @@ or a human decision; one needs code, and is called out as such.
 | ❌ | Store records created, metadata entered |
 | 🟡 | Subscriptions: offerings return real prices; no purchase yet |
 | ✅ | Terms of Use and Privacy Policy links on the paywall (Apple 3.1.2) |
-| ❌ | Coach server deployed, `REHEARSE_COACH_URL` in the release build |
+| ❌ | Coach server deployed — code, rate limits and `wrangler.toml` are ready; needs a Cloudflare account, `OPENAI_API_KEY` as a secret, `ALLOWED_ORIGIN` set, and `REHEARSE_COACH_URL` in the release build |
 | ❌ | TestFlight / internal testing build |
 
 ---

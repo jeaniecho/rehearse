@@ -1,0 +1,57 @@
+name = "rehearse-coach"
+main = "worker.mjs"
+compatibility_date = "2026-09-01"
+
+# `coach.mjs` hashes the session id with `createHash` from `node:crypto` for
+# OpenAI's `safety_identifier`. Web Crypto would work too, but `subtle.digest`
+# is async and would turn `safeIdentifier` — and both request builders — into
+# async functions for no gain. This flag is the cheaper answer.
+compatibility_flags = ["nodejs_compat"]
+
+# --- Rate limiting --------------------------------------------------------
+#
+# This endpoint is unauthenticated and spends money, so the only thing between
+# a script and your OpenAI bill is here. Keyed on client IP by `worker.mjs`.
+#
+# Sized against real usage rather than a round number. One rehearsal is three
+# `respond` calls and exactly one `evaluate`, spread over however long someone
+# takes to type — about 2 respond and 0.4 evaluate per minute for a person
+# going quickly. The limits below leave room for roughly fifteen people behind
+# one carrier NAT before anybody legitimate is refused.
+#
+# What they cap: a single IP saturating both buckets costs about $14 a day at
+# gpt-5-nano prices, against no ceiling at all today. Cloudflare counts per
+# location and is explicit that this is eventually consistent, so treat that
+# as the right order of magnitude, not a guarantee.
+#
+# `period` accepts only 10 or 60.
+
+[[ratelimits]]
+name = "RESPOND_LIMITER"
+namespace_id = "1001"
+
+[ratelimits.simple]
+limit = 30
+period = 60
+
+[[ratelimits]]
+name = "EVALUATE_LIMITER"
+namespace_id = "1002"
+
+[ratelimits.simple]
+limit = 10
+period = 60
+
+# --- Environment ----------------------------------------------------------
+
+[vars]
+# The origin allowed to call this. Leave it unset and `corsHeaders` falls back
+# to "*". Set it to the app's origin before this is reachable from the
+# internet — the rate limit bounds the damage, CORS narrows who can try.
+# ALLOWED_ORIGIN = "https://rehearse.app"
+
+# Overrides DEFAULT_MODEL in coach.mjs. `/health` reports whichever is live.
+# OPENAI_MODEL = "gpt-5-nano"
+
+# OPENAI_API_KEY is a secret, not a var — never put it in this file:
+#   npx wrangler secret put OPENAI_API_KEY

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'session_outcome.dart';
+
 /// How much the situation itself is carrying — a property of the scenario,
 /// fixed by whoever wrote it.
 ///
@@ -54,6 +56,7 @@ class ResponseChoice {
     required this.empathy,
     required this.directness,
     required this.confidence,
+    this.resolution,
   });
 
   final String text;
@@ -63,6 +66,15 @@ class ResponseChoice {
   final int empathy;
   final int directness;
   final int confidence;
+
+  /// How the conversation lands if this is the manager's closing line.
+  ///
+  /// Authored on the last turn of every scenario and nowhere else, which is
+  /// what `scenarios_test.dart` enforces. Guided replies cannot end early —
+  /// the authored turns always run out — so the closing move is the only
+  /// thing that decides the outcome, and it is the thing the other person
+  /// actually walks away with.
+  final SessionOutcome? resolution;
 }
 
 class DialogueTurn {

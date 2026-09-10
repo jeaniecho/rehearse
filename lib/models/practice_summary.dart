@@ -1,5 +1,6 @@
 import 'coaching_note.dart';
 import 'practice_response.dart';
+import 'session_outcome.dart';
 
 /// The four things a hard message needs to land (PRD §10).
 enum PracticeSkill { clarity, empathy, directness, confidence }
@@ -34,6 +35,7 @@ extension PracticeSkillLabel on PracticeSkill {
 class PracticeSummary {
   const PracticeSummary({
     required this.score,
+    required this.outcome,
     required this.clarity,
     required this.empathy,
     required this.directness,
@@ -51,6 +53,7 @@ class PracticeSummary {
   /// once at the end instead of turn by turn.
   factory PracticeSummary.fromEvaluation({
     required int score,
+    required SessionOutcome outcome,
     required Map<PracticeSkill, int> skills,
     required String summary,
     required List<CoachingNote> strengths,
@@ -61,6 +64,7 @@ class PracticeSummary {
 
     return PracticeSummary(
       score: score.clamp(0, 100),
+      outcome: outcome,
       clarity: skill(PracticeSkill.clarity),
       empathy: skill(PracticeSkill.empathy),
       directness: skill(PracticeSkill.directness),
@@ -87,6 +91,12 @@ class PracticeSummary {
 
     return PracticeSummary(
       score: score,
+      // Authored on the closing choice. A guided conversation cannot end
+      // early, so the last thing the manager picked is what the other person
+      // is left with — see `ResponseChoice.resolution`.
+      outcome: responses.isEmpty
+          ? SessionOutcome.unresolved
+          : responses.last.resolution ?? SessionOutcome.unresolved,
       clarity: dimension((response) => response.clarity),
       empathy: dimension((response) => response.empathy),
       directness: dimension((response) => response.directness),
@@ -124,6 +134,11 @@ class PracticeSummary {
   static const _dimensionWeight = 8;
 
   final int score;
+
+  /// How the conversation ended (PRD §9), required on the report by §11.
+  /// Never derived from [score] — see [SessionOutcome].
+  final SessionOutcome outcome;
+
   final int clarity;
   final int empathy;
   final int directness;

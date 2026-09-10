@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "deploy": "npx --yes wrangler deploy",
+    "dev:worker": "npx --yes wrangler dev"
   },
   "engines": {
     "node": ">=20"

@@ -5,6 +5,7 @@ import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/models/scenario.dart';
+import 'package:rehearse/models/session_outcome.dart';
 import 'package:rehearse/widgets/illustration.dart';
 
 /// Guards the authored content. Every scenario is hand-written, so these
@@ -33,6 +34,17 @@ void main() {
           'confidence tracks directness too closely to be measuring '
           'anything of its own',
     );
+  });
+
+  test('every outcome the report can show is reachable', () {
+    // A value the authored library never produces is a label nobody will
+    // ever see, and a branch nothing exercises.
+    final authored = {
+      for (final scenario in scenarios)
+        for (final choice in scenario.turns.last.choices) ?choice.resolution,
+    };
+
+    expect(authored, containsAll(SessionOutcome.values));
   });
 
   test('ids and characters are unique', () {
@@ -124,6 +136,43 @@ void main() {
           expect(choice.confidence, inInclusiveRange(-2, 2));
           expect(choice.confidence, inInclusiveRange(-2, 2));
         }
+      });
+
+      test('the closing turn says how it lands, and only the closing turn', () {
+        // PRD §9's outcome is authored on the last move because a guided
+        // conversation cannot end early — see `ResponseChoice.resolution`.
+        for (final choice in scenario.turns.last.choices) {
+          expect(
+            choice.resolution,
+            isNotNull,
+            reason: 'no outcome for "${choice.text}"',
+          );
+        }
+
+        for (final turn in scenario.turns.take(scenario.turns.length - 1)) {
+          for (final choice in turn.choices) {
+            expect(
+              choice.resolution,
+              isNull,
+              reason:
+                  'a mid-conversation choice cannot end anything: '
+                  '"${choice.text}"',
+            );
+          }
+        }
+      });
+
+      test('the best close resolves it and the worst does not', () {
+        final closing = scenario.turns.last.choices;
+        final best = closing.reduce(
+          (a, b) => a.scoreDelta >= b.scoreDelta ? a : b,
+        );
+        final worst = closing.reduce(
+          (a, b) => a.scoreDelta <= b.scoreDelta ? a : b,
+        );
+
+        expect(best.resolution, SessionOutcome.success);
+        expect(worst.resolution, isNot(SessionOutcome.success));
       });
 
       test('each turn has one clearly best answer', () {
