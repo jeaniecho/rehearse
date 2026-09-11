@@ -93,77 +93,94 @@ class _PlanCardState extends State<_PlanCard> {
 
     final isPro = subscription.isPro;
 
-    return Card(
-      key: const Key('plan_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(17),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Labelled like everything else on this screen. Without it the plan
+        // was the one block arriving unannounced, above two that are not.
+        const Eyebrow('YOUR PLAN'),
+        const SizedBox(height: 10),
+        Card(
+          key: const Key('plan_card'),
+          child: Padding(
+            padding: const EdgeInsets.all(17),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: isPro ? AppColors.mint : AppColors.canvas,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    isPro
-                        ? Icons.workspace_premium_rounded
-                        : Icons.bolt_rounded,
-                    color: isPro ? AppColors.forest : AppColors.muted,
-                    size: 19,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isPro ? 'Rehearse Pro' : 'Free',
-                        style: const TextStyle(
-                          color: AppColors.ink,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
+                Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        // Not `canvas` — that is the same white as the card,
+                        // so the free tier's chip was invisible and its glyph
+                        // floated in 38pt of nothing.
+                        color: isPro ? AppColors.mint : AppColors.subtle,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
+                      child: Icon(
+                        // The same lock the home tiles carry, for the same
+                        // reason: most of the library is closed. A bolt said
+                        // "power", which is what the other plan is.
                         isPro
-                            ? 'All ${scenarios.length} conversations.'
-                            : '${Subscription.freeScenarioIds.length} of '
-                                  '${scenarios.length} conversations, '
-                                  'unlimited reps.',
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 13,
-                        ),
+                            ? Icons.workspace_premium_rounded
+                            : Icons.lock_outline_rounded,
+                        color: isPro ? AppColors.forest : AppColors.muted,
+                        size: 19,
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isPro ? 'Rehearse Pro' : 'Free',
+                            style: const TextStyle(
+                              color: AppColors.ink,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            isPro
+                                ? 'All ${scenarios.length} conversations.'
+                                : '${Subscription.freeScenarioIds.length} of '
+                                      '${scenarios.length} conversations, '
+                                      'unlimited reps.',
+                            style: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (_notice case final notice?) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    notice,
+                    key: const Key('plan_notice'),
+                    style: const TextStyle(
+                      color: AppColors.ink,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            if (_notice case final notice?) ...[
-              const SizedBox(height: 14),
-              Text(
-                notice,
-                key: const Key('plan_notice'),
-                style: const TextStyle(
-                  color: AppColors.ink,
-                  fontSize: 12,
-                  height: 1.4,
-                ),
-              ),
-            ],
-            const SizedBox(height: 14),
-            Row(
-              children: [
+                ],
+                const SizedBox(height: 16),
+                // Stacked rather than side by side. Split down the middle,
+                // "Restore purchases" had half a card to say two words in
+                // and wrapped to two lines beside a one-line "Go Pro" — and
+                // an equal split gave the short primary action as much room
+                // as the long secondary one, which is backwards.
                 if (!isPro) ...[
-                  Expanded(
+                  SizedBox(
+                    width: double.infinity,
                     child: FilledButton(
                       key: const Key('upgrade_from_settings'),
                       onPressed: () => PaywallScreen.show(
@@ -171,30 +188,31 @@ class _PlanCardState extends State<_PlanCard> {
                         trigger: PaywallTrigger.settingsUpsell,
                       ),
                       style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(44),
+                        minimumSize: const Size.fromHeight(46),
                       ),
                       child: const Text('Go Pro'),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(height: 8),
                 ],
-                Expanded(
+                SizedBox(
+                  width: double.infinity,
                   child: OutlinedButton(
                     key: const Key('restore_from_settings'),
                     onPressed: subscription.isBusy
                         ? null
                         : () => _restore(subscription),
                     style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(44),
+                      minimumSize: const Size.fromHeight(46),
                     ),
                     child: const Text('Restore purchases'),
                   ),
                 ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -366,13 +384,9 @@ class _YourData extends StatelessWidget {
                     child: const Text('Clear practice history'),
                   ),
                 ),
-                const SizedBox(height: 10),
-                // The counter is not the history: clearing is a privacy
-                // action and must not hand back free rehearsals.
-                const Text(
-                  'Clearing does not restore free rehearsals.',
-                  style: TextStyle(color: AppColors.muted, fontSize: 12),
-                ),
+                // What used to sit here — "Clearing does not restore free
+                // rehearsals" — described a counter the app no longer has,
+                // and named a consequence nobody can now hit.
               ],
             ),
           ),

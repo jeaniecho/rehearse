@@ -253,32 +253,51 @@ class _FreeAllowance extends StatelessWidget {
     final free = Subscription.freeScenarioIds.length;
     final locked = scenarios.length - free;
 
-    return Row(
+    final label = Text(
+      '$free conversations free, unlimited reps. $locked more with Pro.',
+      style: const TextStyle(color: AppColors.muted, fontSize: 13),
+    );
+    final action = TextButton(
+      key: const Key('open_paywall'),
+      onPressed: () =>
+          PaywallScreen.show(context, trigger: PaywallTrigger.homeUpsell),
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.ink,
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        // `styleFrom` replaces the button's text style rather than
+        // merging into it, so a bare `TextStyle` here drops the family
+        // and this one button renders in the platform font. The filled
+        // and outlined button themes name it for the same reason.
+        textStyle: const TextStyle(
+          fontFamily: AppTheme.fontFamily,
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      child: const Text('Go Pro'),
+    );
+
+    // Beside the sentence at a normal size, under it once the type is big
+    // enough that the two would fight for the width. Side by side at 1.6x,
+    // the sentence wraps to three lines and the button floats against the
+    // middle of them, which reads as a mistake rather than a pairing.
+    final stacked = MediaQuery.textScalerOf(context).scale(13) > 17;
+
+    return Container(
       key: const Key('free_allowance'),
-      children: [
-        Expanded(
-          child: Text(
-            '$free conversations free, unlimited reps. '
-            '$locked more with Pro.',
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
-          ),
-        ),
-        TextButton(
-          key: const Key('open_paywall'),
-          onPressed: () =>
-              PaywallScreen.show(context, trigger: PaywallTrigger.homeUpsell),
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.ink,
-            minimumSize: const Size(0, 36),
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            textStyle: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
+      alignment: stacked ? Alignment.centerLeft : null,
+      child: stacked
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [label, const SizedBox(height: 4), action],
+            )
+          : Row(
+              children: [
+                Expanded(child: label),
+                action,
+              ],
             ),
-          ),
-          child: const Text('Go Pro'),
-        ),
-      ],
     );
   }
 }

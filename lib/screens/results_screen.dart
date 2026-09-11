@@ -6,6 +6,7 @@ import '../models/practice_response.dart';
 import '../models/practice_summary.dart';
 import '../models/session_outcome.dart';
 import '../models/scenario.dart';
+import '../services/haptics.dart';
 import '../theme/app_theme.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
@@ -22,6 +23,7 @@ class ResultsScreen extends StatefulWidget {
     this.mode = PracticeMode.guided,
     this.difficulty = SimulationDifficulty.defensive,
     this.isRetry = false,
+    this.haptics = const DeviceHaptics(),
     super.key,
   });
 
@@ -36,6 +38,8 @@ class ResultsScreen extends StatefulWidget {
   /// Carried through from the rehearsal so the retry funnel stays intact
   /// across a "Try again".
   final bool isRetry;
+
+  final HapticsService haptics;
 
   @override
   State<ResultsScreen> createState() => _ResultsScreenState();
@@ -150,7 +154,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
               ],
             ),
             const SizedBox(height: 26),
-            _ScoreBlock(summary: _summary),
+            _ScoreBlock(summary: _summary, haptics: widget.haptics),
             const SizedBox(height: 22),
             _CoachBubble(text: _summary.summary),
             const SizedBox(height: 30),
@@ -249,13 +253,81 @@ class _ResultsScreenState extends State<ResultsScreen> {
 ///
 /// It used to sit as a ring inside a dark card next to the headline, which
 /// made three things fight for the same moment.
-class _ScoreBlock extends StatelessWidget {
-  const _ScoreBlock({required this.summary});
+/// The score, counted up rather than stated.
+///
+/// The number is the one thing on this screen someone is waiting for, and
+/// arriving at it is worth a beat — but only a beat. The count runs first
+/// and alone; how it ended and what it means follow once it has landed, so
+/// the eye reads them in that order instead of taking the whole block in at
+/// once and going back for the number.
+///
+/// Honours the system's reduce-motion setting, which is not decoration: a
+/// counting number is exactly the kind of thing that setting exists for.
+/// With it on, everything is simply already there.
+class _ScoreBlock extends StatefulWidget {
+  const _ScoreBlock({required this.summary, required this.haptics});
 
   final PracticeSummary summary;
+  final HapticsService haptics;
+
+  @override
+  State<_ScoreBlock> createState() => _ScoreBlockState();
+}
+
+class _ScoreBlockState extends State<_ScoreBlock>
+    with SingleTickerProviderStateMixin {
+  static const _duration = Duration(milliseconds: 850);
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: _duration,
+  );
+
+  /// Reaches the number at 65% and holds, leaving the rest of the run for
+  /// the two lines underneath.
+  late final Animation<double> _count = CurvedAnimation(
+    parent: _controller,
+    curve: const Interval(0, 0.65, curve: Curves.easeOutCubic),
+  );
+  late final Animation<double> _rest = CurvedAnimation(
+    parent: _controller,
+    curve: const Interval(0.6, 1, curve: Curves.easeOut),
+  );
+
+  bool _started = false;
+  bool _tapped = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+      return;
+    }
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// Fired as the number settles rather than when the screen opens, so the
+  /// tap and the figure landing are the same event.
+  void _tapOnce() {
+    if (_tapped || _count.value < 1) return;
+    _tapped = true;
+    widget.haptics.impact();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final score = widget.summary.score;
+
     return Column(
       children: [
         const Text(
@@ -268,24 +340,37 @@ class _ScoreBlock extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          '${summary.score}',
-          key: const Key('final_score'),
-          style: const TextStyle(
-            color: AppColors.ink,
-            fontSize: 76,
-            height: 1,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -3,
-          ),
+        AnimatedBuilder(
+          animation: _count,
+          builder: (context, _) {
+            _tapOnce();
+            return Text(
+              '${(score * _count.value).round()}',
+              key: const Key('final_score'),
+              style: const TextStyle(
+                color: AppColors.ink,
+                fontSize: 76,
+                height: 1,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -3,
+              ),
+            );
+          },
         ),
         const SizedBox(height: 14),
-        _OutcomePill(outcome: summary.outcome),
-        const SizedBox(height: 16),
-        Text(
-          summary.headline,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineMedium,
+        FadeTransition(
+          opacity: _rest,
+          child: Column(
+            children: [
+              _OutcomePill(outcome: widget.summary.outcome),
+              const SizedBox(height: 16),
+              Text(
+                widget.summary.headline,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+            ],
+          ),
         ),
       ],
     );

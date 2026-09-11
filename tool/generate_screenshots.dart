@@ -8,11 +8,8 @@
 // These are the actual screens with seeded data, not mockups — if the UI
 // changes, so do the screenshots, which is the whole point.
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_record.dart';
@@ -30,9 +27,10 @@ import 'package:rehearse/services/app_settings.dart';
 import 'package:rehearse/services/coach_service.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/services/subscription.dart';
-import 'package:rehearse/theme/app_theme.dart';
 import 'package:rehearse/widgets/illustration.dart';
 import 'package:rehearse/widgets/rehearse_scope.dart';
+
+import 'harness.dart';
 
 /// 6.7" iPhone — the size App Store Connect requires. Play accepts it too.
 const _size = Size(1290, 2796);
@@ -40,78 +38,8 @@ const _ratio = 3.0;
 
 final _scenario = scenarios.first;
 
-/// The streak badge on the home screen leads with an emoji, and the test
-/// environment has no font that can draw one — so without this it renders
-/// as a box on exactly the screen the store listing leads with.
-const _emojiFamily = 'Apple Color Emoji';
-
-/// Whether the bundled typeface loaded. The warning below and the output
-/// always agree because the theme names this font either way.
-bool _brandFontLoaded = false;
-bool _emojiFontLoaded = false;
-
-/// The test environment loads no fonts of its own, so without this every
-/// glyph renders as a box and the output is useless as a store asset.
-///
-/// This loads the typeface the app itself bundles, which is why the output
-/// now matches the real app on any machine rather than only on a Mac.
-Future<bool> _loadBrandFont() async {
-  var text = true;
-  try {
-    final loader = FontLoader(AppTheme.fontFamily)
-      ..addFont(rootBundle.load('assets/fonts/PlusJakartaSans[wght].ttf'))
-      ..addFont(
-        rootBundle.load('assets/fonts/PlusJakartaSans-Italic[wght].ttf'),
-      );
-    await loader.load();
-
-    // The serif too, or the coaching report — the one shot that carries a
-    // quote — comes out with the quote and the rewrite set in boxes.
-    final serif = FontLoader(AppTheme.serifFontFamily)
-      ..addFont(rootBundle.load('assets/fonts/Literata[opsz,wght].ttf'));
-    await serif.load();
-  } on Object {
-    text = false;
-  }
-
-  // Icons live in a separate family the test environment does not load
-  // either, so without this every icon renders as a box too.
-  final root = Platform.environment['FLUTTER_ROOT'];
-  final home = Platform.environment['HOME'];
-  const suffix = 'bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf';
-  _emojiFontLoaded = await _register(_emojiFamily, const [
-    '/System/Library/Fonts/Apple Color Emoji.ttc',
-  ]);
-
-  await _register('MaterialIcons', [
-    if (root != null && root.isNotEmpty) '$root/$suffix',
-    if (home != null) '$home/Dev/flutter/$suffix',
-    if (home != null) '$home/flutter/$suffix',
-  ]);
-
-  return text;
-}
-
-Future<bool> _register(String family, List<String> candidates) async {
-  for (final path in candidates) {
-    final file = File(path);
-    if (!file.existsSync()) continue;
-    try {
-      final bytes = await file.readAsBytes();
-      final loader = FontLoader(family)
-        ..addFont(Future.value(ByteData.view(bytes.buffer)));
-      await loader.load();
-      return true;
-    } on Object {
-      continue;
-    }
-  }
-  return false;
-}
-
-/// The app's own theme, plus the emoji family this harness had to supply.
-ThemeData get _theme =>
-    AppTheme.withFallback(_emojiFontLoaded ? const [_emojiFamily] : null);
+/// The device exactly, for both stores.
+late HarnessFonts _fonts;
 
 void main() {
   late PracticeHistory history;
@@ -119,8 +47,8 @@ void main() {
   late Subscription subscription;
 
   setUpAll(() async {
-    _brandFontLoaded = await _loadBrandFont();
-    if (!_brandFontLoaded) {
+    _fonts = await loadHarnessFonts();
+    if (!_fonts.brandLoaded) {
       stdout.writeln(
         'WARNING: the bundled typeface did not load — glyphs will render '
         'as boxes and these images must not be submitted.',
@@ -167,14 +95,7 @@ void main() {
     // the layout is the 430 points a 6.7" phone actually has. Faking the
     // ratio as 1 lays out the same but resolves every asset at 1.0x, and
     // the illustrations would be upscaled in the store's own images.
-    tester.view.physicalSize = _size;
-    tester.view.devicePixelRatio = _ratio;
-    // Without these the frame has no notch and no home indicator, so the
-    // output cannot show a safe-area mistake and does not match the device.
-    // View padding is physical, hence the ratio.
-    const insets = FakeViewPadding(top: 59 * _ratio, bottom: 34 * _ratio);
-    tester.view.viewPadding = insets;
-    tester.view.padding = insets;
+    sizeAsDevice(tester, _size, _ratio);
     addTearDown(tester.view.reset);
 
     final boundary = GlobalKey();
@@ -188,7 +109,7 @@ void main() {
           analytics: Analytics(sink: const NoopAnalyticsSink()),
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
-            theme: _theme,
+            theme: _fonts.theme,
             home: screen,
           ),
         ),
@@ -203,17 +124,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.runAsync(() async {
-      final render =
-          boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-      final image = await render.toImage(pixelRatio: _ratio);
-      final data = await image.toByteData(format: ui.ImageByteFormat.png);
-      final file = File('build/screenshots/$name.png');
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(data!.buffer.asUint8List());
-      stdout.writeln('wrote ${file.path}  ${image.width}x${image.height}');
-      image.dispose();
-    });
+    await writePng(
+      tester,
+      boundary,
+      'build/screenshots/$name.png',
+      pixelRatio: _ratio,
+    );
   }
 
   testWidgets('1 — the scenario list', (tester) async {

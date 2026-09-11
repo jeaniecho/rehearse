@@ -393,6 +393,35 @@ Rules the practice screen enforces:
 - If `initialize()` returns false the app stays silent and hides the control.
   **Speech is an enhancement; nothing in the loop may depend on it.**
 
+### Looking at the app
+
+Two tools render the real screens to PNG, both as tests because that is the
+supported way to get a Flutter canvas outside a running app:
+`tool/generate_screenshots.dart` for the store assets, and
+`tool/ui_review.dart` for design review. They share `tool/harness.dart`,
+which loads the bundled typefaces, the Material icon font and the system
+emoji font — a test environment loads none of them, and without it every
+glyph in either tool's output is a box. That failure is silent in one tool
+and submitted to the App Store in the other, which is why the loading lives
+in one place rather than two.
+
+`ui_review.dart` injects a fake store client that is always configured, so
+it can show the locked tiles, the paywall and the plan card. A web build
+has real fonts but no RevenueCat, so `isConfigured` is false there and none
+of those states can be reached.
+
+### Haptics
+
+`HapticsService` follows the same shape for the same reason — it is a
+platform channel, so a widget test that reached one would be testing the
+channel rather than the screen. It has exactly one method, `impact()`, and
+exactly one caller: the score landing on the report.
+
+The reveal itself honours `MediaQuery.disableAnimations`. A number counting
+itself up is precisely what that setting exists for, so with it on the score
+is simply already there — and the haptic still fires, because the moment
+still happened.
+
 Speech rate is read from `getSpeechRateValidRange` rather than hardcoded,
 because Android treats 1.0 as normal and iOS treats 0.5 as normal.
 

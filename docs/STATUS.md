@@ -127,7 +127,7 @@ real model — and the **release checklist**.
 | **Retry** | restarts the scenario from turn 1; the report names the weak turn but does not scroll to it | highlight the weak moment in a transcript, then retry (P1, PRD §12) |
 | **Scenario coverage** | 12 scenarios; every seeded category has its own, and boundary is no longer shared with saying-no | nothing outstanding — PRD §7.1 asks for 6–12 (see §4) |
 | **Malformed AI output** | falls back to the offline coach; a fabricated quote is dropped on both sides | server-side repair/retry once (PRD §26) — currently it degrades rather than repairs |
-| **Empty states / transitions** | present on home and progress | haptics and an animated score reveal are not built |
+| **Empty states / transitions** | present on home and progress; the score counts up on the report and the phone taps once as it lands, both honouring reduce-motion | nothing outstanding that the PRD names |
 
 ### Missing
 
@@ -629,7 +629,7 @@ Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter, sentry_flutter,
                    url_launcher
-Tests            : 423 Flutter + 31 server
+Tests            : 427 Flutter + 31 server
 TODO/FIXME       : none
 ```
 

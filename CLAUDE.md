@@ -25,7 +25,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 420 tests
+flutter test                    # 427 tests
 cd server && npm test           # 31 tests
 ```
 
@@ -79,7 +79,20 @@ flutter test tool/generate_app_icon.dart && dart run flutter_launcher_icons && g
 
 The final revert is required — see `docs/ARCHITECTURE.md`, Brand assets.
 
-To check layout with real fonts (widget tests render text as boxes):
+To look at every screen with real fonts, including the states a web build
+cannot reach — a lock, the paywall, the plan card — which all need a
+configured store:
+
+```bash
+flutter test tool/ui_review.dart
+```
+
+Output lands in `build/ui-review/`. It shares its font loading with the
+screenshot generator through `tool/harness.dart`; neither tool's output
+means anything without it, because a test environment loads no fonts and
+draws every glyph as a box.
+
+For real fonts in a real browser (no store, so no locks):
 
 ```bash
 flutter build web --release
@@ -179,7 +192,8 @@ From `ROADMAP.md` §0, and they hold:
 - `test/text_scale_test.dart` has no assertions on purpose — Flutter reports a
   layout overflow as a test failure, so laying screens out at 1.3× and 1.6×
   text *is* the assertion.
-- Widget tests render text as boxes. Real-font problems only show in a browser.
+- Widget tests render text as boxes. Real-font problems show up only in
+  `tool/ui_review.dart` or a browser.
 
 ## Current shape
 
@@ -191,8 +205,9 @@ lib/screens    onboarding, tabs (home / progress / you), brief, practice,
                results, paywall
 lib/screens/practice
                `part`s of practice_screen, split for length only
-lib/services   coach (remote/offline/resilient), speech in/out, history,
-               settings, subscription + RevenueCat, analytics + PostHog
+lib/services   coach (remote/offline/resilient), speech in/out, haptics,
+               history, settings, subscription + RevenueCat,
+               analytics + PostHog
 lib/theme      AppColors tokens, Material 3 theme, the two font families,
                the Paper card shadow, and the brand mark painter
 lib/widgets    shared UI, the Illustration lookup, and the four
