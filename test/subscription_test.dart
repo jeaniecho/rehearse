@@ -583,7 +583,7 @@ void main() {
 
       expect(find.byKey(const Key('free_allowance')), findsOneWidget);
       expect(
-        find.text('2 conversations free, unlimited reps. 10 more with Pro.'),
+        find.text('2 conversations free, unlimited reps. The rest with Pro.'),
         findsOneWidget,
       );
       expect(find.text('PRO'), findsNothing);
@@ -660,10 +660,7 @@ void main() {
       );
 
       expect(find.byKey(const Key('plan_card')), findsOneWidget);
-      expect(
-        find.text('2 of 12 conversations, unlimited reps.'),
-        findsOneWidget,
-      );
+      expect(find.text('2 conversations, unlimited reps.'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('restore_from_settings')));
       await tester.pumpAndSettle();

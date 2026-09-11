@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../data/legal_links.dart';
-import '../data/scenarios.dart';
 import '../models/practice_summary.dart';
 import '../models/subscription.dart';
 import '../services/analytics.dart';
@@ -328,11 +327,7 @@ class _Comparison extends StatelessWidget {
 
   /// A null value means "included", drawn as a tick.
   static final _rows = <(String, String?, String?)>[
-    (
-      'Conversations',
-      '${Subscription.freeScenarioIds.length}',
-      'All ${scenarios.length}',
-    ),
+    ('Conversations', '${Subscription.freeScenarioIds.length}', 'All'),
     ('Unlimited rehearsals', null, null),
     ('Coaching on what you actually said', null, null),
     ('Scores, streak and history', null, null),

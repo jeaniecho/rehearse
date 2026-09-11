@@ -251,10 +251,9 @@ class _FreeAllowance extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final free = Subscription.freeScenarioIds.length;
-    final locked = scenarios.length - free;
 
     final label = Text(
-      '$free conversations free, unlimited reps. $locked more with Pro.',
+      '$free conversations free, unlimited reps. The rest with Pro.',
       style: const TextStyle(color: AppColors.muted, fontSize: 13),
     );
     final action = TextButton(

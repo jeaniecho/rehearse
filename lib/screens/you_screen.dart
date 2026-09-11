@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../app_info.dart';
-import '../data/scenarios.dart';
 import '../models/subscription.dart';
 import '../services/analytics.dart';
 import '../services/practice_history.dart';
@@ -146,10 +145,9 @@ class _PlanCardState extends State<_PlanCard> {
                           const SizedBox(height: 2),
                           Text(
                             isPro
-                                ? 'All ${scenarios.length} conversations.'
-                                : '${Subscription.freeScenarioIds.length} of '
-                                      '${scenarios.length} conversations, '
-                                      'unlimited reps.',
+                                ? 'All conversations.'
+                                : '${Subscription.freeScenarioIds.length} '
+                                      'conversations, unlimited reps.',
                             style: const TextStyle(
                               color: AppColors.muted,
                               fontSize: 13,
