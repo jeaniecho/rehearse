@@ -147,6 +147,19 @@ confidence**. `PracticeSummary.skills` returns them in report order, and both
 the coaching report and the progress screen render that map rather than
 listing bars by hand, so the two cannot fall out of step.
 
+**A guided rehearsal is not scored.** `PracticeRecord.fromSummary` writes it
+with every dimension null, and `tryFromJson` drops the numbers off guided
+records written by older builds, so there is no date on which history changes
+meaning. The session is still kept — it holds the streak and appears in the
+history — but it stays out of the average, the trend, the skill bars and a
+tile's best score. Guided mode offers three written answers and says which
+one landed, which measures recognition rather than what someone would have
+said; averaging that in with free-form rehearsals would put a number on the
+wrong thing. The report shows no score either — no number, and no skill
+breakdown — because a figure the app will not keep is a figure that measured
+nothing. A guided report is the outcome, the headline and the authored notes,
+which is what guided mode actually produces.
+
 > Records written before the fourth dimension existed stored directness under
 > the name `courage` — which is what the server schema always described it as.
 > `PracticeRecord.tryFromJson` maps it across. Confidence was genuinely not
@@ -457,7 +470,7 @@ Three rules:
 2. **The gate holds no state.** It is a set of scenario ids in code, compared
    against the scenario being opened. Nothing is written, nothing is read,
    and nothing can drift — which is the difference from what this used to be.
-3. **The free tier is unlimited within its two conversations.** Finishing a
+3. **The free tier is unlimited within its three conversations.** Finishing a
    rehearsal costs nothing, so someone can rep the same conversation until
    the wording is right. That is the product's whole argument, and the free
    tier is the demonstration of it.

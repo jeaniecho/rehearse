@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_record.dart';
+import 'package:rehearse/models/scenario.dart';
 import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/screens/home_screen.dart';
 import 'package:rehearse/screens/progress_screen.dart';
@@ -10,6 +11,12 @@ import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/theme/app_theme.dart';
 import 'package:rehearse/widgets/practice_history_scope.dart';
+
+/// The gentlest tier, in authored order — what the recommendation walks
+/// before it moves up the ramp.
+final _warmUps = scenarios
+    .where((s) => s.stakes == ScenarioStakes.warmUp)
+    .toList();
 
 PracticeRecord record({
   required String scenarioId,
@@ -94,9 +101,12 @@ void main() {
         ],
       );
 
-      expect(find.text('🔥 2 day streak'), findsOneWidget);
-      expect(find.text('One more rep?\nGo again.'), findsOneWidget);
-      expect(find.text('2 reps · best 74'), findsOneWidget);
+      expect(find.text('🔥 2'), findsOneWidget);
+      expect(find.text('One more rep?'), findsOneWidget);
+      // The tile carries the best score and nothing about how often — see
+      // `_ScenarioTile`.
+      expect(find.text('74'), findsOneWidget);
+      expect(find.textContaining('reps'), findsNothing);
     });
 
     testWidgets('urges you on when the streak has not been kept today', (
@@ -113,8 +123,8 @@ void main() {
         ],
       );
 
-      expect(find.text('🔥 1 day streak'), findsOneWidget);
-      expect(find.text('Keep the streak.\nOne conversation.'), findsOneWidget);
+      expect(find.text('🔥 1'), findsOneWidget);
+      expect(find.text('Keep the streak.'), findsOneWidget);
     });
 
     testWidgets('reaches progress and back through the tab bar', (
@@ -131,22 +141,25 @@ void main() {
       await tester.tap(find.byKey(const Key('tab_progress')));
       await tester.pumpAndSettle();
       expect(find.text('Your progress'), findsOneWidget);
-      expect(find.text('Session history'), findsOneWidget);
+      expect(find.text('SESSION HISTORY'), findsOneWidget);
 
       // The scenario list is still built behind it — an IndexedStack keeps
       // each tab alive so coming back does not reset the scroll.
       await tester.tap(find.byKey(const Key('tab_practice')));
       await tester.pumpAndSettle();
-      expect(find.text('Conversations'), findsOneWidget);
+      expect(find.text('WARM-UP'), findsOneWidget);
     });
   });
 
   group('recommendation', () {
-    test('opens on the authored first scenario for a new manager', () {
+    test('opens a new manager on the first warm-up', () {
       final history = PracticeHistory(store: InMemoryHistoryStore(), now: now);
       addTearDown(history.dispose);
 
-      expect(HomeScreen.recommendedScenario(history), scenarios.first);
+      // Nothing is rehearsed, so every scenario ties on reps and the
+      // gentlest tier wins. Read off the library rather than named, so the
+      // authored order can change without the assertion going stale.
+      expect(HomeScreen.recommendedScenario(history), _warmUps.first);
     });
 
     test('moves on to whatever has been rehearsed least', () async {
@@ -154,10 +167,24 @@ void main() {
       addTearDown(history.dispose);
 
       await history.add(
-        record(scenarioId: scenarios.first.id, completedAt: today),
+        record(scenarioId: _warmUps.first.id, completedAt: today),
       );
 
-      expect(HomeScreen.recommendedScenario(history), scenarios[1]);
+      expect(HomeScreen.recommendedScenario(history), _warmUps[1]);
+    });
+
+    test('leaves the warm-ups once they are all rehearsed', () async {
+      final history = PracticeHistory(store: InMemoryHistoryStore(), now: now);
+      addTearDown(history.dispose);
+
+      for (final scenario in _warmUps) {
+        await history.add(record(scenarioId: scenario.id, completedAt: today));
+      }
+
+      expect(
+        HomeScreen.recommendedScenario(history).stakes,
+        isNot(ScenarioStakes.warmUp),
+      );
     });
   });
 
@@ -185,7 +212,8 @@ void main() {
       );
 
       expect(find.text('2-day streak'), findsOneWidget);
-      expect(find.text('2 rehearsals, newest first.'), findsOneWidget);
+      // The list is its own count now — the label above it is a label.
+      expect(find.text('SESSION HISTORY'), findsOneWidget);
       expect(find.text('The slipping deadline'), findsOneWidget);
       expect(find.text('The impossible request'), findsOneWidget);
       expect(find.text('74'), findsOneWidget);

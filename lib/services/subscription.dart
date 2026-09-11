@@ -22,10 +22,21 @@ class Subscription extends ChangeNotifier {
   /// device is back at zero after a reinstall. A content gate holds no state,
   /// so there is nothing to reset.
   ///
-  /// Two warm-up scenarios in different registers — handing work over, and
-  /// repairing a peer relationship — so the free tier samples the range of
-  /// the library rather than one corner of it.
-  static const freeScenarioIds = <String>{'delegation', 'peer-conflict'};
+  /// The first conversation of each tier of stakes, in the order the library
+  /// is authored in — so the free tier is a slice down the ramp rather than
+  /// the bottom of it, and the first tile of every row on home is one
+  /// someone can actually open.
+  ///
+  /// It was three warm-ups until 2026-09-11, which sampled registers but not
+  /// weight: nothing free ever pushed back hard, so the thing Pro is for was
+  /// the thing nobody had tried. `scenarios_test.dart` holds the rule — one
+  /// per tier, each the first of its tier — because home's library is drawn
+  /// on the strength of it.
+  static const freeScenarioIds = <String>{
+    'peer-conflict',
+    'missed-deadlines',
+    'say-no',
+  };
 
   final SubscriptionClient _client;
 

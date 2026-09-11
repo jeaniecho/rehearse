@@ -48,7 +48,7 @@ void main() {
     await pump(tester);
 
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.text('Conversations'), findsOneWidget);
+    expect(find.text('WARM-UP'), findsOneWidget);
     // The page is not shortened to make room — the capsule floats over it,
     // so there is no white band behind the bar.
     expect(tester.getSize(find.byType(IndexedStack)).height, 932);

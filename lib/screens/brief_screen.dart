@@ -90,77 +90,78 @@ class _BriefScreenState extends State<BriefScreen> {
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: const Text(
-          'Scenario briefing',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
+        // No title. A toolbar labelled "Scenario briefing" over a page
+        // whose own heading is the scenario was a category name in the one
+        // place the app has room to say the actual thing — and a bar with a
+        // grey label and a back arrow is the most generic object a screen
+        // can open with. The mark and the title carry it.
       ),
       body: PageWidth(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           children: [
-            const SizedBox(height: 12),
-            // The same mark the home row carried, so arriving here reads as
-            // opening the thing you tapped rather than as a new screen.
+            const SizedBox(height: 8),
+            // The same mark the home tile carried, so arriving here reads as
+            // opening the thing you tapped rather than as a new screen — at
+            // the size that screen gives it, not at 40. This is the page
+            // about this conversation; it had the smallest drawing of it
+            // anywhere in the app.
             Align(
               alignment: Alignment.centerLeft,
-              child: Illustration.scenario(scenario.id),
+              child: Illustration.scenario(
+                scenario.id,
+                size: Illustration.spotSize,
+              ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Eyebrow(
               '${scenario.skill.toUpperCase()}  ·  ${scenario.durationMinutes} MIN  ·  ${scenario.stakes.label.toUpperCase()}',
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Text(
               scenario.title,
               style: Theme.of(context).textTheme.headlineLarge,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               scenario.subtitle,
               style: Theme.of(
                 context,
               ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             _PersonCard(scenario: scenario),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-              decoration: const BoxDecoration(
-                color: AppColors.surface,
-                border: Border(
-                  left: BorderSide(color: AppColors.coralBright, width: 4),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Eyebrow.small('YOUR GOAL'),
-                  const SizedBox(height: 5),
-                  Text(
-                    scenario.goal,
-                    style: const TextStyle(
-                      color: AppColors.ink,
-                      fontSize: 14,
-                      height: 1.4,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Practice setup',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              'Choose how you want this rehearsal to feel.',
-              style: TextStyle(color: AppColors.muted, fontSize: 13),
-            ),
             const SizedBox(height: 12),
+            // Shown, not folded into a disclosure the reader has to ask for.
+            // It was a `Card` wrapping an `ExpansionTile` — a stock
+            // component with a leading glyph, a subtitle and a chevron,
+            // which is what made this screen read as somebody else's design
+            // system — and what it was hiding is the briefing itself, on the
+            // screen whose whole job is to deliver it.
+            //
+            // Two sheets in the app's own note language: the situation on
+            // white, what to watch for on peach, which is the tint the
+            // coaching report already uses for the thing to be careful
+            // about.
+            _BriefNote(
+              icon: Icons.notes_rounded,
+              eyebrow: 'WHAT’S HAPPENING',
+              text: scenario.context,
+              background: AppColors.surface,
+              accent: AppColors.muted,
+              bordered: true,
+            ),
+            const SizedBox(height: 10),
+            _BriefNote(
+              icon: Icons.visibility_outlined,
+              eyebrow: 'WATCH FOR',
+              text: scenario.watchFor,
+              background: AppColors.peach,
+              accent: AppColors.coral,
+            ),
+            const SizedBox(height: 28),
+            const Eyebrow('PRACTICE SETUP', color: AppColors.muted),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -195,15 +196,15 @@ class _BriefScreenState extends State<BriefScreen> {
               alignment: Alignment.topCenter,
               child: _mode == PracticeMode.freestyle
                   ? Padding(
-                      padding: const EdgeInsets.only(top: 22),
+                      padding: const EdgeInsets.only(top: 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Pushback level',
-                            style: Theme.of(context).textTheme.titleMedium,
+                          const Eyebrow(
+                            'PUSHBACK LEVEL',
+                            color: AppColors.muted,
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 6),
                           const Text(
                             'This changes how they answer, not how you are scored.',
                             style: TextStyle(
@@ -220,38 +221,6 @@ class _BriefScreenState extends State<BriefScreen> {
                       ),
                     )
                   : const SizedBox(width: double.infinity),
-            ),
-            const SizedBox(height: 14),
-            Card(
-              clipBehavior: Clip.antiAlias,
-              child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-                leading: const Icon(
-                  Icons.description_outlined,
-                  color: AppColors.forest,
-                ),
-                title: const Text(
-                  'Read the full brief',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-                ),
-                subtitle: const Text('Situation and coaching cue'),
-                children: [
-                  const Divider(color: AppColors.border),
-                  const SizedBox(height: 10),
-                  _BriefItem(
-                    icon: Icons.notes_rounded,
-                    label: 'What’s happening',
-                    text: scenario.context,
-                  ),
-                  const SizedBox(height: 16),
-                  _BriefItem(
-                    icon: Icons.visibility_outlined,
-                    label: 'Watch for',
-                    text: scenario.watchFor,
-                  ),
-                ],
-              ),
             ),
             const SizedBox(height: 8),
           ],
@@ -327,15 +296,15 @@ class _ModeOption extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            padding: const EdgeInsets.fromLTRB(13, 12, 12, 12),
             child: Row(
               children: [
                 Icon(
                   icon,
-                  size: 20,
+                  size: 19,
                   color: selected ? AppColors.forest : AppColors.muted,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 9),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,20 +313,20 @@ class _ModeOption extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.ink,
-                          fontSize: 13,
+                        style: TextStyle(
+                          color: selected ? AppColors.forest : AppColors.ink,
+                          fontSize: 14,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         description,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: AppColors.muted,
-                          fontSize: 10,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -378,6 +347,13 @@ class _ModeOption extends StatelessWidget {
   }
 }
 
+/// Who you are about to talk to, and what you want out of it.
+///
+/// The goal used to sit under this in a white box with a coral rule down its
+/// left edge and a small-caps label — which is the callout every
+/// documentation template ships with, and the app draws nothing else that
+/// way. It is one object now: the person, a hairline, the goal. A briefing
+/// is those two facts, and they belong on the same piece of paper.
 class _PersonCard extends StatelessWidget {
   const _PersonCard({required this.scenario});
 
@@ -386,64 +362,83 @@ class _PersonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.fromLTRB(15, 15, 15, 16),
       decoration: BoxDecoration(
         color: AppColors.forest,
         borderRadius: BorderRadius.circular(18),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              // Was `scenario.tint`, a per-scenario field that all twelve
-              // filled in with this same value.
-              color: AppColors.subtle,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              scenario.personInitials,
-              style: const TextStyle(
-                color: AppColors.ink,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Eyebrow.small(
-                  'REHEARSING WITH',
-                  color: AppColors.onForestMuted,
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  // Was `scenario.tint`, a per-scenario field that all twelve
+                  // filled in with this same value.
+                  color: AppColors.subtle,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  scenario.personName,
+                child: Text(
+                  scenario.personInitials,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
+                    color: AppColors.ink,
+                    fontSize: 15,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  scenario.personRole,
-                  style: const TextStyle(
-                    color: Color(0xFFD9E5DD),
-                    fontSize: 13,
-                  ),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Eyebrow.small(
+                      'REHEARSING WITH',
+                      color: AppColors.onForestMuted,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      scenario.personName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      scenario.personRole,
+                      style: const TextStyle(
+                        color: Color(0xFFD9E5DD),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const Icon(
+                Icons.record_voice_over_outlined,
+                color: AppColors.onForestMuted,
+              ),
+            ],
           ),
-          const Icon(
-            Icons.record_voice_over_outlined,
-            color: AppColors.onForestMuted,
+          const SizedBox(height: 15),
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.16)),
+          const SizedBox(height: 14),
+          const Eyebrow.small('YOUR GOAL', color: AppColors.onForestMuted),
+          const SizedBox(height: 6),
+          Text(
+            scenario.goal,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              height: 1.45,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -451,43 +446,65 @@ class _PersonCard extends StatelessWidget {
   }
 }
 
-class _BriefItem extends StatelessWidget {
-  const _BriefItem({
+/// One block of the briefing, in the note language the coaching report
+/// already speaks: a tinted sheet, a small-caps label, and the text.
+///
+/// It replaces a row of Material glyph-in-a-rounded-square + label + body,
+/// which is a list item from a component library rather than anything this
+/// app draws.
+class _BriefNote extends StatelessWidget {
+  const _BriefNote({
     required this.icon,
-    required this.label,
+    required this.eyebrow,
     required this.text,
+    required this.background,
+    required this.accent,
+    this.bordered = false,
   });
 
   final IconData icon;
-  final String label;
+  final String eyebrow;
   final String text;
+  final Color background;
+  final Color accent;
+
+  /// White needs an edge against the page; a tint does not.
+  final bool bordered;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, size: 19, color: AppColors.forest),
-        ),
-        const SizedBox(width: 13),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 13, 16, 15),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(16),
+        border: bordered ? Border.all(color: AppColors.border) : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // The glyph rides with the label rather than in a rounded square
+          // of its own, which is what the old brief rows had — an icon tile
+          // beside every paragraph is a list item from a component library.
+          Row(
             children: [
-              Text(label, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 5),
-              Text(text, style: Theme.of(context).textTheme.bodyMedium),
+              Icon(icon, size: 13, color: accent),
+              const SizedBox(width: 6),
+              Eyebrow.small(eyebrow, color: accent),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              color: AppColors.ink,
+              fontSize: 14,
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

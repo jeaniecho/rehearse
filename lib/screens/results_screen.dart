@@ -12,6 +12,7 @@ import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/brand_mark.dart';
 import '../widgets/eyebrow.dart';
+import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_display.dart';
 import 'practice_screen.dart';
@@ -116,6 +117,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        // The one bar whose content sets its own floor: the theme's 48 is
+        // shorter than the mark, which would then be quietly scaled down to
+        // fit and read smaller here than everywhere else it appears.
+        toolbarHeight: Illustration.logoSize,
         title: const BrandMark(),
         actions: [
           TextButton(
@@ -154,7 +159,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
               ],
             ),
             const SizedBox(height: 26),
-            _ScoreBlock(summary: _summary, haptics: widget.haptics),
+            _ScoreBlock(
+              summary: _summary,
+              haptics: widget.haptics,
+              // A guided rehearsal is not scored — see `PracticeRecord` —
+              // and a number on the report that nothing keeps is a number
+              // that measured nothing. What is left is what guided mode
+              // actually produces: how it ended, and the authored notes.
+              showsScore: widget.mode != PracticeMode.guided,
+            ),
             const SizedBox(height: 22),
             _CoachBubble(text: _summary.summary),
             const SizedBox(height: 30),
@@ -206,24 +219,25 @@ class _ResultsScreenState extends State<ResultsScreen> {
               ),
             ],
             const SizedBox(height: 18),
-            Card(
-              clipBehavior: Clip.antiAlias,
-              child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 4,
+            if (widget.mode != PracticeMode.guided)
+              Card(
+                clipBehavior: Clip.antiAlias,
+                child: ExpansionTile(
+                  tilePadding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 4,
+                  ),
+                  childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+                  title: const Text(
+                    'Your skill breakdown',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  ),
+                  subtitle: const Text(
+                    'Clarity · empathy · directness · confidence',
+                  ),
+                  children: [SkillBars(values: _summary.skills, spacing: 17)],
                 ),
-                childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
-                title: const Text(
-                  'Your skill breakdown',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                ),
-                subtitle: const Text(
-                  'Clarity · empathy · directness · confidence',
-                ),
-                children: [SkillBars(values: _summary.skills, spacing: 17)],
               ),
-            ),
             const SizedBox(height: 24),
           ],
         ),
@@ -265,10 +279,18 @@ class _ResultsScreenState extends State<ResultsScreen> {
 /// counting number is exactly the kind of thing that setting exists for.
 /// With it on, everything is simply already there.
 class _ScoreBlock extends StatefulWidget {
-  const _ScoreBlock({required this.summary, required this.haptics});
+  const _ScoreBlock({
+    required this.summary,
+    required this.haptics,
+    required this.showsScore,
+  });
 
   final PracticeSummary summary;
   final HapticsService haptics;
+
+  /// False on a guided rehearsal, which leaves the outcome and the headline
+  /// standing on their own.
+  final bool showsScore;
 
   @override
   State<_ScoreBlock> createState() => _ScoreBlockState();
@@ -317,7 +339,8 @@ class _ScoreBlockState extends State<_ScoreBlock>
   }
 
   /// Fired as the number settles rather than when the screen opens, so the
-  /// tap and the figure landing are the same event.
+  /// tap and the figure landing are the same event. Nothing lands when there
+  /// is no number, so nothing is felt either.
   void _tapOnce() {
     if (_tapped || _count.value < 1) return;
     _tapped = true;
@@ -330,34 +353,36 @@ class _ScoreBlockState extends State<_ScoreBlock>
 
     return Column(
       children: [
-        const Text(
-          'SCORE',
-          style: TextStyle(
-            color: AppColors.muted,
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.4,
+        if (widget.showsScore) ...[
+          const Text(
+            'SCORE',
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.4,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        AnimatedBuilder(
-          animation: _count,
-          builder: (context, _) {
-            _tapOnce();
-            return Text(
-              '${(score * _count.value).round()}',
-              key: const Key('final_score'),
-              style: const TextStyle(
-                color: AppColors.ink,
-                fontSize: 76,
-                height: 1,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -3,
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 14),
+          const SizedBox(height: 4),
+          AnimatedBuilder(
+            animation: _count,
+            builder: (context, _) {
+              _tapOnce();
+              return Text(
+                '${(score * _count.value).round()}',
+                key: const Key('final_score'),
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 76,
+                  height: 1,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -3,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+        ],
         FadeTransition(
           opacity: _rest,
           child: Column(

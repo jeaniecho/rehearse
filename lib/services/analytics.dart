@@ -125,7 +125,7 @@ class Analytics extends ChangeNotifier {
       'turn_count': turnCount,
       'outcome': summary.outcome.name,
       'simulation_duration_seconds': durationSeconds,
-      ..._summaryProperties(summary),
+      ..._summaryProperties(summary, mode: mode),
     };
     _track('simulation_completed', properties);
     if (isRetry) _track('retry_completed', properties);
@@ -152,7 +152,7 @@ class Analytics extends ChangeNotifier {
   }) => _track('evaluation_viewed', {
     ..._scenarioProperties(scenario),
     'mode': mode.name,
-    ..._summaryProperties(summary),
+    ..._summaryProperties(summary, mode: mode),
   });
 
   // Monetization funnel.
@@ -207,16 +207,28 @@ class Analytics extends ChangeNotifier {
     'scenario_stakes': scenario.stakes.name,
   };
 
-  static Map<String, Object> _summaryProperties(PracticeSummary summary) => {
-    'overall_score': summary.score,
-    'clarity': summary.clarity,
-    'empathy': summary.empathy,
-    'directness': summary.directness,
-    'confidence': summary.confidence,
+  /// The numbers, on the events that have them.
+  ///
+  /// A guided rehearsal reports none: it is not scored, the app stores no
+  /// score for it and the report shows none, so an event carrying one would
+  /// be the only place the figure survived — and a funnel that mixes it with
+  /// free-form scores is averaging two different measurements. `mode` is on
+  /// every one of these events, so the absence is legible rather than a gap.
+  static Map<String, Object> _summaryProperties(
+    PracticeSummary summary, {
+    required PracticeMode mode,
+  }) => {
+    if (mode != PracticeMode.guided) ...{
+      'overall_score': summary.score,
+      'clarity': summary.clarity,
+      'empathy': summary.empathy,
+      'directness': summary.directness,
+      'confidence': summary.confidence,
+      // Not PRD §9's success/partial/unresolved/escalated — the simulation
+      // has no outcome model yet. Named for what it actually is.
+      'score_band': _bandFor(summary.score),
+    },
     'coached_by_ai': summary.usedAi,
-    // Not PRD §9's success/partial/unresolved/escalated — the simulation has
-    // no outcome model yet. Named for what it actually is.
-    'score_band': _bandFor(summary.score),
   };
 
   static String _bandFor(int score) => switch (score) {

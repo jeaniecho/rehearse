@@ -37,6 +37,9 @@ Future<SilentHaptics> pump(
           child: ResultsScreen(
             scenario: _scenario,
             summary: _summary(),
+            // Free-form: guided rehearsals are not scored, so there is no
+            // number for this file to watch.
+            mode: PracticeMode.freestyle,
             haptics: haptics,
           ),
         ),

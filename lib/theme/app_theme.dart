@@ -62,7 +62,14 @@ abstract final class AppColors {
   /// because a cool grey on charcoal is the tell the whole palette avoids.
   static const onCharcoalMuted = Color(0xFFC6BEB4);
 
-  /// Success, and the surface for whatever comes next.
+  /// Success, selection, and Pro.
+  ///
+  /// It was "the surface for whatever comes next" — home's card for the
+  /// recommended conversation — and it is now home's card for Pro instead.
+  /// A colour that means *well done* was being asked to mean *do this*,
+  /// while the offer under it had to make its case in white. The streak
+  /// chip, a chosen option, a strong line in a transcript, the medal on a
+  /// Pro account and that card are all the same statement.
   ///
   /// Rebuilt when the page went warm. It was `#E3F5EB` — hue 147, saturation
   /// 47, lightness 92.5 — which made it the one cool surface in a palette
@@ -78,6 +85,12 @@ abstract final class AppColors {
   /// a highlighter. [forest] on it is 5.93:1; [muted] is 4.31 and therefore
   /// out, the same rule as [subtle].
   static const mint = Color(0xFFDCECDF);
+
+  /// The cut edge of [mint] stock, what [border] is to [surface]. Same hue
+  /// and saturation, eleven points of lightness below it, which lands at
+  /// 1.26:1 against the fill — the ratio [border] holds against white and
+  /// [butterEdge] against [butter], so all three edges read at one weight.
+  static const mintEdge = Color(0xFFB6D8BD);
   static const peach = Color(0xFFFDECE0);
   static const butter = Color(0xFFFBF7A8);
   static const butterEdge = Color(0xFFE6DF6A);
@@ -213,6 +226,11 @@ abstract final class AppTheme {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         systemOverlayStyle: overlayStyle,
+        // Below Material's 56. Every bar in this app carries a back arrow, a
+        // short title and at most one action, on screens whose own headline
+        // is the thing to read — so the bar is a place to leave from, not a
+        // band of chrome to look at.
+        toolbarHeight: 48,
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,

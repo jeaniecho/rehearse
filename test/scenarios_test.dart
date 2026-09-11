@@ -35,15 +35,25 @@ void main() {
     );
   });
 
-  test('the free scenarios are the gentlest in the library', () {
-    // Someone meets the product through these two, so neither should be a
-    // high-stakes conversation opened cold.
-    for (final id in Subscription.freeScenarioIds) {
-      final scenario = scenarios.firstWhere((s) => s.id == id);
+  test('the free tier is the first conversation of every tier', () {
+    // The library draws each tier as a row whose first tile is therefore
+    // one a free account can open, which is a claim about this set — so the
+    // set is checked rather than trusted.
+    for (final stakes in ScenarioStakes.values) {
+      final tier = scenarios.where((s) => s.stakes == stakes).toList();
+      final free = tier
+          .where((s) => Subscription.freeScenarioIds.contains(s.id))
+          .toList();
+
       expect(
-        scenario.stakes,
-        ScenarioStakes.warmUp,
-        reason: '$id is the wrong weight for a first impression',
+        free.length,
+        1,
+        reason: '${stakes.name} should have exactly one free conversation',
+      );
+      expect(
+        free.single.id,
+        tier.first.id,
+        reason: 'the free ${stakes.name} conversation is not the first one',
       );
     }
   });

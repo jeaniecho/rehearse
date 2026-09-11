@@ -43,10 +43,10 @@ Fired today, in funnel order.
 | `simulation_started` | the conversation screen mounts | `difficulty`, `is_retry` |
 | `retry_started` | as above, when `is_retry` | |
 | `simulation_message_sent` | one manager turn is committed | `turn_index`, `response_length`, `coach` |
-| `simulation_completed` | the conversation ends — the turns run out, or the simulation declares it resolved or broken down (PRD §9) | `turn_count`, `simulation_duration_seconds`, the four dimension scores, `score_band`, `outcome` |
+| `simulation_completed` | the conversation ends — the turns run out, or the simulation declares it resolved or broken down (PRD §9) | `turn_count`, `simulation_duration_seconds`, `outcome`, and — free-form only — the four dimension scores and `score_band` |
 | `retry_completed` | as above, when `is_retry` | |
 | `simulation_abandoned` | the screen is left before the report | `turn_reached`, `simulation_duration_seconds` |
-| `evaluation_viewed` | the coaching report is shown | scores, `score_band` |
+| `evaluation_viewed` | the coaching report is shown | `mode`, and — free-form only — scores and `score_band` |
 | `paywall_viewed` | the paywall opens | `trigger`, `paywall_id`, `plan_count` |
 | `paywall_dismissed` | it is closed without buying | `trigger`, `paywall_id` |
 | `purchase_completed` | a purchase clears | `package_id`, `paywall_id` |
@@ -81,6 +81,16 @@ never fires is worse than a missing one — it looks like a measured zero.
   funnel that only had the band could not tell a manager who handled it well
   and still lost the room from one who did neither. This note used to say the
   simulation had no outcome model; it does now.
+- **A guided rehearsal reports no score.** `overall_score`, the four
+  dimensions and `score_band` are absent from `simulation_completed`,
+  `retry_completed` and `evaluation_viewed` when `mode` is `guided`. Guided
+  mode offers three written answers and says which one landed, so what it
+  measures is recognition rather than the words someone would have used; the
+  app stores no score for it and the report shows none, and an event carrying
+  one would be the only place the figure survived — averaged, in every
+  funnel, with free-form scores that measured something else. `mode` is on
+  all three events, so the absence reads as a mode rather than as a gap. See
+  `PracticeRecord` and `STATUS.md`.
 - **`scenario_skill`, not `scenario_category`.** Scenarios carry a skill, not
   a category.
 - **`scenario_stakes` and `difficulty` are separate.** The first is how heavy

@@ -179,8 +179,8 @@ Once steps 2–5 are done:
 
 1. Run on a real device with a sandbox account signed in. Simulators cannot
    complete StoreKit purchases.
-2. Open one of the two free conversations and finish it. Do it again. The
-   free tier is unlimited within those two, so no paywall should appear.
+2. Open one of the three free conversations and finish it. Do it again. The
+   free tier is unlimited within those three, so no paywall should appear.
 3. Open a locked one — the home tiles say **Pro** — and tap start. The
    paywall should appear then, not on opening the briefing.
 4. Check that real store prices appear. Placeholder prices mean the offering

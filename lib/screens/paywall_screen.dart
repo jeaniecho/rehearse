@@ -262,8 +262,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
     if (offer.callToAction case final remote?) return remote;
     if (plan?.hasTrial ?? false) return 'Start my free trial';
     // Not "unlimited practice" — the free tier already has that, within its
-    // two conversations. What Pro sells is the rest of the library.
-    return 'Unlock every conversation';
+    // three conversations. What Pro sells is the rest of the library.
+    return 'Unlock all conversations';
   }
 }
 
@@ -311,7 +311,7 @@ class _Header extends StatelessWidget {
 /// Every row here is checked against `Subscription.isLocked`, which is the
 /// only gate the app actually has: Pro opens the rest of the library and
 /// changes nothing else. Rehearsals, coaching and history are not gated —
-/// the free tier repeats its two conversations without limit — so they are
+/// the free tier repeats its three conversations without limit — so they are
 /// ticked in both columns rather than crossed out of the free one.
 ///
 /// That makes for a table with one differing row, which is the honest

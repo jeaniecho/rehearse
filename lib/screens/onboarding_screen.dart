@@ -101,7 +101,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               child: Row(
                 children: [
-                  const Flexible(child: BrandMark()),
+                  const BrandMark(),
                   const Spacer(),
                   if (!_isLast)
                     TextButton(

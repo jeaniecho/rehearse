@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rehearse/app.dart';
 import 'package:rehearse/data/scenarios.dart';
 import 'package:rehearse/models/practice_response.dart';
+import 'package:rehearse/screens/brief_screen.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
 import 'package:rehearse/services/practice_history.dart';
@@ -14,7 +15,7 @@ import 'package:rehearse/theme/app_theme.dart';
 import 'package:rehearse/widgets/brand_mark.dart';
 
 void main() {
-  testWidgets('completes the recommended practice and shows coaching', (
+  testWidgets('completes a practice end to end and shows coaching', (
     tester,
   ) async {
     final history = PracticeHistory(store: InMemoryHistoryStore());
@@ -34,10 +35,23 @@ void main() {
 
     expect(find.text('Say the hard thing.\nBetter.'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('start_recommended')));
+    // Opened from the library rather than from the card for what is next,
+    // because every assertion below — the choices, the score, the line the
+    // report closes on — is authored for this one scenario, and what home
+    // recommends is a separate question answered in `progress_test.dart`.
+    final tile = find.byKey(Key('scenario_${scenarios.first.id}'));
+    // The page, not one of the rails — `Scrollable` matches both — and a
+    // little further than "visible", because the nav capsule floats over the
+    // last inch of the list and would take the tap.
+    final page = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(tile, 200, scrollable: page);
+    await tester.drag(page, const Offset(0, -180));
+    await tester.pumpAndSettle();
+    await tester.tap(tile);
     await tester.pumpAndSettle();
 
-    expect(find.text('Scenario briefing'), findsOneWidget);
+    // The bar carries no title — the page's heading is the scenario.
+    expect(find.byType(BriefScreen), findsOneWidget);
     expect(find.text('Jordan Lee'), findsOneWidget);
 
     await tester.fling(
@@ -68,13 +82,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('COACHING REPORT'), findsOneWidget);
-    expect(find.text('88'), findsOneWidget);
     expect(find.text('You held the line with care.'), findsOneWidget);
+    // Guided: the notes are the report, and there is no number on it.
+    expect(find.byKey(const Key('final_score')), findsNothing);
+    expect(find.text('Your skill breakdown'), findsNothing);
 
+    // The rehearsal is kept — it holds the streak and shows in the history
+    // — but a guided one is not scored, so the report's 88 is not written
+    // down. See `PracticeRecord`.
     expect(history.records, hasLength(1));
     expect(history.records.single.scenarioId, scenarios.first.id);
-    expect(history.records.single.score, 88);
     expect(history.records.single.mode, PracticeMode.guided);
+    expect(history.records.single.score, isNull);
+    expect(history.bestScoreFor(scenarios.first.id), isNull);
 
     // Nothing is configured in a test build, so the whole library is open.
     expect(subscription.isConfigured, isFalse);
@@ -318,7 +338,9 @@ void main() {
 
     final header = find.byType(BrandMark);
     final anchored = tester.getTopLeft(header);
-    final listTop = tester.getTopLeft(find.text('Conversations')).dy;
+    // The first rail's label — home's own headline scrolls, and the tier
+    // labels are the only fixed text in the list now.
+    final listTop = tester.getTopLeft(find.text('WARM-UP')).dy;
 
     // The page list, not one of the horizontal rails inside it — the body
     // runs the full height now, so a rail is built where none used to be.
@@ -326,7 +348,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // The list really moved, so the header holding still means something.
-    expect(tester.getTopLeft(find.text('Conversations')).dy, lessThan(listTop));
+    expect(tester.getTopLeft(find.text('WARM-UP')).dy, lessThan(listTop));
     expect(header, findsOneWidget);
     expect(tester.getTopLeft(header), anchored);
   });

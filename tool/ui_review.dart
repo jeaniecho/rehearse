@@ -270,6 +270,22 @@ void main() {
     );
   });
 
+  // The same report without a score, which is what a guided rehearsal gets.
+  testWidgets('results — guided', (t) async {
+    await shoot(
+      t,
+      '11b-results-guided',
+      ResultsScreen(
+        scenario: _free,
+        haptics: SilentHaptics(),
+        summary: PracticeSummary.fromResponses([
+          for (final turn in _free.turns)
+            PracticeResponse.fromChoice(turn.choices.first, turn),
+        ]),
+      ),
+    );
+  });
+
   testWidgets('onboarding', (t) async {
     await shoot(t, '12-onboarding', const OnboardingScreen());
   });

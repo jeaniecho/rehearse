@@ -33,8 +33,10 @@ class Illustration extends StatelessWidget {
   /// The home grid.
   static const tileSize = 56.0;
 
-  /// The home card for whatever is next.
-  static const spotSize = 88.0;
+  /// The home card for whatever is next. It was 88, which set the height of
+  /// that card's top row on its own while the three lines of type beside it
+  /// needed two thirds of that — the card was sized by its decoration.
+  static const spotSize = 72.0;
 
   /// The rehearsal room: the mark holds the empty space above the opening
   /// line until the conversation fills it. The largest a scenario mark is
@@ -45,9 +47,14 @@ class Illustration extends StatelessWidget {
   static const heroSize = 120.0;
 
   /// The logo's frame is square but its artwork is wider than it is tall, so
-  /// it is set larger than the 34pt chip it replaced to land at the same
-  /// weight beside the wordmark.
-  static const logoSize = 44.0;
+  /// it is set larger than the 34pt chip it replaced to land at the weight a
+  /// header needs. It grew again when the wordmark came off [BrandMark]: the
+  /// mark carries the name alone now, and at 44 it read as an afterthought
+  /// in the corner of the page.
+  ///
+  /// This is a cut size — `tool/generate_illustrations.dart` has to run
+  /// after it changes, or the bundled PNG is the old one upscaled.
+  static const logoSize = 52.0;
 
   static const directory = 'assets/illustrations';
 

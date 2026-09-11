@@ -27,7 +27,10 @@ class ProfileButton extends StatelessWidget {
       button: true,
       label: isPro ? 'You, Rehearse Pro' : 'You',
       child: Material(
-        color: isPro ? AppColors.mint : AppColors.subtle,
+        // Unfilled unless it is carrying the medal. A grey disc at one end
+        // of the header outweighed the logo at the other, which is backwards
+        // — the way to a settings screen is not the heaviest thing on home.
+        color: isPro ? AppColors.mint : Colors.transparent,
         shape: const CircleBorder(),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -42,8 +45,8 @@ class ProfileButton extends StatelessWidget {
             height: _size,
             child: Icon(
               isPro ? Icons.workspace_premium_rounded : Icons.person_rounded,
-              size: 20,
-              color: isPro ? AppColors.forest : AppColors.muted,
+              size: isPro ? 20 : 23,
+              color: isPro ? AppColors.forest : AppColors.charcoal,
             ),
           ),
         ),

@@ -334,12 +334,14 @@ void main() {
 
       await pump(
         tester,
-        BriefScreen(scenario: scenarios.first),
+        BriefScreen(scenario: _lockedScenario),
         subscription: subscription,
       );
 
-      expect(find.text('The slipping deadline'), findsOneWidget);
-      expect(find.text('Jordan Lee'), findsOneWidget);
+      // Read off the scenario rather than written out, because which one is
+      // locked follows the free tier — see `_lockedScenario`.
+      expect(find.text(_lockedScenario.title), findsOneWidget);
+      expect(find.text(_lockedScenario.personName), findsOneWidget);
       expect(find.byKey(const Key('begin_simulation')), findsOneWidget);
     });
 
@@ -351,7 +353,7 @@ void main() {
 
       await pump(
         tester,
-        BriefScreen(scenario: scenarios.first),
+        BriefScreen(scenario: _lockedScenario),
         subscription: subscription,
       );
       await tester.tap(find.byKey(const Key('begin_simulation')));
@@ -369,7 +371,7 @@ void main() {
 
       await pump(
         tester,
-        BriefScreen(scenario: scenarios.first),
+        BriefScreen(scenario: _lockedScenario),
         subscription: subscription,
       );
       await tester.tap(find.byKey(const Key('begin_simulation')));
@@ -378,7 +380,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PracticeScreen), findsNothing);
-      expect(find.text('Scenario briefing'), findsOneWidget);
+      expect(find.byType(BriefScreen), findsOneWidget);
     });
 
     testWidgets('buying Pro drops you straight into the rehearsal', (
@@ -389,7 +391,7 @@ void main() {
 
       await pump(
         tester,
-        BriefScreen(scenario: scenarios.first),
+        BriefScreen(scenario: _lockedScenario),
         subscription: subscription,
       );
       await tester.tap(find.byKey(const Key('begin_simulation')));
@@ -440,7 +442,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key(r'plan_$rc_monthly')));
       await tester.pumpAndSettle();
-      expect(find.text('Unlock every conversation'), findsOneWidget);
+      expect(find.text('Unlock all conversations'), findsOneWidget);
     });
 
     // Apple 3.1.2: an auto-renewing subscription has to link both documents
@@ -575,17 +577,14 @@ void main() {
       expect(find.textContaining('not been charged'), findsOneWidget);
     });
 
-    testWidgets('home says what the free tier includes', (tester) async {
+    testWidgets('home offers Pro without shouting it', (tester) async {
       final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(tester, const HomeScreen(), subscription: subscription);
 
-      expect(find.byKey(const Key('free_allowance')), findsOneWidget);
-      expect(
-        find.text('2 conversations free, unlimited reps. The rest with Pro.'),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('pro_upsell')), findsOneWidget);
+      expect(find.text('Unlock all conversations'), findsOneWidget);
       expect(find.text('PRO'), findsNothing);
     });
 
@@ -612,10 +611,20 @@ void main() {
     ) async {
       final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
+      // The mark is a padlock now, so what is asserted is the label it
+      // carries for anyone who cannot see one. The handle is disposed here
+      // rather than in a tear-down: the framework checks for live handles
+      // before tear-downs run.
+      final semantics = tester.ensureSemantics();
 
       await pump(tester, const HomeScreen(), subscription: subscription);
 
-      expect(find.text('Pro'), findsWidgets);
+      expect(find.byIcon(Icons.lock_rounded), findsWidgets);
+      // The tile merges its own label with the chip's, so the assertion is
+      // that the word is in there, not that it stands alone.
+      expect(find.bySemanticsLabel(RegExp(r'\bPro\b')), findsWidgets);
+
+      semantics.dispose();
     });
 
     testWidgets('home shows Pro and drops the free line once subscribed', (
@@ -629,7 +638,7 @@ void main() {
       // Pro is worn on the profile button rather than announced beside the
       // wordmark, so the medal is the assertion.
       expect(find.byIcon(Icons.workspace_premium_rounded), findsOneWidget);
-      expect(find.byKey(const Key('free_allowance')), findsNothing);
+      expect(find.byKey(const Key('pro_upsell')), findsNothing);
     });
 
     testWidgets('home says nothing about plans in an unconfigured build', (
@@ -640,7 +649,7 @@ void main() {
 
       await pump(tester, const HomeScreen(), subscription: subscription);
 
-      expect(find.byKey(const Key('free_allowance')), findsNothing);
+      expect(find.byKey(const Key('pro_upsell')), findsNothing);
       expect(find.byIcon(Icons.workspace_premium_rounded), findsNothing);
     });
 
@@ -662,7 +671,13 @@ void main() {
       );
 
       expect(find.byKey(const Key('plan_card')), findsOneWidget);
-      expect(find.text('2 conversations, unlimited reps.'), findsOneWidget);
+      expect(
+        find.text(
+          '${Subscription.freeScenarioIds.length} conversations, '
+          'unlimited reps.',
+        ),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byKey(const Key('restore_from_settings')));
       await tester.pumpAndSettle();

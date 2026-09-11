@@ -154,16 +154,38 @@ void main() {
       expect(restored.confidence, record.confidence);
     });
 
-    test('falls back to neutral scores for missing fields', () {
+    test('a record with no scores in it reads as unscored', () {
       final record = PracticeRecord.tryFromJson({
         'scenarioId': 'say-no',
         'completedAt': '2026-09-01T12:00:00.000',
       });
 
+      // Null, not a neutral 50: an invented number would be averaged in as
+      // though something had measured it.
       expect(record, isNotNull);
-      expect(record!.score, 50);
+      expect(record!.score, isNull);
       expect(record.mode, PracticeMode.guided);
       expect(record.usedAi, isFalse);
+    });
+
+    test('a stored guided rehearsal comes back without its score', () {
+      // Written by a build that scored guided sessions. The rule is applied
+      // on the way in rather than migrated, so history reads one way.
+      final record = PracticeRecord.tryFromJson({
+        'scenarioId': 'say-no',
+        'completedAt': '2026-09-01T12:00:00.000',
+        'mode': 'guided',
+        'score': 88,
+        'clarity': 90,
+        'empathy': 86,
+        'directness': 88,
+        'usedAi': false,
+      });
+
+      expect(record, isNotNull);
+      expect(record!.score, isNull);
+      expect(record.clarity, isNull);
+      expect(record.toJson().containsKey('score'), isFalse);
     });
   });
 

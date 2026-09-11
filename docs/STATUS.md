@@ -70,9 +70,10 @@ real model — and the **release checklist**.
   paywall, purchase, restore (on the paywall and the progress screen), live
   entitlement refresh, and correct handling of cancelled purchases and
   unavailable offerings.
-- **Free tier**: two conversations — `delegation` and `peer-conflict` —
-  rehearsed without limit; the other ten need Pro. A content gate, so it
-  holds no state and a reinstall resets nothing. See §5.
+- **Free tier**: the first conversation of each tier of stakes —
+  `peer-conflict`, `missed-deadlines` and `say-no` — rehearsed without limit;
+  the other nine need Pro. A content gate, so it holds no state and a
+  reinstall resets nothing. See §5.
 - **Contextual paywall** that opens on the weakest skill the person's own
   history shows, with copy overridable from offering metadata. It is reached
   by trying to start a locked conversation — reading its briefing is free.
@@ -281,12 +282,26 @@ conditions was named here as the best-justified thing to build after
 submission, and it has now been built; what is left of that list is dark
 theme and 4–7 turn conversations, neither of which the PRD calls required.
 
-**The free tier is two conversations, not three rehearsals — changed
-2026-09-11.** PRD §13's suggested free tier is "3 free completed simulations
-total", and §25 lists "free sessions used" among what MVP may persist. The
-app no longer counts. `Subscription.freeScenarioIds` names two warm-up
-scenarios that a free account can rehearse without limit; the other ten need
-Pro.
+**Guided rehearsals are not scored — changed 2026-09-11.** PRD §10 describes
+one rubric over both modes, and §25 lists a score on every stored session.
+The app now stores a guided session with no score at all: it counts as
+practice and holds the streak, but it is out of the average, the trend, the
+skill bars and a tile's best score. Guided mode shows three written answers
+and says which landed, so what it measures is recognition rather than the
+words someone would have chosen, and mixing the two made the average a number
+about neither. The coaching report shows none either — no number and no
+skill bars, just the outcome, the headline and the authored notes. See
+`PracticeRecord`.
+
+**The free tier is a set of conversations, not a count of rehearsals —
+changed 2026-09-11.** PRD §13's suggested free tier is "3 free completed
+simulations total", and §25 lists "free sessions used" among what MVP may
+persist. The app no longer counts. `Subscription.freeScenarioIds` names three
+scenarios that a free account can rehearse without limit; the other nine need
+Pro. It named two warm-ups until 2026-09-11, then three, and now the first
+conversation of each tier of stakes — a slice down the ramp rather than the
+bottom of it, so nothing about the free tier hides how hard the library gets.
+`scenarios_test.dart` holds that rule, and home's Pro card states it.
 
 The reason is that a count is state, and state on the device is back at zero
 after a delete and reinstall — reliably on iOS, where the app container goes
@@ -726,7 +741,7 @@ Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter, sentry_flutter,
                    url_launcher
-Tests            : 434 Flutter + 31 server
+Tests            : 436 Flutter + 31 server
 TODO/FIXME       : none
 ```
 

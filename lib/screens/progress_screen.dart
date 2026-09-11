@@ -8,9 +8,11 @@ import '../models/practice_summary.dart';
 import '../services/practice_history.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/profile_button.dart';
+import '../widgets/score_chip.dart';
 import '../widgets/score_display.dart';
 
 /// Everything the rehearsal history knows about you: how consistently you
@@ -58,39 +60,34 @@ class ProgressScreen extends StatelessWidget {
                   MediaQuery.paddingOf(context).bottom + 30,
                 ),
                 children: [
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   _StreakBanner(history: history),
-                  const SizedBox(height: 20),
-                  _SkillTrends(history: history),
-                  const SizedBox(height: 30),
-                  Text(
-                    'Session history',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  // Nothing to chart while every rehearsal so far was
+                  // guided: the bars would be four empty tracks under a
+                  // sentence about a pattern.
+                  if (history.averageSkills.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _SkillTrends(history: history),
+                  ],
+                  const SizedBox(height: 32),
+                  // An eyebrow, not a headline with a sentence under it. The
+                  // library labels its rows this way and this is the same
+                  // kind of thing — a list that needs naming, not a section
+                  // that needs introducing. The count it used to carry is
+                  // the list itself, and "newest first" is what a history
+                  // is.
+                  const Padding(
+                    // Inset to the cards' own content, the way the library's
+                    // row labels are — the label lines up with what it names
+                    // rather than with the paper it is printed on.
+                    padding: EdgeInsets.only(left: 14),
+                    child: Eyebrow('SESSION HISTORY', color: AppColors.muted),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    // Not "on this device" — the line under the list already
-                    // says that, and saying it twice was half of why this
-                    // section read as stacked.
-                    '${records.length} ${records.length == 1 ? 'rehearsal' : 'rehearsals'}, newest first.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   for (final record in records) ...[
                     _SessionTile(record: record),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                   ],
-                  const SizedBox(height: 18),
-                  const Center(
-                    child: Text(
-                      'Your history never leaves this device.',
-                      style: TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                 ],
               ),
       ),
@@ -155,10 +152,10 @@ class _StreakBanner extends StatelessWidget {
     final trend = history.scoreTrend();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
         color: AppColors.forest,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
       ),
       // One card, one claim, then the numbers under a rule. The ring used to
       // sit here at 92pt and repeat the average score the row already gave,
@@ -187,24 +184,27 @@ class _StreakBanner extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Container(height: 1, color: Colors.white.withValues(alpha: 0.14)),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _BannerStat(
-                value: '${history.averageScore}',
-                label: 'average score',
-              ),
+              if (history.averageScore case final average?)
+                _BannerStat(value: '$average', label: 'average score'),
               _BannerStat(
                 value: '${history.sessionsThisWeek}',
                 label: 'this week',
               ),
-              _BannerStat(
-                value: trend == null ? '—' : '${trend > 0 ? '+' : ''}$trend',
-                label: trend == null ? 'trend soon' : 'recent trend',
-              ),
+              // A third of the row said "—" over "trend soon" until there
+              // were two weeks to compare, which is a placeholder wearing
+              // the clothes of a number. The row is two stats until the
+              // third one exists.
+              if (trend case final trend?)
+                _BannerStat(
+                  value: '${trend > 0 ? '+' : ''}$trend',
+                  label: 'recent trend',
+                ),
             ],
           ),
         ],
@@ -268,7 +268,7 @@ class _SkillTrends extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -283,8 +283,8 @@ class _SkillTrends extends StatelessWidget {
                   : claims.join(' '),
               style: const TextStyle(color: AppColors.muted, fontSize: 13),
             ),
-            const SizedBox(height: 20),
-            SkillBars(values: skills, spacing: 18),
+            const SizedBox(height: 16),
+            SkillBars(values: skills, spacing: 14),
           ],
         ),
       ),
@@ -353,30 +353,9 @@ class _SessionTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Semantics(
-            label: 'Scored ${record.score} out of 100',
-            excludeSemantics: true,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(
-                // Not [AppColors.canvas], which is the tile's own white: a
-                // score under 68 used to lose its pill entirely, so half the
-                // list was chips and half was loose numerals.
-                color: record.score >= 68 ? AppColors.mint : AppColors.subtle,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                '${record.score}',
-                style: TextStyle(
-                  color: record.score >= 68
-                      ? AppColors.forest
-                      : AppColors.charcoal,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ),
+          // Guided rehearsals are not scored, so the row ends after its
+          // meta line — which already says which mode it was.
+          if (record.score case final score?) ScoreChip(score),
         ],
       ),
     );

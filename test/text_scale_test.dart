@@ -81,6 +81,17 @@ void main() {
     group('at ${textScale}x text', () {
       testWidgets('home', (tester) async {
         await layOut(tester, const HomeScreen(), textScale: textScale);
+
+        // Scrolled to the end, because the rails are the part of this screen
+        // whose height is a formula rather than a layout, and a ListView
+        // does not build what is far below the fold. A tile that outgrows
+        // its rail overflows, which is this file's whole assertion.
+        await tester.fling(
+          find.byType(ListView).first,
+          const Offset(0, -3000),
+          3000,
+        );
+        await tester.pumpAndSettle();
       });
 
       testWidgets('onboarding', (tester) async {

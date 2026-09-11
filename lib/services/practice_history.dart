@@ -133,50 +133,55 @@ class PracticeHistory extends ChangeNotifier {
         .length;
   }
 
-  int get averageScore => _average(_records.map((record) => record.score));
-
-  int get averageClarity => _average(_records.map((record) => record.clarity));
-
-  int get averageEmpathy => _average(_records.map((record) => record.empathy));
-
-  int get averageDirectness =>
-      _average(_records.map((record) => record.directness));
-
-  /// Null until at least one rehearsal was scored on it — older records
-  /// predate the dimension and must not be counted as a neutral 50.
-  int? get averageConfidence {
-    final scored = [for (final record in _records) ?record.confidence];
+  /// Every dimension is an average over the rehearsals that have one.
+  ///
+  /// A guided rehearsal has none — see [PracticeRecord] — and neither do the
+  /// records written before the rubric gained confidence. Both are left out
+  /// rather than counted as a neutral 50, so a week of guided practice
+  /// cannot drag an average it never measured.
+  int? _averageOf(int? Function(PracticeRecord) dimension) {
+    final scored = [for (final record in _records) ?dimension(record)];
     return scored.isEmpty ? null : _average(scored);
   }
 
-  /// Every dimension there is data for, in report order.
+  /// Null until something has been scored at all.
+  int? get averageScore => _averageOf((record) => record.score);
+
+  int? get averageClarity => _averageOf((record) => record.clarity);
+
+  int? get averageEmpathy => _averageOf((record) => record.empathy);
+
+  int? get averageDirectness => _averageOf((record) => record.directness);
+
+  int? get averageConfidence => _averageOf((record) => record.confidence);
+
+  /// Every dimension there is data for, in report order. Empty while nothing
+  /// has been scored.
   Map<PracticeSkill, int> get averageSkills => {
-    PracticeSkill.clarity: averageClarity,
-    PracticeSkill.empathy: averageEmpathy,
-    PracticeSkill.directness: averageDirectness,
+    PracticeSkill.clarity: ?averageClarity,
+    PracticeSkill.empathy: ?averageEmpathy,
+    PracticeSkill.directness: ?averageDirectness,
     PracticeSkill.confidence: ?averageConfidence,
   };
 
   /// The skill that has scored lowest across every rehearsal, or null while
-  /// the scores are still tied or there is no history to read.
+  /// the scores are still tied or there is nothing scored to read.
   PracticeSkill? get weakestSkill {
-    if (_records.isEmpty) return null;
     final averages = averageSkills;
+    if (averages.isEmpty) return null;
     final lowest = averages.values.reduce((a, b) => a < b ? a : b);
     if (lowest == averages.values.reduce((a, b) => a > b ? a : b)) return null;
     return averages.entries.firstWhere((entry) => entry.value == lowest).key;
   }
 
-  /// Change in average score between the most recent [window] sessions and
-  /// the [window] before them. Null until there is something to compare.
+  /// Change in average score between the most recent [window] scored
+  /// sessions and the [window] before them. Null until there is something to
+  /// compare — guided rehearsals are not in this line at all.
   int? scoreTrend({int window = 3}) {
-    if (_records.length < window * 2) return null;
-    final recent = _average(
-      _records.take(window).map((record) => record.score),
-    );
-    final earlier = _average(
-      _records.skip(window).take(window).map((record) => record.score),
-    );
+    final scores = [for (final record in _records) ?record.score];
+    if (scores.length < window * 2) return null;
+    final recent = _average(scores.take(window));
+    final earlier = _average(scores.skip(window).take(window));
     return recent - earlier;
   }
 
@@ -186,7 +191,7 @@ class PracticeHistory extends ChangeNotifier {
   ];
 
   int? bestScoreFor(String scenarioId) {
-    final scores = recordsFor(scenarioId).map((record) => record.score);
+    final scores = [for (final record in recordsFor(scenarioId)) ?record.score];
     return scores.isEmpty ? null : scores.reduce((a, b) => a > b ? a : b);
   }
 

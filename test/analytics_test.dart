@@ -23,6 +23,12 @@ import 'package:rehearse/widgets/rehearse_scope.dart';
 /// may ever reach an analytics payload.
 const _secret = 'Jordan, the pangolin handoff on Thursday was the third one.';
 
+/// What home recommends to someone with no history — the first conversation
+/// of the gentlest tier. Two tests below walk in through that card.
+final _recommended = scenarios
+    .where((s) => s.stakes == ScenarioStakes.warmUp)
+    .first;
+
 void main() {
   final scenario = scenarios.first;
 
@@ -123,7 +129,8 @@ void main() {
       ]) {
         analytics.evaluationViewed(
           scenario,
-          mode: PracticeMode.guided,
+          // Free-form: a guided rehearsal reports no numbers at all.
+          mode: PracticeMode.freestyle,
           summary: PracticeSummary(
             score: score,
             outcome: SessionOutcome.success,
@@ -136,6 +143,32 @@ void main() {
         );
         expect(sink.last.properties['score_band'], band);
       }
+    });
+
+    test('a guided rehearsal reports no score at all', () {
+      // It is not scored, nothing is stored for it and the report shows no
+      // number — an event carrying one would be the only place the figure
+      // survived, and it would be averaged in with free-form scores.
+      analytics.evaluationViewed(
+        scenario,
+        mode: PracticeMode.guided,
+        summary: const PracticeSummary(
+          score: 88,
+          outcome: SessionOutcome.success,
+          clarity: 88,
+          empathy: 88,
+          directness: 88,
+          confidence: 88,
+          usedAi: false,
+        ),
+      );
+
+      final event = sink.eventNamed('evaluation_viewed');
+      expect(event['mode'], 'guided');
+      expect(event.containsKey('overall_score'), isFalse);
+      expect(event.containsKey('score_band'), isFalse);
+      expect(event.containsKey('clarity'), isFalse);
+      expect(event['coached_by_ai'], isFalse);
     });
 
     test('a purchase with a trial emits both steps', () {
@@ -280,7 +313,10 @@ void main() {
 
       final abandoned = sink.eventNamed('simulation_abandoned');
       expect(abandoned['turn_reached'], 2);
-      expect(abandoned['scenario_id'], 'missed-deadlines');
+      // Whatever home put on its card — a fresh history recommends the foot
+      // of the ramp, and which conversation that is belongs to
+      // `progress_test.dart`, not here. The assertion is the turn.
+      expect(abandoned['scenario_id'], _recommended.id);
       expect(sink.names, isNot(contains('simulation_completed')));
       expect(sink.names, isNot(contains('evaluation_viewed')));
     });

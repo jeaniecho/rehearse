@@ -12,6 +12,7 @@ import '../widgets/brand_mark.dart';
 import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
+import '../widgets/score_chip.dart';
 import '../widgets/profile_button.dart';
 import '../widgets/subscription_scope.dart';
 import 'brief_screen.dart';
@@ -30,18 +31,33 @@ const _gutter = EdgeInsets.symmetric(horizontal: 20);
 const _railGutter = EdgeInsets.fromLTRB(20, 6, 20, 16);
 const _railShadowRoom = 22.0;
 
+/// The mark on a library tile.
+///
+/// Bigger than the 56 it was. The tiles carry a title and nothing else since
+/// the footer moved into a chip, and at 56 — a third of the card's width,
+/// with the mark's own transparent margin inside that — the drawing read as
+/// an icon stranded in a large white card. The masters are cut at
+/// `Illustration.stageSize`, so this costs nothing to draw.
+const _tileMark = 72.0;
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   /// What to put in front of someone next: whatever they have rehearsed
-  /// least, keeping the authored order as the tie-break so a fresh install
-  /// still opens on the warm-up.
+  /// least, the gentler of two that are equally unrehearsed, and the
+  /// authored order after that.
   ///
   /// [subscription] narrows the field to what this person can actually
   /// start. The primary call to action on first run must not lead straight
   /// into a paywall — someone should meet the product before they meet the
   /// price — so a free account is recommended a free conversation. Locked
   /// ones are still reachable from the library below.
+  ///
+  /// Stakes are the tie-break because a fresh install has none of anything
+  /// and would otherwise open on whichever conversation happens to be
+  /// written first — which, since the free tier became the first of each
+  /// tier, is a challenging one. The library is drawn as a ramp; the first
+  /// thing recommended should be the foot of it.
   static Scenario recommendedScenario(
     PracticeHistory history, {
     Subscription? subscription,
@@ -58,7 +74,9 @@ class HomeScreen extends StatelessWidget {
 
     for (final scenario in candidates.skip(1)) {
       final reps = history.recordsFor(scenario.id).length;
-      if (reps < fewest) {
+      final gentler =
+          reps == fewest && scenario.stakes.index < best.stakes.index;
+      if (reps < fewest || gentler) {
         best = scenario;
         fewest = reps;
       }
@@ -97,16 +115,19 @@ class HomeScreen extends StatelessWidget {
                 // Space below the header, not above the list: the list's own
                 // padding scrolls away, and without this the first line of
                 // whatever is passing underneath is sliced against the logo.
-                12,
+                8,
               ),
               child: Row(
                 children: [
-                  // `Expanded`, not `Flexible` beside a `Spacer` — a spacer
-                  // is a flex child too, so it was claiming half the row and
-                  // truncating the app's own name to "rehear…" at a large
-                  // text scale. The wordmark takes whatever the button
-                  // leaves and aligns itself left.
-                  const Expanded(child: BrandMark()),
+                  const BrandMark(),
+                  const Spacer(),
+                  // The streak is status, not news: it belongs in the bar
+                  // with the other standing thing rather than on a row of
+                  // its own above a headline it is not part of.
+                  if (history.streakDays > 0) ...[
+                    _StreakChip(days: history.streakDays),
+                    const SizedBox(width: 8),
+                  ],
                   // Pro is worn on the button itself, so the eyebrow that
                   // used to sit here would now say it twice.
                   const ProfileButton(),
@@ -132,21 +153,19 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (history.streakDays > 0) ...[
-                          _StreakChip(days: history.streakDays),
-                          const SizedBox(height: 14),
-                        ],
                         Text(
                           headline,
                           style: Theme.of(context).textTheme.displayLarge,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          body,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: AppColors.muted),
-                        ),
-                        const SizedBox(height: 20),
+                        if (body case final body?) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            body,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: AppColors.muted),
+                          ),
+                        ],
+                        const SizedBox(height: 24),
                         _NextUp(
                           scenario: recommended,
                           isFirst: history.isEmpty,
@@ -154,30 +173,32 @@ class HomeScreen extends StatelessWidget {
                           onTap: () => _openScenario(context, recommended),
                         ),
                         if (subscription?.showsLocks ?? false) ...[
-                          const SizedBox(height: 14),
-                          const _FreeAllowance(),
+                          const SizedBox(height: 16),
+                          const _ProUpsell(),
                         ],
-                        const SizedBox(height: 34),
-                        Text(
-                          'Conversations',
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  // The rails label themselves. A "Conversations" heading
+                  // over the first of them was a second level of labelling
+                  // with nothing between the two, and the library is what
+                  // the rest of this page is — it does not need announcing.
+                  const SizedBox(height: 32),
                   // Grouped by what the situation is carrying, in order, so
                   // the library reads as a ramp rather than seven of the
                   // same thing. Skill would not group: all seven differ.
                   //
-                  // The featured one is left out rather than repeated. On a
-                  // phone the card and the grid are on screen together, and
-                  // the same scenario twice reads as a mistake.
+                  // The featured one is listed here as well. It was held out
+                  // of the rails while the card above was the only way to
+                  // reach it — the same scenario twice looked like a mistake
+                  // — but the gap it left was worse: the warm-up rail was
+                  // short by one for no reason a reader could see, and the
+                  // library stopped being the whole library. The card is a
+                  // recommendation, not a place.
                   for (final stakes in ScenarioStakes.values) ...[
                     _StakesGroup(
                       stakes: stakes,
                       history: history,
-                      exclude: recommended,
                       subscription: subscription,
                       onOpen: (scenario) => _openScenario(context, scenario),
                     ),
@@ -192,8 +213,14 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// What the screen leads with, which depends only on whether the habit is
-  /// running. The streak itself is shown by the chip, not said twice here.
-  (String, String) _copy(PracticeHistory history) {
+  /// running. The streak itself is worn in the header, not said twice here.
+  ///
+  /// Only the first run gets two lines and a paragraph under them: it is the
+  /// one visit with nothing else to show, and the page has to say what the
+  /// app is for. Every other state is a line — the block was a third of the
+  /// screen before anything could be tapped, spent re-explaining a product
+  /// the person has already used.
+  (String, String?) _copy(PracticeHistory history) {
     if (history.isEmpty) {
       return (
         'Say the hard thing.\nBetter.',
@@ -202,26 +229,21 @@ class HomeScreen extends StatelessWidget {
       );
     }
     if (history.practicedToday) {
-      return (
-        'One more rep?\nGo again.',
-        'The second rehearsal is where the wording gets sharp. Nothing here '
-            'is graded twice.',
-      );
+      return ('One more rep?', 'Nothing here is graded twice.');
     }
     if (history.streakDays > 0) {
-      return (
-        'Keep the streak.\nOne conversation.',
-        'A few minutes today holds the habit together.',
-      );
+      return ('Keep the streak.', null);
     }
-    return (
-      'Ready for a\nharder one?',
-      'You have rehearsed before. Today is a chance to make the message land '
-          'faster.',
-    );
+    return ('Ready for\na harder one?', null);
   }
 }
 
+/// The streak, worn in the header.
+///
+/// The flame and the number, not "4 day streak" spelled out: the chip shares
+/// a row with the logo and the way into You, and at 1.3x text the sentence
+/// pushed the row twenty-seven points past the screen. The words are kept
+/// for screen readers, which have the room.
 class _StreakChip extends StatelessWidget {
   const _StreakChip({required this.days});
 
@@ -229,16 +251,17 @@ class _StreakChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
+    return Semantics(
+      label: days == 1 ? '1 day streak' : '$days day streak',
+      excludeSemantics: true,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: AppColors.mint,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
-          '🔥 $days day streak',
+          '🔥 $days',
           style: const TextStyle(
             color: AppColors.forest,
             fontSize: 13,
@@ -250,60 +273,68 @@ class _StreakChip extends StatelessWidget {
   }
 }
 
-/// A quiet statement of the shape of the free tier, so the paywall is never
-/// the moment someone first learns that part of the library is closed.
-class _FreeAllowance extends StatelessWidget {
-  const _FreeAllowance();
+/// The offer, made where someone can still ignore it.
+///
+/// One line of mint, and it used to be a card: mark, eyebrow, headline and
+/// two lines of body, at the size of the card for what to rehearse next and
+/// in the only colour on the page. So the eye landed on the upsell before it
+/// landed on the thing to do, and the library started below the fold. An
+/// upsell should be the quietest permanent thing on a screen.
+///
+/// What it stopped saying — which conversations are free — is said by the
+/// library itself: every locked tile carries a padlock, and the paywall this
+/// opens states the tier in full.
+class _ProUpsell extends StatelessWidget {
+  const _ProUpsell();
+
+  static const _radius = 14.0;
 
   @override
   Widget build(BuildContext context) {
-    final free = Subscription.freeScenarioIds.length;
-
-    final label = Text(
-      '$free conversations free, unlimited reps. The rest with Pro.',
-      style: const TextStyle(color: AppColors.muted, fontSize: 13),
-    );
-    final action = TextButton(
-      key: const Key('open_paywall'),
-      onPressed: () =>
-          PaywallScreen.show(context, trigger: PaywallTrigger.homeUpsell),
-      style: TextButton.styleFrom(
-        foregroundColor: AppColors.ink,
-        minimumSize: const Size(0, 36),
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        // `styleFrom` replaces the button's text style rather than
-        // merging into it, so a bare `TextStyle` here drops the family
-        // and this one button renders in the platform font. The filled
-        // and outlined button themes name it for the same reason.
-        textStyle: const TextStyle(
-          fontFamily: AppTheme.fontFamily,
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
+    return Material(
+      key: const Key('pro_upsell'),
+      color: AppColors.mint,
+      borderRadius: BorderRadius.circular(_radius),
+      child: InkWell(
+        key: const Key('open_paywall'),
+        onTap: () =>
+            PaywallScreen.show(context, trigger: PaywallTrigger.homeUpsell),
+        borderRadius: BorderRadius.circular(_radius),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+          decoration: BoxDecoration(
+            color: AppColors.mint,
+            borderRadius: BorderRadius.circular(_radius),
+            border: Border.all(color: AppColors.mintEdge),
+          ),
+          child: Row(
+            children: [
+              // Big enough to read as the drawing it is: at thirty, a mark
+              // cut for 120 went muddy on the tint.
+              Illustration.proUnlock(size: 36),
+              const SizedBox(width: 6),
+              const Expanded(
+                child: Text(
+                  'Unlock all conversations',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Icon(
+                Icons.arrow_forward_rounded,
+                size: 16,
+                color: AppColors.forest,
+              ),
+            ],
+          ),
         ),
       ),
-      child: const Text('Go Pro'),
-    );
-
-    // Beside the sentence at a normal size, under it once the type is big
-    // enough that the two would fight for the width. Side by side at 1.6x,
-    // the sentence wraps to three lines and the button floats against the
-    // middle of them, which reads as a mistake rather than a pairing.
-    final stacked = MediaQuery.textScalerOf(context).scale(13) > 17;
-
-    return Container(
-      key: const Key('free_allowance'),
-      alignment: stacked ? Alignment.centerLeft : null,
-      child: stacked
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [label, const SizedBox(height: 4), action],
-            )
-          : Row(
-              children: [
-                Expanded(child: label),
-                action,
-              ],
-            ),
     );
   }
 }
@@ -312,6 +343,12 @@ class _FreeAllowance extends StatelessWidget {
 ///
 /// The old screen led with a bare "Continue practicing" button that never
 /// said what it would open, above seven rows of equal weight. This says it.
+///
+/// Paper, not mint. A tint a shade off the page was not the reason this card
+/// reads as the thing to do — the charcoal button on it is — and spending the
+/// one coloured surface on the screen here left the offer below it arguing
+/// for attention in white. So they are swapped: this is a sheet, like the
+/// library tiles it recommends from, and the mint went to the Pro card.
 class _NextUp extends StatelessWidget {
   const _NextUp({
     required this.scenario,
@@ -328,10 +365,12 @@ class _NextUp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: AppColors.mint,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: Paper.lift,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,15 +379,12 @@ class _NextUp extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Illustration.scenario(scenario.id, size: Illustration.spotSize),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Eyebrow(
-                      reps == 0 ? 'START HERE' : 'GO AGAIN',
-                      color: AppColors.forest,
-                    ),
+                    Eyebrow(reps == 0 ? 'START HERE' : 'GO AGAIN'),
                     const SizedBox(height: 6),
                     Text(
                       scenario.title,
@@ -364,7 +400,7 @@ class _NextUp extends StatelessWidget {
                     Text(
                       '${scenario.skill} · ${scenario.durationMinutes} min',
                       style: const TextStyle(
-                        color: AppColors.forest,
+                        color: AppColors.muted,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -374,7 +410,7 @@ class _NextUp extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           FilledButton(
             key: const Key('start_recommended'),
             onPressed: onTap,
@@ -394,42 +430,49 @@ class _StakesGroup extends StatelessWidget {
   const _StakesGroup({
     required this.stakes,
     required this.history,
-    required this.exclude,
     required this.subscription,
     required this.onOpen,
   });
 
   final ScenarioStakes stakes;
   final PracticeHistory history;
-  final Scenario exclude;
   final Subscription? subscription;
   final ValueChanged<Scenario> onOpen;
 
   @override
   Widget build(BuildContext context) {
-    final items = scenarios
-        .where((s) => s.stakes == stakes && s != exclude)
-        .toList();
+    final items = scenarios.where((s) => s.stakes == stakes).toList();
     if (items.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: _gutter,
+          // Indented past the gutter to line up with the titles inside the
+          // tiles rather than with the cards' outer edge — the label names
+          // what the text under it says, so it sits on the same rail as
+          // that text.
+          padding: const EdgeInsets.only(left: 28, right: 20),
           child: Eyebrow(stakes.label.toUpperCase(), color: AppColors.muted),
         ),
-        const SizedBox(height: 10),
+        // Four, not twelve: the rail's own padding adds six above the cards
+        // for their shadow, so a label that looked close to the tiles was
+        // eighteen points off them.
+        const SizedBox(height: 4),
         // A horizontal list has to be told its height, so it is derived from
         // the text scale rather than fixed: the illustration is a constant
         // but the two lines of title under it are not, and a rail that could
         // not grow would clip them at an accessibility size.
+        //
+        // The scaled term is the title alone now. It was the title and a
+        // footer line; the state moved up beside the mark, and the rail gave
+        // back the height that line was holding.
         SizedBox(
           height:
-              Illustration.tileSize +
-              58 +
+              _tileMark +
+              40 +
               _railShadowRoom +
-              MediaQuery.textScalerOf(context).scale(53),
+              MediaQuery.textScalerOf(context).scale(43),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: _railGutter,
@@ -439,14 +482,13 @@ class _StakesGroup extends StatelessWidget {
                 SizedBox(width: 168, child: _tile(items[index])),
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 24),
       ],
     );
   }
 
   Widget _tile(Scenario scenario) => _ScenarioTile(
     scenario: scenario,
-    reps: history.recordsFor(scenario.id).length,
     bestScore: history.bestScoreFor(scenario.id),
     isLocked: subscription?.isLocked(scenario) ?? false,
     onTap: () => onOpen(scenario),
@@ -456,14 +498,17 @@ class _StakesGroup extends StatelessWidget {
 class _ScenarioTile extends StatelessWidget {
   const _ScenarioTile({
     required this.scenario,
-    required this.reps,
     required this.bestScore,
     required this.isLocked,
     required this.onTap,
   });
 
   final Scenario scenario;
-  final int reps;
+
+  /// The best of this scenario's rehearsals, and nothing about how many
+  /// there were. A rep count on the tile answered a question nobody asks of
+  /// a library — the count that means something is the streak, and the
+  /// progress tab keeps the rest.
   final int? bestScore;
 
   /// Locked tiles still open. Reading a briefing is free (PRD §14), so the
@@ -492,7 +537,42 @@ class _ScenarioTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Illustration.scenario(scenario.id, size: Illustration.tileSize),
+              // The state of the tile rides beside the mark rather than in a
+              // row of its own under the title: it is one short thing, and a
+              // line for it cost every tile the height of a line.
+              //
+              Row(
+                // The chip hangs from the top of the row. Without this the
+                // row centres its children, and an `Align` inside a centred
+                // `Expanded` has nothing to align against — the box is only
+                // as tall as the chip, so "top right" put it in the middle.
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Illustration.scenario(scenario.id, size: _tileMark),
+                  const SizedBox(width: 8),
+                  // The chip takes the rest of the row and sits at the end
+                  // of it, rather than being a flexible child beside a
+                  // `Spacer`: two flexible children split the free space
+                  // evenly, which gave the chip half of what it needed and
+                  // ellipsed "Pro" down to its lock. Sized to its content
+                  // here, and free to shrink at 1.6x, where the mark and the
+                  // chip together outgrow the tile.
+                  Expanded(
+                    child: Align(
+                      // The corner, not the middle of the row: it is a
+                      // stamp on the card rather than a companion to the
+                      // mark. `Align` inside the `Expanded` does it without
+                      // moving the mark, which stays where the eye starts.
+                      alignment: Alignment.topRight,
+                      child: isLocked
+                          ? const _LockedChip()
+                          : bestScore == null
+                          ? const SizedBox.shrink()
+                          : ScoreChip(bestScore!, compact: true),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 10),
               Text(
                 scenario.title,
@@ -508,25 +588,6 @@ class _ScenarioTile extends StatelessWidget {
                   letterSpacing: -0.2,
                 ),
               ),
-              const Spacer(),
-              const SizedBox(height: 8),
-              if (isLocked)
-                const _LockedFooter()
-              else
-                Text(
-                  bestScore == null
-                      ? '${scenario.durationMinutes} min'
-                      : reps == 1
-                      ? '1 rep · best $bestScore'
-                      : '$reps reps · best $bestScore',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
             ],
           ),
         ),
@@ -535,34 +596,36 @@ class _ScenarioTile extends StatelessWidget {
   }
 }
 
-/// What a locked tile says instead of its duration.
+/// What a locked tile carries in the corner where a score would be.
 ///
-/// The artwork above it is left at full strength on purpose: the mark is
+/// A lock and no word. "Pro" beside it was the widest thing on the tile
+/// after the title, it said what the lock already says, and the strip above
+/// the library names the plan in full. The word is kept for screen readers,
+/// which cannot see a padlock.
+///
+/// The artwork beside it is left at full strength on purpose: the mark is
 /// what makes a scenario worth wanting, and dimming it would sell Pro by
 /// making the library look broken.
-class _LockedFooter extends StatelessWidget {
-  const _LockedFooter();
+class _LockedChip extends StatelessWidget {
+  const _LockedChip();
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.lock_rounded, size: 13, color: AppColors.muted),
-        SizedBox(width: 5),
-        Flexible(
-          child: Text(
-            'Pro',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: AppColors.muted,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+    return Semantics(
+      label: 'Pro',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        decoration: const BoxDecoration(
+          color: AppColors.subtle,
+          shape: BoxShape.circle,
         ),
-      ],
+        child: const Icon(
+          Icons.lock_rounded,
+          size: 13,
+          color: AppColors.charcoal,
+        ),
+      ),
     );
   }
 }
