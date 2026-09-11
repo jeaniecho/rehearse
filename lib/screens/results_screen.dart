@@ -12,7 +12,6 @@ import '../widgets/analytics_scope.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/brand_mark.dart';
 import '../widgets/eyebrow.dart';
-import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_display.dart';
 import 'practice_screen.dart';
@@ -117,10 +116,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        // The one bar whose content sets its own floor: the theme's 48 is
-        // shorter than the mark, which would then be quietly scaled down to
-        // fit and read smaller here than everywhere else it appears.
-        toolbarHeight: Illustration.logoSize,
         title: const BrandMark(),
         actions: [
           TextButton(

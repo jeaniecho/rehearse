@@ -6,6 +6,7 @@ class _ResponsePanel extends StatelessWidget {
   const _ResponsePanel({
     required this.mode,
     required this.turn,
+    required this.maxChoiceHeight,
     required this.selectedResponse,
     required this.isLastTurn,
     required this.controller,
@@ -22,6 +23,10 @@ class _ResponsePanel extends StatelessWidget {
 
   final PracticeMode mode;
   final DialogueTurn turn;
+
+  /// What the guided choices may grow to before they scroll — the screen's
+  /// height, less what the conversation needs.
+  final double maxChoiceHeight;
   final PracticeResponse? selectedResponse;
   final bool isLastTurn;
   final TextEditingController controller;
@@ -50,47 +55,82 @@ class _ResponsePanel extends StatelessWidget {
         20,
         12 + MediaQuery.paddingOf(context).bottom,
       ),
-      child: AnimatedSwitcher(
+      // The height change is animated, and the panel is sized to whichever
+      // control it is showing *now* rather than to the taller of the two.
+      // `AnimatedSwitcher` stacks the outgoing child with the incoming one
+      // and takes the size of the larger, so three guided choices becoming a
+      // Continue button held the old height for the whole fade and then
+      // dropped it in a single frame — which is what made the transcript
+      // above jump.
+      child: AnimatedSize(
         duration: const Duration(milliseconds: 220),
-        child: selectedResponse != null
-            ? FilledButton.icon(
-                key: const Key('continue_practice'),
-                onPressed: onContinue,
-                icon: Icon(
-                  isLastTurn
-                      ? Icons.insights_rounded
-                      : Icons.arrow_forward_rounded,
+        curve: Curves.easeOut,
+        alignment: Alignment.topCenter,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          layoutBuilder: (current, previous) => Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              // Pinned by its edges rather than filled: the outgoing child
+              // keeps its own height while it fades — squeezed into the
+              // incoming one's, three choice cards overflow — and the stack
+              // clips whatever hangs past the panel as it shrinks.
+              for (final child in previous)
+                Positioned(top: 0, left: 0, right: 0, child: child),
+              ?current,
+            ],
+          ),
+          child: selectedResponse != null
+              ? FilledButton.icon(
+                  key: const Key('continue_practice'),
+                  onPressed: onContinue,
+                  icon: Icon(
+                    isLastTurn
+                        ? Icons.insights_rounded
+                        : Icons.arrow_forward_rounded,
+                  ),
+                  label: Text(
+                    isLastTurn ? 'See my coaching report' : 'Continue',
+                  ),
+                )
+              : mode == PracticeMode.guided
+              ? _GuidedChoices(
+                  key: ValueKey(turn.prompt),
+                  turn: turn,
+                  onSelect: onSelect,
+                  maxHeight: maxChoiceHeight,
+                )
+              : _FreeformComposer(
+                  key: ValueKey(turn.prompt),
+                  turn: turn,
+                  controller: controller,
+                  focusNode: focusNode,
+                  isBusy: isBusy,
+                  inputError: inputError,
+                  speechError: speechError,
+                  isListening: isListening,
+                  onSubmit: onSubmit,
+                  onToggleListening: onToggleListening,
                 ),
-                label: Text(isLastTurn ? 'See my coaching report' : 'Continue'),
-              )
-            : mode == PracticeMode.guided
-            ? _GuidedChoices(
-                key: ValueKey(turn.prompt),
-                turn: turn,
-                onSelect: onSelect,
-              )
-            : _FreeformComposer(
-                key: ValueKey(turn.prompt),
-                turn: turn,
-                controller: controller,
-                focusNode: focusNode,
-                isBusy: isBusy,
-                inputError: inputError,
-                speechError: speechError,
-                isListening: isListening,
-                onSubmit: onSubmit,
-                onToggleListening: onToggleListening,
-              ),
+        ),
       ),
     );
   }
 }
 
 class _GuidedChoices extends StatelessWidget {
-  const _GuidedChoices({required this.turn, required this.onSelect, super.key});
+  const _GuidedChoices({
+    required this.turn,
+    required this.onSelect,
+    required this.maxHeight,
+    super.key,
+  });
 
   final DialogueTurn turn;
   final ValueChanged<ResponseChoice> onSelect;
+
+  /// How much room the list may take before it starts scrolling.
+  final double maxHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -100,14 +140,35 @@ class _GuidedChoices extends StatelessWidget {
       children: [
         Text(turn.prompt, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 11),
-        for (var index = 0; index < turn.choices.length; index++) ...[
-          _ChoiceButton(
-            choice: turn.choices[index],
-            index: index,
-            onTap: () => onSelect(turn.choices[index]),
+        // Now that the answers are shown whole, three of them can run past
+        // what a phone has left under the conversation — and at an
+        // accessibility text size they certainly do. The list takes the
+        // share of the screen the room hands it and scrolls inside that,
+        // rather than pushing the person you are talking to off the top.
+        //
+        // The figure comes down from the screen's own layout rather than
+        // from `MediaQuery.sizeOf`, which is zero in any harness that wraps
+        // a screen in a bare `MediaQueryData` to set the text scale.
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var index = 0; index < turn.choices.length; index++) ...[
+                  _ChoiceButton(
+                    choice: turn.choices[index],
+                    index: index,
+                    onTap: () => onSelect(turn.choices[index]),
+                  ),
+                  if (index != turn.choices.length - 1)
+                    const SizedBox(height: 8),
+                ],
+              ],
+            ),
           ),
-          if (index != turn.choices.length - 1) const SizedBox(height: 8),
-        ],
+        ),
       ],
     );
   }
@@ -310,14 +371,17 @@ class _ChoiceButton extends StatelessWidget {
               ),
               const SizedBox(width: 11),
               Expanded(
+                // Whole, not clamped to two lines with an ellipsis. These
+                // are the words you are about to say; an answer you cannot
+                // read to the end is not a choice, and the longer ones were
+                // being cut exactly where they stop being polite and start
+                // being specific.
                 child: Text(
                   choice.text,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: AppColors.ink,
                     fontSize: 13,
-                    height: 1.3,
+                    height: 1.35,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

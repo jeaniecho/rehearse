@@ -27,57 +27,63 @@ class DifficultyPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            for (final level in SimulationDifficulty.values) ...[
-              if (level != SimulationDifficulty.values.first)
-                const SizedBox(width: 8),
-              Expanded(
-                child: Semantics(
-                  selected: level == selected,
-                  button: true,
-                  child: Material(
-                    color: level == selected
-                        ? AppColors.forest
-                        : AppColors.surface,
-                    borderRadius: BorderRadius.circular(14),
-                    child: InkWell(
-                      key: Key('${keyPrefix}_${level.name}'),
-                      onTap: () => onChanged(level),
+        // All three the height of the tallest, because "Very defensive"
+        // wraps to two lines where "Calm" does not, and three pills at three
+        // heights read as a mistake rather than as a choice.
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final level in SimulationDifficulty.values) ...[
+                if (level != SimulationDifficulty.values.first)
+                  const SizedBox(width: 8),
+                Expanded(
+                  child: Semantics(
+                    selected: level == selected,
+                    button: true,
+                    child: Material(
+                      color: level == selected
+                          ? AppColors.forest
+                          : AppColors.surface,
                       borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 12,
-                        ),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: level == selected
-                                ? AppColors.forest
-                                : AppColors.border,
+                      child: InkWell(
+                        key: Key('${keyPrefix}_${level.name}'),
+                        onTap: () => onChanged(level),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 12,
                           ),
-                        ),
-                        child: Text(
-                          level.label,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          style: TextStyle(
-                            color: level == selected
-                                ? Colors.white
-                                : AppColors.ink,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: level == selected
+                                  ? AppColors.forest
+                                  : AppColors.border,
+                            ),
+                          ),
+                          child: Text(
+                            level.label,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            style: TextStyle(
+                              color: level == selected
+                                  ? Colors.white
+                                  : AppColors.ink,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
         const SizedBox(height: 10),
         Text(

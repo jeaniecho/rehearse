@@ -20,12 +20,17 @@ import 'illustration.dart';
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key});
 
+  /// Drawn under [Illustration.logoSize], which is the size the mark is cut
+  /// at, because it has to sit inside a 48pt bar with air around it. Smaller
+  /// than the cut size downscales and stays sharp; larger is what goes soft.
+  static const size = 44.0;
+
   @override
   Widget build(BuildContext context) {
     return Semantics(
       label: 'Rehearse',
       container: true,
-      child: const Illustration.logo(),
+      child: const Illustration.logo(size: size),
     );
   }
 }

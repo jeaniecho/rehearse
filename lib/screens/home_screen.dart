@@ -7,13 +7,12 @@ import '../services/practice_history.dart';
 import '../services/subscription.dart';
 import '../theme/app_theme.dart';
 import '../theme/paper.dart';
+import '../widgets/app_header.dart';
 import '../widgets/app_shell.dart';
-import '../widgets/brand_mark.dart';
 import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
 import '../widgets/score_chip.dart';
-import '../widgets/profile_button.dart';
 import '../widgets/subscription_scope.dart';
 import 'brief_screen.dart';
 import 'paywall_screen.dart';
@@ -107,33 +106,7 @@ class HomeScreen extends StatelessWidget {
         // status bar. Onboarding is built the same way.
         child: Column(
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                MediaQuery.paddingOf(context).top,
-                20,
-                // Space below the header, not above the list: the list's own
-                // padding scrolls away, and without this the first line of
-                // whatever is passing underneath is sliced against the logo.
-                8,
-              ),
-              child: Row(
-                children: [
-                  const BrandMark(),
-                  const Spacer(),
-                  // The streak is status, not news: it belongs in the bar
-                  // with the other standing thing rather than on a row of
-                  // its own above a headline it is not part of.
-                  if (history.streakDays > 0) ...[
-                    _StreakChip(days: history.streakDays),
-                    const SizedBox(width: 8),
-                  ],
-                  // Pro is worn on the button itself, so the eyebrow that
-                  // used to sit here would now say it twice.
-                  const ProfileButton(),
-                ],
-              ),
-            ),
+            const AppHeader(),
             Expanded(
               child: ListView(
                 // No horizontal padding: the rails below bleed to both
@@ -235,41 +208,6 @@ class HomeScreen extends StatelessWidget {
       return ('Keep the streak.', null);
     }
     return ('Ready for\na harder one?', null);
-  }
-}
-
-/// The streak, worn in the header.
-///
-/// The flame and the number, not "4 day streak" spelled out: the chip shares
-/// a row with the logo and the way into You, and at 1.3x text the sentence
-/// pushed the row twenty-seven points past the screen. The words are kept
-/// for screen readers, which have the room.
-class _StreakChip extends StatelessWidget {
-  const _StreakChip({required this.days});
-
-  final int days;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: days == 1 ? '1 day streak' : '$days day streak',
-      excludeSemantics: true,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.mint,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          '🔥 $days',
-          style: const TextStyle(
-            color: AppColors.forest,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
   }
 }
 

@@ -16,7 +16,7 @@ import '../theme/app_theme.dart';
 class Eyebrow extends StatelessWidget {
   const Eyebrow(this.text, {this.color = AppColors.coral, super.key})
     : _fontSize = 10,
-      _letterSpacing = 0.9;
+      _letterSpacing = 0.8;
 
   /// The version that labels something inside a card rather than a screen.
   const Eyebrow.small(this.text, {this.color = AppColors.coral, super.key})

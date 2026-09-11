@@ -112,6 +112,16 @@ abstract final class AppColors {
   static const sky = Color(0xFFE1ECF5);
 }
 
+/// The height of every top bar in the app.
+///
+/// Below Material's 56: every bar here carries a mark or a back arrow, a
+/// short title at most, and one action, on screens whose own headline is the
+/// thing to read. Home builds its header by hand rather than as an `AppBar`,
+/// so the number has to be shared rather than set twice — the two tabs were
+/// four points apart, which is exactly the kind of difference you feel on
+/// switching and cannot name.
+const kToolbarHeightShort = 48.0;
+
 abstract final class AppTheme {
   /// Bundled, so Android and the web no longer fall back to something else
   /// and the app stops looking unlike its own screenshots.
@@ -226,11 +236,7 @@ abstract final class AppTheme {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         systemOverlayStyle: overlayStyle,
-        // Below Material's 56. Every bar in this app carries a back arrow, a
-        // short title and at most one action, on screens whose own headline
-        // is the thing to read — so the bar is a place to leave from, not a
-        // band of chrome to look at.
-        toolbarHeight: 48,
+        toolbarHeight: kToolbarHeightShort,
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,

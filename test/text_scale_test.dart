@@ -67,9 +67,17 @@ void main() {
         subscription: subscription,
         child: MaterialApp(
           theme: AppTheme.light,
-          home: MediaQuery(
-            data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-            child: screen,
+          // The real data with the scale changed. A fresh `MediaQueryData`
+          // is zero-sized, so anything that measures the window — the guided
+          // choices cap their height against it — laid out as though there
+          // were no window, which is the opposite of what this file is for.
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(textScale)),
+              child: screen,
+            ),
           ),
         ),
       ),

@@ -741,7 +741,7 @@ Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter, sentry_flutter,
                    url_launcher
-Tests            : 436 Flutter + 31 server
+Tests            : 439 Flutter + 31 server
 TODO/FIXME       : none
 ```
 

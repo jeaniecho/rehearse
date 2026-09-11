@@ -167,9 +167,18 @@ void main() {
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
             theme: _fonts.theme,
-            home: MediaQuery(
-              data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-              child: screen,
+            // The real `MediaQueryData` with the scale changed, not a
+            // fresh one: a bare `MediaQueryData` has a zero size and no
+            // insets, so every screen under it draws as though the window
+            // were empty — which is how a control sized from the screen
+            // came out with no height at all in these shots.
+            home: Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(textScale)),
+                child: screen,
+              ),
             ),
           ),
         ),
@@ -247,6 +256,20 @@ void main() {
       PracticeScreen(
         scenario: _free,
         mode: PracticeMode.freestyle,
+        coachService: OfflineCoachService(),
+      ),
+    );
+  });
+
+  // Guided: the three authored answers, which is the state the freestyle
+  // shot above cannot show.
+  testWidgets('practice — guided', (t) async {
+    await shoot(
+      t,
+      '10b-practice-guided',
+      PracticeScreen(
+        scenario: _free,
+        mode: PracticeMode.guided,
         coachService: OfflineCoachService(),
       ),
     );

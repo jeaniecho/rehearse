@@ -7,11 +7,11 @@ import '../models/scenario.dart';
 import '../models/practice_summary.dart';
 import '../services/practice_history.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_header.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
-import '../widgets/profile_button.dart';
 import '../widgets/score_chip.dart';
 import '../widgets/score_display.dart';
 
@@ -30,66 +30,72 @@ class ProgressScreen extends StatelessWidget {
     final records = history.records;
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Your progress',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
-        actions: const [ProfileAction()],
-      ),
+      // The header is the widget home uses, not an `AppBar` dressed to look
+      // like it: same mark at the same inset, same streak beside the same
+      // button. A grey "Your progress" over a page that opens on a streak
+      // banner was a label for a screen that introduces itself.
       body: PageWidth(
-        child: records.isEmpty
-            ? Padding(
-                // The one layout here that centres rather than scrolls, so
-                // it takes the bottom inset as padding — otherwise it
-                // centres through the floating bar and sits low.
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  0,
-                  20,
-                  MediaQuery.paddingOf(context).bottom,
-                ),
-                child: _EmptyProgress(onPickScenario: onPickScenario),
-              )
-            : ListView(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  4,
-                  20,
-                  MediaQuery.paddingOf(context).bottom + 30,
-                ),
-                children: [
-                  const SizedBox(height: 8),
-                  _StreakBanner(history: history),
-                  // Nothing to chart while every rehearsal so far was
-                  // guided: the bars would be four empty tracks under a
-                  // sentence about a pattern.
-                  if (history.averageSkills.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _SkillTrends(history: history),
-                  ],
-                  const SizedBox(height: 32),
-                  // An eyebrow, not a headline with a sentence under it. The
-                  // library labels its rows this way and this is the same
-                  // kind of thing — a list that needs naming, not a section
-                  // that needs introducing. The count it used to carry is
-                  // the list itself, and "newest first" is what a history
-                  // is.
-                  const Padding(
-                    // Inset to the cards' own content, the way the library's
-                    // row labels are — the label lines up with what it names
-                    // rather than with the paper it is printed on.
-                    padding: EdgeInsets.only(left: 14),
-                    child: Eyebrow('SESSION HISTORY', color: AppColors.muted),
-                  ),
-                  const SizedBox(height: 12),
-                  for (final record in records) ...[
-                    _SessionTile(record: record),
-                    const SizedBox(height: 8),
-                  ],
-                ],
-              ),
+        child: Column(
+          children: [
+            const AppHeader(),
+            Expanded(
+              child: records.isEmpty
+                  ? Padding(
+                      // The one layout here that centres rather than scrolls, so
+                      // it takes the bottom inset as padding — otherwise it
+                      // centres through the floating bar and sits low.
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        0,
+                        20,
+                        MediaQuery.paddingOf(context).bottom,
+                      ),
+                      child: _EmptyProgress(onPickScenario: onPickScenario),
+                    )
+                  : ListView(
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        4,
+                        20,
+                        MediaQuery.paddingOf(context).bottom + 30,
+                      ),
+                      children: [
+                        const SizedBox(height: 8),
+                        _StreakBanner(history: history),
+                        // Nothing to chart while every rehearsal so far was
+                        // guided: the bars would be four empty tracks under a
+                        // sentence about a pattern.
+                        if (history.averageSkills.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          _SkillTrends(history: history),
+                        ],
+                        const SizedBox(height: 32),
+                        // An eyebrow, not a headline with a sentence under it. The
+                        // library labels its rows this way and this is the same
+                        // kind of thing — a list that needs naming, not a section
+                        // that needs introducing. The count it used to carry is
+                        // the list itself, and "newest first" is what a history
+                        // is.
+                        const Padding(
+                          // Inset to the cards' own content, the way the library's
+                          // row labels are — the label lines up with what it names
+                          // rather than with the paper it is printed on.
+                          padding: EdgeInsets.only(left: 14),
+                          child: Eyebrow(
+                            'SESSION HISTORY',
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        for (final record in records) ...[
+                          _SessionTile(record: record),
+                          const SizedBox(height: 8),
+                        ],
+                      ],
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

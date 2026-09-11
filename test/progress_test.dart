@@ -10,6 +10,7 @@ import 'package:rehearse/screens/tabs_screen.dart';
 import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/theme/app_theme.dart';
+import 'package:rehearse/widgets/brand_mark.dart';
 import 'package:rehearse/widgets/practice_history_scope.dart';
 
 /// The gentlest tier, in authored order — what the recommendation walks
@@ -101,7 +102,8 @@ void main() {
         ],
       );
 
-      expect(find.text('🔥 2'), findsOneWidget);
+      expect(find.text('2'), findsWidgets);
+      expect(find.byIcon(Icons.local_fire_department_rounded), findsOneWidget);
       expect(find.text('One more rep?'), findsOneWidget);
       // The tile carries the best score and nothing about how often — see
       // `_ScenarioTile`.
@@ -123,7 +125,7 @@ void main() {
         ],
       );
 
-      expect(find.text('🔥 1'), findsOneWidget);
+      expect(find.byIcon(Icons.local_fire_department_rounded), findsOneWidget);
       expect(find.text('Keep the streak.'), findsOneWidget);
     });
 
@@ -140,7 +142,8 @@ void main() {
 
       await tester.tap(find.byKey(const Key('tab_progress')));
       await tester.pumpAndSettle();
-      expect(find.text('Your progress'), findsOneWidget);
+      // The tab wears the same bar as home: the mark, not a title.
+      expect(find.byType(BrandMark), findsOneWidget);
       expect(find.text('SESSION HISTORY'), findsOneWidget);
 
       // The scenario list is still built behind it — an IndexedStack keeps
