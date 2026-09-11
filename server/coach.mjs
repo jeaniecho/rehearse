@@ -152,8 +152,11 @@ export function buildRespondRequest(payload, model = DEFAULT_MODEL) {
     model,
     store: false,
     safety_identifier: safeIdentifier(payload.sessionId),
+    // The ceiling covers reasoning as well as the reply, and 300 was not
+    // enough for both — the model spent it thinking and returned no message
+    // at all. It is a cap, not a spend, so the headroom costs nothing.
     reasoning: { effort: "low" },
-    max_output_tokens: 300,
+    max_output_tokens: 1000,
     input: [
       {
         role: "developer",
@@ -208,8 +211,11 @@ export function buildEvaluateRequest(payload, model = DEFAULT_MODEL) {
     store: false,
     safety_identifier: safeIdentifier(payload.sessionId),
     // Worth more thinking than a single turn: this one runs once, at the end.
+    // That thinking is drawn from the ceiling below, and medium effort against
+    // four dimensions and quoted notes spent 2500 without emitting a word, so
+    // the number has to cover the reasoning and the report both.
     reasoning: { effort: "medium" },
-    max_output_tokens: 1200,
+    max_output_tokens: 6000,
     input: [
       {
         role: "developer",
@@ -268,7 +274,28 @@ export function extractOutputText(response) {
       }
     }
   }
-  throw new Error("OpenAI returned no coaching output.");
+
+  // A truncated response is indistinguishable from an empty one by the time
+  // we are here: reasoning tokens are drawn from `max_output_tokens`, so a
+  // budget that is too tight comes back 200 with a reasoning item and no
+  // message. Carrying the reason — and what it actually spent — is the
+  // difference between reading one line of `wrangler tail` and guessing at a
+  // ceiling one deploy at a time.
+  const usage = response?.usage;
+  const detail = [
+    [response?.status, response?.incomplete_details?.reason]
+      .filter(Boolean)
+      .join(": "),
+    usage &&
+      `${usage.output_tokens ?? "?"} output, ${usage.output_tokens_details?.reasoning_tokens ?? "?"} reasoning`,
+  ]
+    .filter(Boolean)
+    .join("; ");
+  throw new Error(
+    detail
+      ? `OpenAI returned no coaching output (${detail}).`
+      : "OpenAI returned no coaching output.",
+  );
 }
 
 function normalize(value) {

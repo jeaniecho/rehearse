@@ -154,6 +154,33 @@ test("a refusal is surfaced rather than parsed", () => {
   );
 });
 
+// Truncation and an empty answer look the same from here, and telling them
+// apart in the log is the whole reason the reason is carried.
+test("a truncated response says why it was empty", () => {
+  assert.throws(
+    () =>
+      extractOutputText({
+        status: "incomplete",
+        incomplete_details: { reason: "max_output_tokens" },
+        output: [{ type: "reasoning", summary: [] }],
+      }),
+    /incomplete: max_output_tokens/,
+  );
+});
+
+test("an empty response reports what it spent", () => {
+  assert.throws(
+    () =>
+      extractOutputText({
+        status: "incomplete",
+        incomplete_details: { reason: "max_output_tokens" },
+        usage: { output_tokens: 6000, output_tokens_details: { reasoning_tokens: 5952 } },
+        output: [],
+      }),
+    /6000 output, 5952 reasoning/,
+  );
+});
+
 test("returns the employee reply", async () => {
   const result = await respondWithOpenAI(respondPayload, {
     apiKey: "test-key",
