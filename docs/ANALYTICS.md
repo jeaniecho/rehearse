@@ -57,7 +57,7 @@ Fired today, in funnel order.
 
 Attached to every event, refreshed whenever entitlement changes:
 
-`is_pro`, `billing_configured`, `free_sessions_remaining`
+`is_pro`, `billing_configured`
 
 That means any funnel can be split by free versus Pro without threading state
 through each call.
@@ -96,8 +96,19 @@ never fires is worse than a missing one — it looks like a measured zero.
 - **`trigger` and `from` say `settings`, and the tab is called You.** The
   plan card and Restore live on the You tab; the property values are named
   for the kind of surface rather than the label on it, so a copy change to
-  the tab does not break a funnel. Values are `session_limit` / `home_upsell`
-  / `settings_upsell` for `trigger`, and `paywall` / `settings` for `from`.
+  the tab does not break a funnel. Values are `lockedScenario` /
+  `homeUpsell` / `settingsUpsell` for `trigger`, and `paywall` / `settings`
+  for `from`.
+- **`lockedScenario` is the only forced paywall.** The free tier is two
+  conversations rehearsed without limit, so nobody is ever stopped
+  mid-habit — the paywall appears when they reach for a conversation the
+  free tier does not include. `scenario_id` on the surrounding
+  `scenario_viewed` says which one, which is the question worth asking of
+  this funnel: what were people trying to open when they met the price.
+- **There is no `free_sessions_remaining`.** It went when the free tier
+  stopped being a count. Nothing had been sent to a live project yet, so no
+  history was lost — which is the only reason the rename was cheap. After
+  the first real event it would not have been.
 
 ---
 

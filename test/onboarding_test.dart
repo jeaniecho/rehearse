@@ -33,7 +33,7 @@ void main() {
     addTearDown(settings.dispose);
     final history = PracticeHistory(store: InMemoryHistoryStore());
     addTearDown(history.dispose);
-    final subscription = Subscription(store: InMemorySettingsStore());
+    final subscription = Subscription();
     addTearDown(subscription.dispose);
     final sink = _Sink();
     final analytics = Analytics(sink: sink);
@@ -164,7 +164,7 @@ void main() {
       addTearDown(settings.dispose);
       final history = PracticeHistory(store: InMemoryHistoryStore());
       addTearDown(history.dispose);
-      final subscription = Subscription(store: InMemorySettingsStore());
+      final subscription = Subscription();
       addTearDown(subscription.dispose);
 
       await tester.pumpWidget(

@@ -19,7 +19,7 @@ void main() {
   ) async {
     final history = PracticeHistory(store: InMemoryHistoryStore());
     addTearDown(history.dispose);
-    final subscription = Subscription(store: InMemorySettingsStore());
+    final subscription = Subscription();
     addTearDown(subscription.dispose);
     final settings = AppSettings(store: seenOnboarding());
     addTearDown(settings.dispose);
@@ -76,10 +76,10 @@ void main() {
     expect(history.records.single.score, 88);
     expect(history.records.single.mode, PracticeMode.guided);
 
-    // Nothing is configured in a test build, so the loop stays unmetered.
+    // Nothing is configured in a test build, so the whole library is open.
     expect(subscription.isConfigured, isFalse);
-    expect(subscription.freeSessionsUsed, 0);
-    expect(subscription.canStartPractice, isTrue);
+    expect(subscription.showsLocks, isFalse);
+    expect(subscription.canPractice(scenarios.first), isTrue);
   });
 
   testWidgets('a free-form turn is answered, not marked', (tester) async {

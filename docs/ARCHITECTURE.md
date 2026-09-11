@@ -17,13 +17,13 @@ _Root ──▶ OnboardingScreen (first run only)
 HomeScreen ──▶ BriefScreen ──▶ PracticeScreen ──▶ ResultsScreen
     │            pick mode  │     3 turns          score + coaching
     │                       │                              │
-    │              out of free rehearsals?                 │
+    │               is it a Pro conversation?              │
     │                       │                              │
     │                  PaywallScreen                       │
     │                                                      │
     └──────────────── popUntil(isFirst) ◀──────────────────┘
                                                            │
-                                       PracticeHistory.add() + one free
+                                                PracticeHistory.add()
                                        rehearsal spent
 ```
 
@@ -410,26 +410,37 @@ because Android treats 1.0 as normal and iOS treats 0.5 as normal.
     RevenueCatSubscriptionClient        └──▶ UnconfiguredSubscriptionClient
                     │                            configure() == false
                     ▼
-              Subscription  ── the gate: canStartPractice
+              Subscription  ── the gate: isLocked(scenario)
                     │
         ┌───────────┴───────────┐
-   entitlement `pro`      free sessions used
-   (store, live)          (local, monotonic)
+   entitlement `pro`      freeScenarioIds
+   (store, live)          (const, in code)
 ```
 
-`Subscription` owns the single question the UI asks — *may this person start
-another rehearsal?* — because the answer depends on both halves.
+`Subscription` owns the single question the UI asks — *may this person
+rehearse this conversation?* — because the answer depends on both halves.
 
 Three rules:
 
 1. **An unconfigured build never gates.** No key, or a failed `configure()`,
-   means unlimited free rehearsals and no paywall anywhere. This keeps the
+   means the whole library is open and no paywall anywhere. This keeps the
    demo runnable and satisfies PRD §26.
-2. **The free counter is not the practice history.** It lives under its own
-   settings key, so clearing your history — a privacy action — cannot hand
-   back free sessions.
-3. **Only a completed rehearsal counts.** `ResultsScreen` spends the session
-   when the report is reached, so abandoning one costs nothing.
+2. **The gate holds no state.** It is a set of scenario ids in code, compared
+   against the scenario being opened. Nothing is written, nothing is read,
+   and nothing can drift — which is the difference from what this used to be.
+3. **The free tier is unlimited within its two conversations.** Finishing a
+   rehearsal costs nothing, so someone can rep the same conversation until
+   the wording is right. That is the product's whole argument, and the free
+   tier is the demonstration of it.
+
+**Why this is not a count.** Until 2026-09-11 the gate was three completed
+rehearsals, lifetime, stored under `rehearse.free_sessions_used`. Anything
+stored on the device is back at zero after a delete and reinstall — reliably
+on iOS, where the app container goes with the app — so the limit was
+resettable by anyone who noticed. A content gate has nothing to reset. PRD
+§13 lists "all scenarios" among what Pro unlocks, so this is a swap between
+two mechanisms the PRD already names, not a new invention; §5 of
+[`STATUS.md`](STATUS.md) records what it cost.
 
 Prices and packages are never hardcoded; they come from the current RevenueCat
 offering. Paywall copy can also come from **offering metadata**
@@ -490,7 +501,10 @@ runs the service.
 |---|---|---|
 | `PracticeHistory` | `PracticeHistoryStore` | `rehearse.practice_history` (string list of JSON) |
 | `AppSettings` | `SettingsStore` | `rehearse.spoken_replies` (bool), `rehearse.onboarding_completed` (bool) |
-| `Subscription` | `SettingsStore` | `rehearse.free_sessions_used` (int) |
+
+`Subscription` is absent on purpose: it persists nothing. Its half of the
+answer comes from the store, and the other half is `freeScenarioIds`, a
+constant.
 
 Each has a `SharedPreferences…` implementation and an `InMemory…` one.
 

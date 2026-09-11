@@ -32,7 +32,6 @@ deleted when you delete the app:
 - Your streak and progress figures
 - Your preferences, including whether the other person's replies are spoken
   aloud and how much resistance you last chose
-- How many free rehearsals you have used
 
 You can erase your practice history at any time from the **You** tab. That
 deletes it permanently from the device.
@@ -99,7 +98,7 @@ What an event can contain:
 - How the conversation ended, as one of four fixed words — resolved, partly
   resolved, unresolved, or escalated
 - Your scores
-- Whether you have a subscription, and how many free rehearsals remain
+- Whether you have a subscription
 
 Analytics is off entirely unless the app has been built with an analytics key.
 

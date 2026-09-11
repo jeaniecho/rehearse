@@ -29,15 +29,10 @@ class Analytics extends ChangeNotifier {
 
   /// Entitlement travels with every later event, so any funnel can be split
   /// by free versus Pro without threading it through each call.
-  void setSubscriptionState({
-    required bool isConfigured,
-    required bool isPro,
-    required int freeSessionsRemaining,
-  }) {
+  void setSubscriptionState({required bool isConfigured, required bool isPro}) {
     _sink.setSuperProperties({
       'is_pro': isPro,
       'billing_configured': isConfigured,
-      'free_sessions_remaining': freeSessionsRemaining,
     });
   }
 
@@ -234,8 +229,11 @@ class Analytics extends ChangeNotifier {
 
 /// Where someone reached the paywall from, so the forced and the voluntary
 /// paths can be told apart.
-/// Where the paywall was opened from. `settingsUpsell` is the You tab,
-/// which is where the plan card lives.
-enum PaywallTrigger { sessionLimit, homeUpsell, settingsUpsell }
+///
+/// `lockedScenario` is the forced one: they tried to start a conversation the
+/// free tier does not include. The other two are volunteered — `homeUpsell`
+/// from the line under the featured card, `settingsUpsell` from the plan card
+/// on the You tab.
+enum PaywallTrigger { lockedScenario, homeUpsell, settingsUpsell }
 
 enum RestoreSource { paywall, settings }

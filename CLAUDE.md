@@ -128,9 +128,11 @@ From `ROADMAP.md` §0, and they hold:
   never gates. Every remote capability needs a local fallback, and the demo
   must never depend on one.
 - **Never gate on a store that isn't there.** No RevenueCat key, or a failed
-  `configure()`, means unlimited free rehearsals — never a locked app.
-- **The free-session counter is not the practice history.** Clearing history
-  is a privacy action and must not hand back free sessions.
+  `configure()`, means the whole library is open — never a locked app.
+- **The gate is content, not a count.** `Subscription.freeScenarioIds` names
+  the conversations a free account can rehearse, without limit. Nothing about
+  the gate is stored, which is the point: a lifetime count of completed
+  rehearsals came back at zero after a reinstall. Do not reintroduce one.
 - **Storage failures never interrupt a rehearsal.** Reads and writes are
   wrapped; a corrupt record is skipped, not thrown.
 - **Speech is an enhancement.** If the device has no voice, the app stays

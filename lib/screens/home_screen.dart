@@ -35,11 +35,27 @@ class HomeScreen extends StatelessWidget {
   /// What to put in front of someone next: whatever they have rehearsed
   /// least, keeping the authored order as the tie-break so a fresh install
   /// still opens on the warm-up.
-  static Scenario recommendedScenario(PracticeHistory history) {
-    var best = scenarios.first;
+  ///
+  /// [subscription] narrows the field to what this person can actually
+  /// start. The primary call to action on first run must not lead straight
+  /// into a paywall — someone should meet the product before they meet the
+  /// price — so a free account is recommended a free conversation. Locked
+  /// ones are still reachable from the library below.
+  static Scenario recommendedScenario(
+    PracticeHistory history, {
+    Subscription? subscription,
+  }) {
+    final candidates = scenarios
+        .where((s) => !(subscription?.isLocked(s) ?? false))
+        .toList();
+    // Belt and braces: `freeScenarioIds` is asserted non-empty by
+    // `scenarios_test.dart`, so this only fires if that guard is removed.
+    if (candidates.isEmpty) return scenarios.first;
+
+    var best = candidates.first;
     var fewest = history.recordsFor(best.id).length;
 
-    for (final scenario in scenarios.skip(1)) {
+    for (final scenario in candidates.skip(1)) {
       final reps = history.recordsFor(scenario.id).length;
       if (reps < fewest) {
         best = scenario;
@@ -59,7 +75,10 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final history = PracticeHistoryScope.of(context);
     final subscription = SubscriptionScope.maybeOf(context);
-    final recommended = recommendedScenario(history);
+    final recommended = recommendedScenario(
+      history,
+      subscription: subscription,
+    );
     final (headline, body) = _copy(history);
 
     return Scaffold(
@@ -127,10 +146,9 @@ class HomeScreen extends StatelessWidget {
                           reps: history.recordsFor(recommended.id).length,
                           onTap: () => _openScenario(context, recommended),
                         ),
-                        if (subscription != null &&
-                            subscription.showsFreeAllowance) ...[
+                        if (subscription?.showsLocks ?? false) ...[
                           const SizedBox(height: 14),
-                          _FreeAllowance(subscription: subscription),
+                          const _FreeAllowance(),
                         ],
                         const SizedBox(height: 34),
                         Text(
@@ -153,6 +171,7 @@ class HomeScreen extends StatelessWidget {
                       stakes: stakes,
                       history: history,
                       exclude: recommended,
+                      subscription: subscription,
                       onOpen: (scenario) => _openScenario(context, scenario),
                     ),
                   ],
@@ -224,27 +243,23 @@ class _StreakChip extends StatelessWidget {
   }
 }
 
-/// A quiet running total, so the paywall is never the moment someone first
-/// learns the free practice was finite.
+/// A quiet statement of the shape of the free tier, so the paywall is never
+/// the moment someone first learns that part of the library is closed.
 class _FreeAllowance extends StatelessWidget {
-  const _FreeAllowance({required this.subscription});
-
-  final Subscription subscription;
+  const _FreeAllowance();
 
   @override
   Widget build(BuildContext context) {
-    final remaining = subscription.freeSessionsRemaining;
+    final free = Subscription.freeScenarioIds.length;
+    final locked = scenarios.length - free;
 
     return Row(
       key: const Key('free_allowance'),
       children: [
         Expanded(
           child: Text(
-            remaining == 0
-                ? 'You’ve used your free rehearsals.'
-                : remaining == 1
-                ? '1 free rehearsal left.'
-                : '$remaining free rehearsals left.',
+            '$free conversations free, unlimited reps. '
+            '$locked more with Pro.',
             style: const TextStyle(color: AppColors.muted, fontSize: 13),
           ),
         ),
@@ -355,12 +370,14 @@ class _StakesGroup extends StatelessWidget {
     required this.stakes,
     required this.history,
     required this.exclude,
+    required this.subscription,
     required this.onOpen,
   });
 
   final ScenarioStakes stakes;
   final PracticeHistory history;
   final Scenario exclude;
+  final Subscription? subscription;
   final ValueChanged<Scenario> onOpen;
 
   @override
@@ -406,6 +423,7 @@ class _StakesGroup extends StatelessWidget {
     scenario: scenario,
     reps: history.recordsFor(scenario.id).length,
     bestScore: history.bestScoreFor(scenario.id),
+    isLocked: subscription?.isLocked(scenario) ?? false,
     onTap: () => onOpen(scenario),
   );
 }
@@ -415,12 +433,18 @@ class _ScenarioTile extends StatelessWidget {
     required this.scenario,
     required this.reps,
     required this.bestScore,
+    required this.isLocked,
     required this.onTap,
   });
 
   final Scenario scenario;
   final int reps;
   final int? bestScore;
+
+  /// Locked tiles still open. Reading a briefing is free (PRD §14), so the
+  /// lock says what to expect rather than refusing the tap — nobody meets a
+  /// paywall before they understand what it is standing in front of.
+  final bool isLocked;
   final VoidCallback onTap;
 
   @override
@@ -461,24 +485,59 @@ class _ScenarioTile extends StatelessWidget {
               ),
               const Spacer(),
               const SizedBox(height: 8),
-              Text(
-                bestScore == null
-                    ? '${scenario.durationMinutes} min'
-                    : reps == 1
-                    ? '1 rep · best $bestScore'
-                    : '$reps reps · best $bestScore',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.muted,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              if (isLocked)
+                const _LockedFooter()
+              else
+                Text(
+                  bestScore == null
+                      ? '${scenario.durationMinutes} min'
+                      : reps == 1
+                      ? '1 rep · best $bestScore'
+                      : '$reps reps · best $bestScore',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// What a locked tile says instead of its duration.
+///
+/// The artwork above it is left at full strength on purpose: the mark is
+/// what makes a scenario worth wanting, and dimming it would sell Pro by
+/// making the library look broken.
+class _LockedFooter extends StatelessWidget {
+  const _LockedFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.lock_rounded, size: 13, color: AppColors.muted),
+        SizedBox(width: 5),
+        Flexible(
+          child: Text(
+            'Pro',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

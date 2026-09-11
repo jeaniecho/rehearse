@@ -57,10 +57,10 @@ class _BriefScreenState extends State<BriefScreen> {
     final subscription = SubscriptionScope.maybeOf(context);
     final analytics = AnalyticsScope.maybeOf(context);
 
-    if (subscription != null && subscription.isPaywalled) {
+    if (subscription != null && subscription.isLocked(scenario)) {
       final unlocked = await PaywallScreen.show(
         context,
-        trigger: PaywallTrigger.sessionLimit,
+        trigger: PaywallTrigger.lockedScenario,
       );
       if (!unlocked || !context.mounted) return;
     }
@@ -80,6 +80,9 @@ class _BriefScreenState extends State<BriefScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLocked =
+        SubscriptionScope.maybeOf(context)?.isLocked(scenario) ?? false;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -255,20 +258,31 @@ class _BriefScreenState extends State<BriefScreen> {
         ),
       ),
       bottomNavigationBar: PageActionBar(
-        child: FilledButton.icon(
-          key: const Key('begin_simulation'),
-          onPressed: () => _begin(context),
-          icon: Icon(
-            _mode == PracticeMode.freestyle
-                ? Icons.mic_rounded
-                : Icons.play_arrow_rounded,
-          ),
-          label: Text(
-            _mode == PracticeMode.freestyle
-                ? 'Start speaking practice'
-                : 'Start guided practice',
-          ),
-        ),
+        // The button says where the tap leads. Reading the brief stays free
+        // either way, so someone who opens a locked conversation still gets
+        // the whole situation before the price comes up — but they are not
+        // told "start" and then shown a paywall.
+        child: isLocked
+            ? FilledButton.icon(
+                key: const Key('begin_simulation'),
+                onPressed: () => _begin(context),
+                icon: const Icon(Icons.lock_open_rounded),
+                label: const Text('Unlock with Pro'),
+              )
+            : FilledButton.icon(
+                key: const Key('begin_simulation'),
+                onPressed: () => _begin(context),
+                icon: Icon(
+                  _mode == PracticeMode.freestyle
+                      ? Icons.mic_rounded
+                      : Icons.play_arrow_rounded,
+                ),
+                label: Text(
+                  _mode == PracticeMode.freestyle
+                      ? 'Start speaking practice'
+                      : 'Start guided practice',
+                ),
+              ),
       ),
     );
   }

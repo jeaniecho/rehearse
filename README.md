@@ -38,8 +38,9 @@ Built for the RevenueCat Shipaton 2026, leadership and career coaching.
   1.6x system text size.
 - Fully local scenario logic, so the demo is fast and reliable without an API
   key or network connection.
-- Three free rehearsals, then a RevenueCat subscription, with prices and
-  paywall copy driven from the dashboard rather than the code.
+- Two conversations free and unlimited, the rest behind a RevenueCat
+  subscription, with prices and paywall copy driven from the dashboard rather
+  than the code.
 - A product funnel instrumented end to end, built so that nothing you say in a
   rehearsal can reach analytics.
 - A three-screen intro on first run that previews the real thing.

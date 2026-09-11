@@ -16,7 +16,6 @@ import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
-import 'package:rehearse/services/app_settings.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/services/subscription_client.dart';
@@ -42,10 +41,8 @@ const _offer = SubscriptionOffer(id: 'default', plans: [_annual, _monthly]);
 Future<Subscription> subscriptionWith({
   bool configured = true,
   bool isPro = false,
-  int used = 0,
   SubscriptionOffer? offer = _offer,
   SubscriptionClient? client,
-  SettingsStore? store,
 }) async {
   final subscription = Subscription(
     client:
@@ -55,126 +52,122 @@ Future<Subscription> subscriptionWith({
           isPro: isPro,
           offer: offer,
         ),
-    store:
-        store ?? InMemorySettingsStore({'rehearse.free_sessions_used': used}),
   );
   await subscription.load();
   return subscription;
 }
 
+/// A conversation the free tier includes, and one it does not.
+///
+/// Looked up rather than named, so these follow the free tier if its
+/// membership is ever re-picked. Which ids are free is asserted separately,
+/// in `scenarios_test.dart`.
+final _freeScenario = scenarios.firstWhere(
+  (s) => Subscription.freeScenarioIds.contains(s.id),
+);
+final _lockedScenario = scenarios.firstWhere(
+  (s) => !Subscription.freeScenarioIds.contains(s.id),
+);
+
 void main() {
   group('the gate', () {
-    test('an unconfigured build never blocks and never counts', () async {
+    test('an unconfigured build never locks anything', () async {
       final subscription = await subscriptionWith(configured: false);
       addTearDown(subscription.dispose);
 
       expect(subscription.isConfigured, isFalse);
-      expect(subscription.canStartPractice, isTrue);
-      expect(subscription.showsFreeAllowance, isFalse);
-
-      for (var i = 0; i < 5; i++) {
-        await subscription.recordCompletedSession();
+      expect(subscription.showsLocks, isFalse);
+      for (final scenario in scenarios) {
+        expect(subscription.isLocked(scenario), isFalse, reason: scenario.id);
       }
-
-      expect(subscription.freeSessionsUsed, 0);
-      expect(subscription.canStartPractice, isTrue);
-    });
-
-    test('three completed rehearsals, then the paywall', () async {
-      final subscription = await subscriptionWith();
-      addTearDown(subscription.dispose);
-
-      expect(subscription.freeSessionsRemaining, 3);
-
-      await subscription.recordCompletedSession();
-      expect(subscription.freeSessionsRemaining, 2);
-      expect(subscription.canStartPractice, isTrue);
-
-      await subscription.recordCompletedSession();
-      await subscription.recordCompletedSession();
-
-      expect(subscription.freeSessionsRemaining, 0);
-      expect(subscription.isPaywalled, isTrue);
-    });
-
-    test('Pro never counts and never blocks', () async {
-      final subscription = await subscriptionWith(isPro: true);
-      addTearDown(subscription.dispose);
-
-      await subscription.recordCompletedSession();
-
-      expect(subscription.freeSessionsUsed, 0);
-      expect(subscription.isPaywalled, isFalse);
-      expect(subscription.showsFreeAllowance, isFalse);
-    });
-
-    test('the count survives a restart', () async {
-      final store = InMemorySettingsStore();
-      final first = await subscriptionWith(store: store);
-      await first.recordCompletedSession();
-      await first.recordCompletedSession();
-      first.dispose();
-
-      final second = await subscriptionWith(store: store);
-      addTearDown(second.dispose);
-
-      expect(second.freeSessionsUsed, 2);
-      expect(second.freeSessionsRemaining, 1);
     });
 
     test(
-      'clearing practice history does not hand back free sessions',
+      'a free account reaches the free conversations and no others',
       () async {
-        final store = InMemorySettingsStore();
-        final subscription = await subscriptionWith(store: store);
+        final subscription = await subscriptionWith();
         addTearDown(subscription.dispose);
-        final history = PracticeHistory(store: InMemoryHistoryStore());
-        addTearDown(history.dispose);
 
-        for (var i = 0; i < 3; i++) {
-          await history.add(_record());
-          await subscription.recordCompletedSession();
-        }
-        expect(subscription.isPaywalled, isTrue);
-
-        await history.clear();
-
-        expect(history.isEmpty, isTrue);
-        expect(subscription.freeSessionsUsed, 3);
-        expect(subscription.isPaywalled, isTrue);
+        expect(subscription.showsLocks, isTrue);
+        expect(subscription.canPractice(_freeScenario), isTrue);
+        expect(subscription.isLocked(_lockedScenario), isTrue);
       },
     );
 
-    test('an unreadable store starts the allowance fresh', () async {
-      final subscription = await subscriptionWith(store: _BrokenStore());
+    test('the free conversations are exactly the named ids', () async {
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
-      expect(subscription.freeSessionsUsed, 0);
+      final open = scenarios
+          .where((s) => !subscription.isLocked(s))
+          .map((s) => s.id)
+          .toSet();
 
-      // A failed write must not surface, and the count still holds in memory.
-      await subscription.recordCompletedSession();
-      expect(subscription.freeSessionsUsed, 1);
+      expect(open, Subscription.freeScenarioIds);
+    });
+
+    test('Pro unlocks the whole library', () async {
+      final subscription = await subscriptionWith(isPro: true);
+      addTearDown(subscription.dispose);
+
+      expect(subscription.showsLocks, isFalse);
+      for (final scenario in scenarios) {
+        expect(subscription.isLocked(scenario), isFalse, reason: scenario.id);
+      }
+    });
+
+    test('a free conversation repeats without limit', () async {
+      final subscription = await subscriptionWith();
+      addTearDown(subscription.dispose);
+      final history = PracticeHistory(store: InMemoryHistoryStore());
+      addTearDown(history.dispose);
+
+      // The gate used to be a lifetime count of completed rehearsals, so
+      // this is the case that changed: finishing many does not close it.
+      for (var i = 0; i < 25; i++) {
+        await history.add(_record());
+      }
+
+      expect(subscription.canPractice(_freeScenario), isTrue);
+    });
+
+    test('the gate holds no state, so it survives a reinstall', () async {
+      // Nothing is written, so a fresh Subscription over a fresh store is
+      // indistinguishable from one that has been used — which is the whole
+      // reason this is a content gate rather than a count.
+      final first = await subscriptionWith();
+      final second = await subscriptionWith();
+      addTearDown(first.dispose);
+      addTearDown(second.dispose);
+
+      for (final scenario in scenarios) {
+        expect(
+          first.isLocked(scenario),
+          second.isLocked(scenario),
+          reason: scenario.id,
+        );
+      }
     });
   });
 
   group('purchasing', () {
     test('a completed purchase unlocks Pro', () async {
-      final subscription = await subscriptionWith(used: 3);
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
-      expect(subscription.isPaywalled, isTrue);
+      expect(subscription.isLocked(_lockedScenario), isTrue);
 
       final outcome = await subscription.purchase(_annual);
 
       expect(outcome, PurchaseOutcome.purchased);
       expect(subscription.isPro, isTrue);
-      expect(subscription.isPaywalled, isFalse);
+      expect(subscription.isLocked(_lockedScenario), isFalse);
     });
 
     test('cancelling is not an error and changes nothing', () async {
       final client = FakeSubscriptionClient(
         purchaseOutcome: PurchaseOutcome.cancelled,
       );
-      final subscription = await subscriptionWith(client: client, used: 3);
+      final subscription = await subscriptionWith(client: client);
       addTearDown(subscription.dispose);
 
       final outcome = await subscription.purchase(_annual);
@@ -182,7 +175,7 @@ void main() {
       expect(outcome, PurchaseOutcome.cancelled);
       expect(outcome.message, isNull, reason: 'cancelling needs no message');
       expect(subscription.isPro, isFalse);
-      expect(subscription.isPaywalled, isTrue);
+      expect(subscription.isLocked(_lockedScenario), isTrue);
     });
 
     test('a pending purchase does not unlock Pro yet', () async {
@@ -245,7 +238,11 @@ void main() {
       client.pushProStatus(false);
 
       expect(subscription.isPro, isFalse);
-      expect(subscription.isPaywalled, isFalse, reason: '3 free sessions left');
+      expect(
+        subscription.isLocked(_lockedScenario),
+        isTrue,
+        reason: 'losing Pro closes the library again',
+      );
     });
   });
 
@@ -332,7 +329,7 @@ void main() {
     testWidgets('the briefing is free to read even when paywalled', (
       tester,
     ) async {
-      final subscription = await subscriptionWith(used: 3);
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(
@@ -349,7 +346,7 @@ void main() {
     testWidgets('starting a rehearsal past the limit opens the paywall', (
       tester,
     ) async {
-      final subscription = await subscriptionWith(used: 3);
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(
@@ -367,7 +364,7 @@ void main() {
     testWidgets('closing the paywall does not start a rehearsal', (
       tester,
     ) async {
-      final subscription = await subscriptionWith(used: 3);
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(
@@ -387,7 +384,7 @@ void main() {
     testWidgets('buying Pro drops you straight into the rehearsal', (
       tester,
     ) async {
-      final subscription = await subscriptionWith(used: 3);
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(
@@ -405,13 +402,15 @@ void main() {
       expect(find.byType(PracticeScreen), findsOneWidget);
     });
 
-    testWidgets('under the limit, starting is not interrupted', (tester) async {
-      final subscription = await subscriptionWith(used: 1);
+    testWidgets('a free conversation starts without interruption', (
+      tester,
+    ) async {
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(
         tester,
-        BriefScreen(scenario: scenarios.first),
+        BriefScreen(scenario: _freeScenario),
         subscription: subscription,
       );
       await tester.tap(find.byKey(const Key('begin_simulation')));
@@ -424,12 +423,12 @@ void main() {
     testWidgets('the paywall shows store prices and the selected plan', (
       tester,
     ) async {
-      final subscription = await subscriptionWith(used: 3);
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(
         tester,
-        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+        const PaywallScreen(trigger: PaywallTrigger.lockedScenario),
         subscription: subscription,
       );
 
@@ -441,7 +440,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key(r'plan_$rc_monthly')));
       await tester.pumpAndSettle();
-      expect(find.text('Unlock unlimited practice'), findsOneWidget);
+      expect(find.text('Unlock every conversation'), findsOneWidget);
     });
 
     // Apple 3.1.2: an auto-renewing subscription has to link both documents
@@ -449,13 +448,13 @@ void main() {
     testWidgets('the paywall links the terms and the privacy policy', (
       tester,
     ) async {
-      final subscription = await subscriptionWith(used: 3);
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
       final links = FakeLinkService();
 
       await pump(
         tester,
-        PaywallScreen(trigger: PaywallTrigger.sessionLimit, links: links),
+        PaywallScreen(trigger: PaywallTrigger.lockedScenario, links: links),
         subscription: subscription,
       );
 
@@ -476,13 +475,13 @@ void main() {
     });
 
     testWidgets('a link that will not open says so', (tester) async {
-      final subscription = await subscriptionWith(used: 3);
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(
         tester,
         PaywallScreen(
-          trigger: PaywallTrigger.sessionLimit,
+          trigger: PaywallTrigger.lockedScenario,
           links: FakeLinkService(succeeds: false),
         ),
         subscription: subscription,
@@ -497,12 +496,12 @@ void main() {
     testWidgets('the paywall names the pattern your own history shows', (
       tester,
     ) async {
-      final subscription = await subscriptionWith(used: 3);
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(
         tester,
-        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+        const PaywallScreen(trigger: PaywallTrigger.lockedScenario),
         subscription: subscription,
         records: [
           _record(clarity: 80, empathy: 78, directness: 40, confidence: 40),
@@ -520,12 +519,12 @@ void main() {
     testWidgets('an unavailable offering offers a retry, not a dead end', (
       tester,
     ) async {
-      final subscription = await subscriptionWith(offer: null, used: 3);
+      final subscription = await subscriptionWith(offer: null);
       addTearDown(subscription.dispose);
 
       await pump(
         tester,
-        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+        const PaywallScreen(trigger: PaywallTrigger.lockedScenario),
         subscription: subscription,
       );
 
@@ -541,13 +540,12 @@ void main() {
         client: FakeSubscriptionClient(
           purchaseOutcome: PurchaseOutcome.cancelled,
         ),
-        used: 3,
       );
       addTearDown(subscription.dispose);
 
       await pump(
         tester,
-        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+        const PaywallScreen(trigger: PaywallTrigger.lockedScenario),
         subscription: subscription,
       );
       await tester.tap(find.byKey(const Key('start_subscription')));
@@ -562,13 +560,12 @@ void main() {
     ) async {
       final subscription = await subscriptionWith(
         client: FakeSubscriptionClient(purchaseOutcome: PurchaseOutcome.failed),
-        used: 3,
       );
       addTearDown(subscription.dispose);
 
       await pump(
         tester,
-        const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+        const PaywallScreen(trigger: PaywallTrigger.lockedScenario),
         subscription: subscription,
       );
       await tester.tap(find.byKey(const Key('start_subscription')));
@@ -578,18 +575,50 @@ void main() {
       expect(find.textContaining('not been charged'), findsOneWidget);
     });
 
-    testWidgets('home counts down the free rehearsals', (tester) async {
-      final subscription = await subscriptionWith(used: 2);
+    testWidgets('home says what the free tier includes', (tester) async {
+      final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(tester, const HomeScreen(), subscription: subscription);
 
       expect(find.byKey(const Key('free_allowance')), findsOneWidget);
-      expect(find.text('1 free rehearsal left.'), findsOneWidget);
+      expect(
+        find.text('2 conversations free, unlimited reps. 10 more with Pro.'),
+        findsOneWidget,
+      );
       expect(find.text('PRO'), findsNothing);
     });
 
-    testWidgets('home shows Pro and drops the counter once subscribed', (
+    testWidgets('home recommends a conversation a free account can start', (
+      tester,
+    ) async {
+      final subscription = await subscriptionWith();
+      addTearDown(subscription.dispose);
+
+      await pump(tester, const HomeScreen(), subscription: subscription);
+
+      // The primary call to action must not open a paywall on first run.
+      await tester.tap(find.byKey(const Key('start_recommended')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('begin_simulation')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PaywallScreen), findsNothing);
+      expect(find.byType(PracticeScreen), findsOneWidget);
+    });
+
+    testWidgets('locked conversations are marked as Pro on home', (
+      tester,
+    ) async {
+      final subscription = await subscriptionWith();
+      addTearDown(subscription.dispose);
+
+      await pump(tester, const HomeScreen(), subscription: subscription);
+
+      expect(find.text('Pro'), findsWidgets);
+    });
+
+    testWidgets('home shows Pro and drops the free line once subscribed', (
       tester,
     ) async {
       final subscription = await subscriptionWith(isPro: true);
@@ -620,7 +649,6 @@ void main() {
         client: FakeSubscriptionClient(
           restoreOutcome: PurchaseOutcome.restored,
         ),
-        used: 1,
       );
       addTearDown(subscription.dispose);
 
@@ -632,7 +660,10 @@ void main() {
       );
 
       expect(find.byKey(const Key('plan_card')), findsOneWidget);
-      expect(find.text('2 of 3 free rehearsals left.'), findsOneWidget);
+      expect(
+        find.text('2 of 12 conversations, unlimited reps.'),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byKey(const Key('restore_from_settings')));
       await tester.pumpAndSettle();
@@ -641,18 +672,16 @@ void main() {
       expect(find.text('Rehearse Pro'), findsOneWidget);
     });
 
-    testWidgets('reaching the coaching report spends one free rehearsal', (
-      tester,
-    ) async {
+    testWidgets('finishing a rehearsal costs nothing', (tester) async {
       final subscription = await subscriptionWith();
       addTearDown(subscription.dispose);
 
       await pump(
         tester,
         ResultsScreen(
-          scenario: scenarios.first,
+          scenario: _freeScenario,
           summary: PracticeSummary.fromResponses([
-            for (final turn in scenarios.first.turns)
+            for (final turn in _freeScenario.turns)
               PracticeResponse.fromChoice(turn.choices.first, turn),
           ]),
         ),
@@ -660,27 +689,10 @@ void main() {
       );
 
       expect(find.text('COACHING REPORT'), findsOneWidget);
-      expect(subscription.freeSessionsUsed, 1);
-      expect(subscription.freeSessionsRemaining, 2);
-    });
-
-    testWidgets('a Pro rehearsal spends nothing', (tester) async {
-      final subscription = await subscriptionWith(isPro: true);
-      addTearDown(subscription.dispose);
-
-      await pump(
-        tester,
-        ResultsScreen(
-          scenario: scenarios.first,
-          summary: PracticeSummary.fromResponses([
-            for (final turn in scenarios.first.turns)
-              PracticeResponse.fromChoice(turn.choices.first, turn),
-          ]),
-        ),
-        subscription: subscription,
-      );
-
-      expect(subscription.freeSessionsUsed, 0);
+      // The report used to be where a free session was spent. Nothing is
+      // spent now, so the same conversation is open again immediately.
+      expect(subscription.canPractice(_freeScenario), isTrue);
+      expect(subscription.isLocked(_lockedScenario), isTrue);
     });
 
     testWidgets('the You tab hides plans in an unconfigured build', (
@@ -793,28 +805,4 @@ class _ThrowingClient implements SubscriptionClient {
 
   @override
   Future<PurchaseOutcome> restore() async => throw StateError('store exploded');
-}
-
-class _BrokenStore implements SettingsStore {
-  @override
-  Future<bool?> readBool(String key) async => throw StateError('unavailable');
-
-  @override
-  Future<void> writeBool(String key, bool value) async =>
-      throw StateError('unavailable');
-
-  @override
-  Future<int?> readInt(String key) async => throw StateError('unavailable');
-
-  @override
-  Future<void> writeInt(String key, int value) async =>
-      throw StateError('unavailable');
-
-  @override
-  Future<String?> readString(String key) async =>
-      throw StateError('unavailable');
-
-  @override
-  Future<void> writeString(String key, String value) async =>
-      throw StateError('unavailable');
 }

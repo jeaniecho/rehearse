@@ -133,7 +133,7 @@ void main() {
     settings = AppSettings(
       store: InMemorySettingsStore({'rehearse.onboarding_completed': true}),
     );
-    subscription = Subscription(store: InMemorySettingsStore());
+    subscription = Subscription();
     await settings.load();
     await subscription.load();
 

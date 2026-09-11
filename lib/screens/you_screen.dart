@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_info.dart';
+import '../data/scenarios.dart';
 import '../models/subscription.dart';
 import '../services/analytics.dart';
 import '../services/practice_history.dart';
@@ -132,12 +133,10 @@ class _PlanCardState extends State<_PlanCard> {
                       const SizedBox(height: 2),
                       Text(
                         isPro
-                            ? 'Unlimited rehearsals.'
-                            : subscription.freeSessionsRemaining == 0
-                            ? 'No free rehearsals left.'
-                            : '${subscription.freeSessionsRemaining} of '
-                                  '${Subscription.freeSessionLimit} free '
-                                  'rehearsals left.',
+                            ? 'All ${scenarios.length} conversations.'
+                            : '${Subscription.freeScenarioIds.length} of '
+                                  '${scenarios.length} conversations, '
+                                  'unlimited reps.',
                         style: const TextStyle(
                           color: AppColors.muted,
                           fontSize: 13,

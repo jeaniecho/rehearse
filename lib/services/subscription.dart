@@ -1,36 +1,38 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/scenario.dart';
 import '../models/subscription.dart';
-import 'app_settings.dart';
 import 'subscription_client.dart';
 
-/// Owns the one question the rest of the app asks: may this person start
-/// another rehearsal?
+/// Owns the one question the rest of the app asks: may this person rehearse
+/// this conversation?
 ///
-/// The answer depends on the store entitlement and on how many free sessions
-/// have been used, so both live here rather than being stitched together at
-/// each call site.
+/// The answer depends on the store entitlement and on which scenarios the
+/// free tier includes, so both live here rather than being stitched together
+/// at each call site.
 class Subscription extends ChangeNotifier {
-  Subscription({SubscriptionClient? client, SettingsStore? store})
-    : _client = client ?? createSubscriptionClient(),
-      _store = store ?? const SharedPreferencesSettingsStore();
+  Subscription({SubscriptionClient? client})
+    : _client = client ?? createSubscriptionClient();
 
-  /// Completed rehearsals before Pro is required. PRD §13: a lifetime limit
-  /// rather than a weekly one, for a simpler funnel.
-  static const freeSessionLimit = 3;
-
-  /// Deliberately not the practice-history key. Clearing your history is a
-  /// privacy action and must not hand back free sessions.
-  static const _usedKey = 'rehearse.free_sessions_used';
+  /// The conversations a free account can rehearse, without limit.
+  ///
+  /// PRD §13 lists "all scenarios" among what Pro unlocks; this is that gate.
+  /// It replaced a lifetime count of completed rehearsals, and the reason is
+  /// worth keeping: a count has to be stored, and anything stored on the
+  /// device is back at zero after a reinstall. A content gate holds no state,
+  /// so there is nothing to reset.
+  ///
+  /// Two warm-up scenarios in different registers — handing work over, and
+  /// repairing a peer relationship — so the free tier samples the range of
+  /// the library rather than one corner of it.
+  static const freeScenarioIds = <String>{'delegation', 'peer-conflict'};
 
   final SubscriptionClient _client;
-  final SettingsStore _store;
 
   bool _isConfigured = false;
   bool _isPro = false;
   bool _isLoaded = false;
   bool _isBusy = false;
-  int _freeSessionsUsed = 0;
   SubscriptionOffer? _offer;
 
   /// False when no API key is set for this platform, or the store could not
@@ -46,28 +48,23 @@ class Subscription extends ChangeNotifier {
 
   SubscriptionOffer? get offer => _offer;
 
-  int get freeSessionsUsed => _freeSessionsUsed;
-
-  int get freeSessionsRemaining =>
-      (freeSessionLimit - _freeSessionsUsed).clamp(0, freeSessionLimit);
-
-  /// Whether the free allowance should be shown at all — Pro users and
-  /// unconfigured builds have nothing to count.
-  bool get showsFreeAllowance => _isConfigured && !_isPro;
+  /// Whether to draw the free/locked distinction at all — Pro users and
+  /// unconfigured builds have nothing to lock.
+  bool get showsLocks => _isConfigured && !_isPro;
 
   /// The gate.
   ///
-  /// An unconfigured build never blocks: a missing key or an unreachable
-  /// store must leave the core experience intact (PRD §26), and the demo has
-  /// to run without any of this wired up.
-  bool get canStartPractice =>
-      _isPro || !_isConfigured || freeSessionsRemaining > 0;
+  /// An unconfigured build never locks anything: a missing key or an
+  /// unreachable store must leave the core experience intact (PRD §26), and
+  /// the demo has to run without any of this wired up.
+  bool isLocked(Scenario scenario) =>
+      showsLocks && !freeScenarioIds.contains(scenario.id);
 
-  /// True once the allowance is spent and Pro would unlock more.
-  bool get isPaywalled => !canStartPractice;
+  /// The free tier is unlimited within the scenarios it includes, so this is
+  /// only ever false for a locked one.
+  bool canPractice(Scenario scenario) => !isLocked(scenario);
 
   Future<void> load() async {
-    _freeSessionsUsed = await _readUsed();
     _isConfigured = await _client.configure(onProChanged: _handleProChanged);
     _isLoaded = true;
     notifyListeners();
@@ -81,17 +78,6 @@ class Subscription extends ChangeNotifier {
     if (offer == _offer) return;
     _offer = offer;
     notifyListeners();
-  }
-
-  /// Called when a rehearsal reaches its coaching report. Only completed
-  /// sessions count, so abandoning one costs nothing.
-  Future<void> recordCompletedSession() async {
-    if (_isPro || !_isConfigured) return;
-    if (_freeSessionsUsed >= freeSessionLimit) return;
-
-    _freeSessionsUsed += 1;
-    notifyListeners();
-    await _writeUsed(_freeSessionsUsed);
   }
 
   Future<PurchaseOutcome> purchase(SubscriptionPlan plan) =>
@@ -123,24 +109,5 @@ class Subscription extends ChangeNotifier {
     if (_isPro == isPro) return;
     _isPro = isPro;
     notifyListeners();
-  }
-
-  Future<int> _readUsed() async {
-    try {
-      final stored = await _store.readInt(_usedKey);
-      return (stored ?? 0).clamp(0, freeSessionLimit);
-    } on Object {
-      return 0;
-    }
-  }
-
-  Future<void> _writeUsed(int value) async {
-    try {
-      await _store.writeInt(_usedKey, value);
-    } on Object {
-      // The count still holds for this session; losing it errs toward
-      // giving someone an extra free rehearsal, which is the safe way to
-      // be wrong.
-    }
   }
 }

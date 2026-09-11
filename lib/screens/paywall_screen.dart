@@ -17,9 +17,9 @@ import '../widgets/subscription_scope.dart';
 
 /// The Pro upgrade.
 ///
-/// Deliberately contextual (PRD §14): it appears only once someone has
-/// finished their free rehearsals, and it opens by naming the pattern their
-/// own history shows rather than a generic pitch.
+/// Deliberately contextual (PRD §14): it appears when someone tries to start
+/// a conversation the free tier does not include, and it opens by naming the
+/// pattern their own history shows rather than a generic pitch.
 ///
 /// Plans and prices come from the RevenueCat offering, never from code, so
 /// packaging can be changed and experimented on from the dashboard.
@@ -262,7 +262,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
   static String _ctaLabel(SubscriptionOffer offer, SubscriptionPlan? plan) {
     if (offer.callToAction case final remote?) return remote;
     if (plan?.hasTrial ?? false) return 'Start my free trial';
-    return 'Unlock unlimited practice';
+    // Not "unlimited practice" — the free tier already has that, within its
+    // two conversations. What Pro sells is the rest of the library.
+    return 'Unlock every conversation';
   }
 }
 
@@ -279,8 +281,8 @@ class _Header extends StatelessWidget {
     final subhead =
         offer?.subhead ??
         weakest?.weaknessDescription ??
-        'You have used your free rehearsals. Keep practicing the '
-            'conversations you would rather not have.';
+        'Open the whole library, and keep practicing the conversations '
+            'you would rather not have.';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,10 +309,11 @@ class _Header extends StatelessWidget {
 
 /// Free against Pro, side by side.
 ///
-/// Every row here is checked against `Subscription.canStartPractice`, which
-/// is the only gate the app actually has: Pro removes the session limit and
-/// changes nothing else. Scenarios, coaching and history are not gated, so
-/// they are ticked in both columns rather than crossed out of the free one.
+/// Every row here is checked against `Subscription.isLocked`, which is the
+/// only gate the app actually has: Pro opens the rest of the library and
+/// changes nothing else. Rehearsals, coaching and history are not gated —
+/// the free tier repeats its two conversations without limit — so they are
+/// ticked in both columns rather than crossed out of the free one.
 ///
 /// That makes for a table with one differing row, which is the honest
 /// shape of this product. A cross against something the free tier really
@@ -325,8 +328,12 @@ class _Comparison extends StatelessWidget {
 
   /// A null value means "included", drawn as a tick.
   static final _rows = <(String, String?, String?)>[
-    ('Rehearsals', '${Subscription.freeSessionLimit} total', 'Unlimited'),
-    ('All ${scenarios.length} conversations', null, null),
+    (
+      'Conversations',
+      '${Subscription.freeScenarioIds.length}',
+      'All ${scenarios.length}',
+    ),
+    ('Unlimited rehearsals', null, null),
     ('Coaching on what you actually said', null, null),
     ('Scores, streak and history', null, null),
   ];

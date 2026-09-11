@@ -167,16 +167,11 @@ void main() {
     });
 
     test('entitlement rides along on every later event', () {
-      analytics.setSubscriptionState(
-        isConfigured: true,
-        isPro: false,
-        freeSessionsRemaining: 2,
-      );
+      analytics.setSubscriptionState(isConfigured: true, isPro: false);
 
       expect(sink.superProperties, {
         'is_pro': false,
         'billing_configured': true,
-        'free_sessions_remaining': 2,
       });
     });
   });
@@ -195,7 +190,7 @@ void main() {
       addTearDown(analytics.dispose);
       final history = PracticeHistory(store: InMemoryHistoryStore());
       addTearDown(history.dispose);
-      final subscription = Subscription(store: InMemorySettingsStore());
+      final subscription = Subscription();
       addTearDown(subscription.dispose);
       final settings = AppSettings(
         store: InMemorySettingsStore({'rehearse.onboarding_completed': true}),
@@ -379,10 +374,7 @@ void main() {
       final sink = RecordingSink();
       final analytics = Analytics(sink: sink);
       addTearDown(analytics.dispose);
-      final subscription = Subscription(
-        client: _StubClient(offer),
-        store: InMemorySettingsStore(),
-      );
+      final subscription = Subscription(client: _StubClient(offer));
       addTearDown(subscription.dispose);
       await subscription.load();
 
@@ -405,11 +397,11 @@ void main() {
     ) async {
       final sink = await pumpPaywall(
         tester,
-        trigger: PaywallTrigger.sessionLimit,
+        trigger: PaywallTrigger.lockedScenario,
       );
 
       final viewed = sink.eventNamed('paywall_viewed');
-      expect(viewed['trigger'], 'sessionLimit');
+      expect(viewed['trigger'], 'lockedScenario');
       expect(viewed['paywall_id'], 'default');
       expect(viewed['plan_count'], 1);
     });
@@ -428,7 +420,7 @@ void main() {
     ) async {
       final sink = await pumpPaywall(
         tester,
-        trigger: PaywallTrigger.sessionLimit,
+        trigger: PaywallTrigger.lockedScenario,
         offer: null,
       );
 
@@ -440,7 +432,7 @@ void main() {
     testWidgets('closing records a dismissal', (tester) async {
       final sink = await pumpPaywall(
         tester,
-        trigger: PaywallTrigger.sessionLimit,
+        trigger: PaywallTrigger.lockedScenario,
       );
       await tester.tap(find.byKey(const Key('close_paywall')));
       await tester.pumpAndSettle();
@@ -453,7 +445,7 @@ void main() {
     ) async {
       final sink = await pumpPaywall(
         tester,
-        trigger: PaywallTrigger.sessionLimit,
+        trigger: PaywallTrigger.lockedScenario,
       );
       await tester.tap(find.byKey(const Key('start_subscription')));
       await tester.pumpAndSettle();
@@ -474,7 +466,7 @@ void main() {
     ) async {
       final sink = await pumpPaywall(
         tester,
-        trigger: PaywallTrigger.sessionLimit,
+        trigger: PaywallTrigger.lockedScenario,
       );
       await tester.tap(find.byKey(const Key('restore_purchases')));
       await tester.pumpAndSettle();

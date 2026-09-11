@@ -16,7 +16,6 @@ import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
 import 'package:rehearse/services/coach_service.dart';
 import 'package:rehearse/models/subscription.dart';
-import 'package:rehearse/services/app_settings.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/services/subscription_client.dart';
@@ -58,10 +57,7 @@ void main() {
       );
     }
 
-    final subscription = Subscription(
-      client: _OfferingClient(),
-      store: InMemorySettingsStore(),
-    );
+    final subscription = Subscription(client: _OfferingClient());
     addTearDown(subscription.dispose);
     await subscription.load();
 
@@ -149,7 +145,7 @@ void main() {
       testWidgets('paywall', (tester) async {
         await layOut(
           tester,
-          const PaywallScreen(trigger: PaywallTrigger.sessionLimit),
+          const PaywallScreen(trigger: PaywallTrigger.lockedScenario),
           textScale: textScale,
         );
       });

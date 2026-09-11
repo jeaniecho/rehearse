@@ -68,7 +68,6 @@ class _RehearseAppState extends State<RehearseApp> {
     _analytics.setSubscriptionState(
       isConfigured: _subscription.isConfigured,
       isPro: _subscription.isPro,
-      freeSessionsRemaining: _subscription.freeSessionsRemaining,
     );
   }
 

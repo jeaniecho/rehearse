@@ -70,10 +70,12 @@ real model — and the **release checklist**.
   paywall, purchase, restore (on the paywall and the progress screen), live
   entitlement refresh, and correct handling of cancelled purchases and
   unavailable offerings.
-- **Free-session limit**: 3 completed rehearsals, lifetime, counted separately
-  from practice history so clearing history cannot hand sessions back.
+- **Free tier**: two conversations — `delegation` and `peer-conflict` —
+  rehearsed without limit; the other ten need Pro. A content gate, so it
+  holds no state and a reinstall resets nothing. See §5.
 - **Contextual paywall** that opens on the weakest skill the person's own
-  history shows, with copy overridable from offering metadata.
+  history shows, with copy overridable from offering metadata. It is reached
+  by trying to start a locked conversation — reading its briefing is free.
 - **Analytics**: the PRD §17 funnel end to end, including abandonment with the
   turn reached, retry as its own attempt, and paywall triggers that
   distinguish a forced paywall from a voluntary upsell. Entitlement rides
@@ -278,6 +280,54 @@ So `CLAUDE.md` and §7 held and §2 was wrong. Session outcome plus §9's end
 conditions was named here as the best-justified thing to build after
 submission, and it has now been built; what is left of that list is dark
 theme and 4–7 turn conversations, neither of which the PRD calls required.
+
+**The free tier is two conversations, not three rehearsals — changed
+2026-09-11.** PRD §13's suggested free tier is "3 free completed simulations
+total", and §25 lists "free sessions used" among what MVP may persist. The
+app no longer counts. `Subscription.freeScenarioIds` names two warm-up
+scenarios that a free account can rehearse without limit; the other ten need
+Pro.
+
+The reason is that a count is state, and state on the device is back at zero
+after a delete and reinstall — reliably on iOS, where the app container goes
+with the app; usually not on Android, where Auto Backup restores
+`shared_prefs` to the same Google account. So the limit was resettable by
+anyone who noticed, and inconsistent between platforms for everyone else. A
+content gate has nothing to reset.
+
+This is a swap between two mechanisms the PRD already names rather than an
+invention: §13 lists **"all scenarios"** among what Pro unlocks. What it
+gives up is §13's stated reason for preferring the count — "faster paywall
+exposure during testing". The shape of exposure changed rather than
+vanishing: a free account sees ten locked tiles on first launch, which is
+earlier and more often than a count would have produced, but nobody is ever
+forced into a decision mid-habit. Impressions up, forced moments down. Worth
+watching once PostHog is live: `paywall_viewed` with `trigger` =
+`lockedScenario` against `purchase_completed` is the conversion question, and
+if free users settle into the two scenarios and never look at the rest, the
+free tier is too comfortable.
+
+**PRD §34 still passes**, with one item read differently: its monetization
+checklist says "Free session limit works", and what works is a free *tier*
+rather than a session count. Every other line on that checklist — RevenueCat
+initializes, the paywall displays, purchase, restore, Pro unlocks the
+expected behavior — is unchanged. Nothing else in §34 mentions the limit.
+
+Three consequences worth knowing:
+
+- **`free_sessions_remaining` is gone from analytics**, and
+  `PaywallTrigger.sessionLimit` became `lockedScenario`. Nothing had been
+  sent to a live PostHog yet, so this cost no historical data — the same
+  window that made the `progressUpsell` rename cheap. It is now shut.
+- **`Subscription` persists nothing at all**, so it no longer takes a
+  `SettingsStore`. The invariant it used to carry — the free counter is not
+  the practice history — is retired, because there is no counter. Clearing
+  history was already a privacy action and still is.
+- **The free two are asserted to be warm-up stakes** in
+  `scenarios_test.dart`, along with the ids existing at all. A set of string
+  ids in code is exactly the kind of thing that silently rots when a scenario
+  is renamed, and the failure mode — the library closed to everyone who has
+  not paid — is bad enough to be worth a guard.
 
 **The app is set in two families, which the PRD does not mention.** Plus
 Jakarta Sans throughout, plus Literata on the results screen only — the quote
@@ -571,14 +621,15 @@ Backend          : Cloudflare Worker in server/ (worker.mjs), with a local
                    OpenAI Responses API
 Persistence      : shared_preferences
 Monetization     : RevenueCat (purchases_flutter), entitlement `pro`,
-                   3 free completed rehearsals, keys via --dart-define
+                   2 free conversations rehearsed without limit,
+                   keys via --dart-define
 Analytics        : PostHog behind a provider-agnostic sink, key via
                    --dart-define, no-op without one
 Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter, sentry_flutter,
                    url_launcher
-Tests            : 420 Flutter + 31 server
+Tests            : 423 Flutter + 31 server
 TODO/FIXME       : none
 ```
 

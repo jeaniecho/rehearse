@@ -21,7 +21,7 @@ unmetered and never shows a paywall — see [Behaviour without keys](#behaviour-
 | Entitlement refresh | ✅ `addCustomerInfoUpdateListener`, so renewals and expiries arrive live |
 | Cancelled purchase | ✅ treated as a normal outcome, no error shown |
 | Unavailable offerings | ✅ retry state, never a dead end |
-| Free session limit | ✅ 3 completed rehearsals, lifetime |
+| Free tier | ✅ 2 conversations, rehearsed without limit |
 | Contextual paywall | ✅ opens on the pattern the person's own history shows |
 | Sandbox purchase tested | ❌ **needs steps 2–5 below** |
 
@@ -179,14 +179,18 @@ Once steps 2–5 are done:
 
 1. Run on a real device with a sandbox account signed in. Simulators cannot
    complete StoreKit purchases.
-2. Finish three rehearsals. The home screen counts down as you go.
-3. Start a fourth. The paywall should appear on tapping start, not before.
+2. Open one of the two free conversations and finish it. Do it again. The
+   free tier is unlimited within those two, so no paywall should appear.
+3. Open a locked one — the home tiles say **Pro** — and tap start. The
+   paywall should appear then, not on opening the briefing.
 4. Check that real store prices appear. Placeholder prices mean the offering
    is not current or the products are not approved.
 5. Buy. The paywall should close and drop you straight into the rehearsal.
 6. Confirm the transaction appears in the RevenueCat dashboard.
-7. Delete and reinstall the app, then use **Restore purchases** on the progress
-   screen. Pro should come back.
+7. Delete and reinstall the app, then use **Restore purchases** on the You
+   tab. Pro should come back. Note that reinstalling no longer hands back
+   free rehearsals — there is no count to reset — so the locked
+   conversations should still be locked until the restore lands.
 
 ### If offerings come back empty
 

@@ -51,10 +51,13 @@ Four things gate everything downstream, in this order:
    are filled in, and offerings come back empty until then — which looks
    exactly like a bug in the app. As of 2026-09-11 iOS offerings *do* return
    real prices, so this is mostly done; the gap is a completed purchase.
-4. **Decide the free limit.** Currently 3 completed rehearsals, lifetime. It
-   is one constant, `Subscription.freeSessionLimit`, and changing it later
-   means shipping a build; changing the *price* does not, because that comes
-   from RevenueCat.
+4. **Decide the free tier.** Currently two conversations — `delegation` and
+   `peer-conflict` — rehearsed without limit. It is one constant,
+   `Subscription.freeScenarioIds`, and changing it later means shipping a
+   build; changing the *price* does not, because that comes from RevenueCat.
+   It replaced a lifetime count of three rehearsals, which a reinstall
+   reset; see [`ARCHITECTURE.md`](ARCHITECTURE.md), "Why this is not a
+   count".
 
 ---
 
@@ -337,10 +340,12 @@ Run through this on a real device, on the build you are actually shipping:
 - [ ] Aeroplane mode: the app still runs, on the offline coach
 
 **Money**
-- [ ] Three free rehearsals, then the paywall
+- [ ] The two free conversations repeat without ever hitting a paywall
+- [ ] A locked conversation opens its briefing, then paywalls on start
 - [ ] Real prices load, not placeholders
 - [ ] Sandbox purchase completes and unlocks
-- [ ] Delete, reinstall, restore — Pro comes back, from the You tab
+- [ ] Delete, reinstall, restore — Pro comes back, from the You tab, and the
+      locked conversations are still locked until it does
 - [ ] The transaction appears in RevenueCat
 
 **Telemetry**

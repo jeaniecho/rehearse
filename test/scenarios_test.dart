@@ -6,6 +6,7 @@ import 'package:rehearse/models/practice_response.dart';
 import 'package:rehearse/models/practice_summary.dart';
 import 'package:rehearse/models/scenario.dart';
 import 'package:rehearse/models/session_outcome.dart';
+import 'package:rehearse/services/subscription.dart';
 import 'package:rehearse/widgets/illustration.dart';
 
 /// Guards the authored content. Every scenario is hand-written, so these
@@ -13,6 +14,38 @@ import 'package:rehearse/widgets/illustration.dart';
 void main() {
   test('the library is not empty', () {
     expect(scenarios, isNotEmpty);
+  });
+
+  test('the free tier names scenarios that exist', () {
+    // The free tier is a set of ids rather than a flag on each scenario, so
+    // nothing in the type system stops a typo or a renamed scenario from
+    // silently closing the library to everyone who has not paid.
+    final ids = {for (final scenario in scenarios) scenario.id};
+
+    expect(Subscription.freeScenarioIds, isNotEmpty);
+    expect(
+      Subscription.freeScenarioIds.difference(ids),
+      isEmpty,
+      reason: 'a free scenario id matches nothing in the library',
+    );
+    expect(
+      Subscription.freeScenarioIds.length,
+      lessThan(scenarios.length),
+      reason: 'Pro has to unlock something',
+    );
+  });
+
+  test('the free scenarios are the gentlest in the library', () {
+    // Someone meets the product through these two, so neither should be a
+    // high-stakes conversation opened cold.
+    for (final id in Subscription.freeScenarioIds) {
+      final scenario = scenarios.firstWhere((s) => s.id == id);
+      expect(
+        scenario.stakes,
+        ScenarioStakes.warmUp,
+        reason: '$id is the wrong weight for a first impression',
+      );
+    }
   });
 
   test('confidence is scored as its own axis, not a copy of directness', () {
