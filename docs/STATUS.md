@@ -668,8 +668,8 @@ live services; the rest is release and depth.
    side: `createCoachService` reads `REHEARSE_COACH_URL` with **no default**
    ([`coach_service.dart:47`](../lib/services/coach_service.dart)), so a
    build made without it ships as the offline demo — which is what the store
-   description sells against. The release entry in `.vscode/launch.json`
-   does not pass it.
+   description sells against. Both keyed entries in `.vscode/launch.json`
+   now pass it; the store build commands in `RELEASE.md` §8 are what is left.
 2. **Deploy the legal pages.** The paywall now links Terms of Use and
    Privacy Policy, as Apple 3.1.2 requires at the point of purchase, and both
    pages are written — `/rehearse-privacy` and `/rehearse-terms` in the
