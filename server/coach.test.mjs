@@ -70,6 +70,17 @@ test("the simulation prompt stays in character and never coaches", () => {
   assert.match(instructions, /Jordan Lee/);
 });
 
+// The authored dialogue runs 16 words at the median and 29 at its longest.
+// A model reply twice that length stops reading as speech, which is the whole
+// illusion — so the ceiling is in the prompt and asserted here.
+test("the simulation prompt keeps the reply spoken-length", () => {
+  const instructions = buildRespondRequest(respondPayload).input[0].content[0]
+    .text;
+
+  assert.match(instructions, /never more than 40/);
+  assert.match(instructions, /spoken, not written/);
+});
+
 test("each difficulty describes materially different behaviour", () => {
   const levels = ["calm", "defensive", "veryDefensive"].map(temperamentFor);
 

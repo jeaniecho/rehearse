@@ -662,13 +662,14 @@ Ordered by what moves the submission, not by what is most interesting.
 blockers found on the 2026-09-11 device pass; 3–5 are verification against
 live services; the rest is release and depth.
 
-1. **Deploy the coach and compile its URL into the release build.**
-   `createCoachService` reads `REHEARSE_COACH_URL` with **no default**
+1. **Compile the coach URL into the release build.** The server is deployed
+   and both routes now answer against the live model, at
+   `https://coach.example.invalid`. What remains is the app
+   side: `createCoachService` reads `REHEARSE_COACH_URL` with **no default**
    ([`coach_service.dart:47`](../lib/services/coach_service.dart)), so a
    build made without it ships as the offline demo — which is what the store
    description sells against. The release entry in `.vscode/launch.json`
-   does not pass it. Nothing downstream can be verified until the server has
-   a public home.
+   does not pass it.
 2. **Deploy the legal pages.** The paywall now links Terms of Use and
    Privacy Policy, as Apple 3.1.2 requires at the point of purchase, and both
    pages are written — `/rehearse-privacy` and `/rehearse-terms` in the

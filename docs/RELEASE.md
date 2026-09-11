@@ -27,7 +27,7 @@ or a human decision; one needs code, and is called out as such.
 | ❌ | Store records created, metadata entered |
 | 🟡 | Subscriptions: offerings return real prices; no purchase yet |
 | ✅ | Terms of Use and Privacy Policy links on the paywall (Apple 3.1.2) |
-| ❌ | Coach server deployed — code, rate limits and `wrangler.toml` are ready; needs a Cloudflare account, `OPENAI_API_KEY` as a secret, `ALLOWED_ORIGIN` set, and `REHEARSE_COACH_URL` in the release build |
+| 🟡 | Coach server deployed and answering at `https://coach.example.invalid`, with `OPENAI_API_KEY` set as a secret; both routes verified against the live model. Still needs `ALLOWED_ORIGIN` set and `REHEARSE_COACH_URL` in the release build |
 | ❌ | TestFlight / internal testing build |
 
 ---
@@ -36,11 +36,12 @@ or a human decision; one needs code, and is called out as such.
 
 Four things gate everything downstream, in this order:
 
-1. **Deploy the coach server.** `REHEARSE_COACH_URL` has no default, so a
-   release build without it ships on the offline demo coach and the app does
-   not do what §3's description says it does. Everything in §9's "The
-   product" checklist needs this first, and so does judging whether the
-   prompts are any good.
+1. **Point the release build at the coach server.** It is deployed and both
+   routes answer, but `REHEARSE_COACH_URL` has no default, so a build without
+   it ships on the offline demo coach and the app does not do what §3's
+   description says it does — silently, because `ResilientCoachService` falls
+   back rather than failing. Everything in §9's "The product" checklist needs
+   this define, and so does judging whether the prompts are any good.
 2. **Deploy the legal pages.** Both are written and build clean —
    `/rehearse-privacy` and `/rehearse-terms` in the `jeanie-dev` repository,
    which Firebase serves from `react/dist`. Both stores need a reachable
@@ -310,7 +311,7 @@ None of these are in the repo, and none should be.
 
 ```bash
 flutter build ipa \
-  --dart-define=REHEARSE_COACH_URL=https://coach.rehearse.app \
+  --dart-define=REHEARSE_COACH_URL=https://coach.example.invalid \
   --dart-define=REHEARSE_REVENUECAT_IOS_KEY=appl_… \
   --dart-define=REHEARSE_REVENUECAT_ANDROID_KEY=goog_… \
   --dart-define=REHEARSE_POSTHOG_KEY=phc_… \

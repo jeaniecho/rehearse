@@ -56,3 +56,6 @@ app.*.map.json
 # A whole file of real per-environment values is a different thing, and stays
 # out. See docs/REVENUECAT.md §5.
 *.dart-define.json
+
+# Wrangler build cache (server/)
+.wrangler/
