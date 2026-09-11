@@ -69,8 +69,9 @@ looks them up by scenario id.
 | `pro-unlock.png` | An open padlock resting on its side, shackle lifted. |
 | `logo.png` | Two overlapping speech bubbles, the left deep green and the right warm off-white, with a small muted amber bubble showing in the gap between them. |
 
-The first twelve are the scenarios, shown at 40pt on the briefing, 56pt in
-the home grid and 88pt on the card for whatever is next.
+The first twelve are the scenarios, shown at 40pt on the briefing, 44pt in
+the progress list, 56pt in the home grid, 88pt on the card for whatever is
+next, and 132pt in the rehearsal room, which is what they are cut to.
 `empty-progress` is the progress screen before the first rehearsal, and
 `pro-unlock` heads the paywall; both are shown at 120pt.
 

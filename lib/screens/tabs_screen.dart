@@ -29,7 +29,9 @@ class TabsScreen extends StatefulWidget {
   /// that inset can scroll its last row clear of the capsule. A test pins
   /// this number to what the capsule actually measures, because nothing
   /// else would notice the two drifting apart.
-  static const navHeight = 72.0;
+  /// 70, not the 72 it was: the rail lost the 1pt border on each side when
+  /// it went charcoal, and the guard below caught the two drifting apart.
+  static const navHeight = 70.0;
 
   final int initialTab;
 
@@ -82,17 +84,35 @@ class _TabsScreenState extends State<TabsScreen> {
 
 /// The navigation, as a piece of paper rather than a bar.
 ///
-/// Everything else the app puts on this canvas is a card lifted slightly off
-/// it — the scenario tiles, the plan card, the coaching notes — so the one
-/// permanent control is made of the same thing: a white capsule with the
-/// card's own border and contact shadow, sized to its contents and floated
-/// off the bottom edge rather than ruled across it, over the content rather
-/// than beside it — the page runs to the bottom of the screen and the
-/// capsule sits on top of it, which is the whole point of the shape.
+/// Sized to its contents and floated off the bottom edge rather than ruled
+/// across it, over the content rather than beside it — the page runs to the
+/// bottom of the screen and the capsule sits on top of it, which is the
+/// whole point of the shape.
 ///
 /// Two destinations is the reason it can be. A full-width bar divided in two
 /// leaves each label marooned in half a screen; a capsule takes only the
 /// width the words need.
+///
+/// **Charcoal, and this used to be white.** The goal written here was that
+/// the one permanent control be "made of the same thing" as the cards it
+/// floats over — a white capsule with the card's own border and shadow. On
+/// a white page that worked, because the capsule was then the only white
+/// object with depth and the shadow alone said it was floating. Once
+/// [AppColors.ground] went warm, every card became a white sheet lifted off
+/// it, and the capsule stopped being distinguishable from the content
+/// underneath: on home it merged into the scenario tile behind it. The
+/// stated goal had become the bug.
+///
+/// Charcoal is the fix that keeps the shape, and the shape is not the
+/// problem — `filledButtonTheme` and `outlinedButtonTheme` are both
+/// `StadiumBorder` while every surface in the app is a rounded rectangle,
+/// so a stadium is what you press and a rectangle is what you read. A tab
+/// is something you press. Nothing in the content layer is dark, so the
+/// rail cannot be mistaken for a card, and charcoal already carries every
+/// primary action in the app rather than introducing a colour.
+///
+/// Measured: [AppColors.onCharcoalMuted] on charcoal 6.67:1, charcoal on
+/// the selected chip 12.27:1, the rail on the ground 10.96:1.
 class _PaperNav extends StatelessWidget {
   const _PaperNav({required this.selected, required this.onSelected});
 
@@ -113,10 +133,9 @@ class _PaperNav extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.charcoal,
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppColors.border),
-              boxShadow: Paper.lift,
+              boxShadow: Paper.float,
             ),
             // The pills are `Flexible`, not the labels alone. A `Flexible`
             // inside a min-size row is handed the whole incoming width, so
@@ -167,13 +186,15 @@ class _NavPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ink = isSelected ? AppColors.forest : AppColors.muted;
+    // The selected tab is a white chip on the dark rail — a tab pulled
+    // forward, rather than a tint laid on.
+    final ink = isSelected ? AppColors.charcoal : AppColors.onCharcoalMuted;
 
     return Semantics(
       selected: isSelected,
       button: true,
       child: Material(
-        color: isSelected ? AppColors.mint : Colors.transparent,
+        color: isSelected ? AppColors.surface : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
         child: InkWell(
           key: Key('tab_${label.toLowerCase()}'),

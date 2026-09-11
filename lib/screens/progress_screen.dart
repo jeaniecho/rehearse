@@ -58,26 +58,29 @@ class ProgressScreen extends StatelessWidget {
                   MediaQuery.paddingOf(context).bottom + 30,
                 ),
                 children: [
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   _StreakBanner(history: history),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   _SkillTrends(history: history),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 30),
                   Text(
                     'Session history',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
-                    '${records.length} ${records.length == 1 ? 'rehearsal' : 'rehearsals'} on this device.',
+                    // Not "on this device" — the line under the list already
+                    // says that, and saying it twice was half of why this
+                    // section read as stacked.
+                    '${records.length} ${records.length == 1 ? 'rehearsal' : 'rehearsals'}, newest first.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   for (final record in records) ...[
                     _SessionTile(record: record),
-                    const SizedBox(height: 9),
+                    const SizedBox(height: 10),
                   ],
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 18),
                   const Center(
                     child: Text(
                       'Your history never leaves this device.',
@@ -152,65 +155,52 @@ class _StreakBanner extends StatelessWidget {
     final trend = history.scoreTrend();
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
       decoration: BoxDecoration(
         color: AppColors.forest,
         borderRadius: BorderRadius.circular(22),
       ),
+      // One card, one claim, then the numbers under a rule. The ring used to
+      // sit here at 92pt and repeat the average score the row already gave,
+      // in rust on green — the two loudest colours in the palette, touching.
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            streak > 0
+                ? '$streak-day streak'
+                : '${history.records.length} rehearsed',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(color: Colors.white),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            streak > 0
+                ? history.practicedToday
+                      ? 'You already practiced today. Nice.'
+                      : 'Practice today to keep it alive.'
+                : 'Practice two days running to start a streak.',
+            style: const TextStyle(
+              color: AppColors.onForestMuted,
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.14)),
+          const SizedBox(height: 18),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      streak > 0
-                          ? '$streak-day streak'
-                          : '${history.records.length} rehearsed',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.headlineMedium?.copyWith(color: Colors.white),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      streak > 0
-                          ? history.practicedToday
-                                ? 'You already practiced today. Nice.'
-                                : 'Practice today to keep it alive.'
-                          : 'Practice two days running to start a streak.',
-                      style: const TextStyle(
-                        color: Color(0xFFD9E5DD),
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ScoreRing.onDark(
-                score: history.averageScore,
-                caption: 'AVG SCORE',
-                diameter: 92,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _BannerStat(
-                value: '${history.sessionsThisWeek}',
-                label: 'this week',
-              ),
-              const _BannerDivider(),
               _BannerStat(
                 value: '${history.averageScore}',
                 label: 'average score',
               ),
-              const _BannerDivider(),
+              _BannerStat(
+                value: '${history.sessionsThisWeek}',
+                label: 'this week',
+              ),
               _BannerStat(
                 value: trend == null ? '—' : '${trend > 0 ? '+' : ''}$trend',
                 label: trend == null ? 'trend soon' : 'recent trend',
@@ -239,40 +229,24 @@ class _BannerStat extends StatelessWidget {
             value,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+              letterSpacing: -0.6,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             label,
-            style: const TextStyle(color: Color(0xFFB9CEC2), fontSize: 11),
+            style: const TextStyle(
+              color: AppColors.onForestMuted,
+              fontSize: 11,
+              height: 1.3,
+            ),
           ),
         ],
       ),
     );
   }
-}
-
-class _BannerDivider extends StatelessWidget {
-  const _BannerDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 30,
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      color: Colors.white.withValues(alpha: 0.18),
-    );
-  }
-}
-
-/// The skill that alone scores [value], or null when it is shared.
-PracticeSkill? _soleHolder(Map<PracticeSkill, int> skills, int value) {
-  final holders = skills.entries.where((entry) => entry.value == value);
-  return holders.length == 1 ? holders.first.key : null;
 }
 
 class _SkillTrends extends StatelessWidget {
@@ -283,14 +257,10 @@ class _SkillTrends extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skills = history.averageSkills;
-    final best = skills.values.reduce((a, b) => a >= b ? a : b);
-    final worst = skills.values.reduce((a, b) => a <= b ? a : b);
 
-    // Name a skill only where it alone holds the extreme. Reducing to the
-    // first of a tie used to announce "Clarity is carrying you" off three
-    // dimensions level at 43 — a winner the numbers do not have.
-    final strongest = best == worst ? null : _soleHolder(skills, best);
-    final weakest = best == worst ? null : _soleHolder(skills, worst);
+    // The same call the bars make, so the sentence and the chart name the
+    // same two skills — see `skillExtremes`.
+    final (:strongest, :weakest) = skillExtremes(skills);
     final claims = [
       if (strongest != null) '${strongest.label} is carrying you.',
       if (weakest != null) '${weakest.label} is where the next point is.',
@@ -298,7 +268,7 @@ class _SkillTrends extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(17),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -306,15 +276,15 @@ class _SkillTrends extends StatelessWidget {
               'Skills across every rehearsal',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 6),
             Text(
               claims.isEmpty
                   ? 'Evenly balanced so far. Keep going to see a pattern.'
                   : claims.join(' '),
               style: const TextStyle(color: AppColors.muted, fontSize: 13),
             ),
-            const SizedBox(height: 18),
-            SkillBars(values: skills, spacing: 17),
+            const SizedBox(height: 20),
+            SkillBars(values: skills, spacing: 18),
           ],
         ),
       ),
@@ -339,28 +309,29 @@ class _SessionTile extends StatelessWidget {
     final scenario = _scenario;
 
     return Container(
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: scenario?.tint ?? AppColors.canvas,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              scenario?.icon ?? Icons.forum_rounded,
-              color: AppColors.ink,
-              size: 21,
-            ),
+          // The scenario's own mark, as on the home grid. A Material glyph
+          // on a pastel chip was the one place a scenario was labelled by
+          // something other than the illustration drawn for it.
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: scenario == null
+                ? const Icon(
+                    Icons.forum_rounded,
+                    color: AppColors.muted,
+                    size: 21,
+                  )
+                : Illustration.scenario(scenario.id, size: 44),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,7 +359,10 @@ class _SessionTile extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
-                color: record.score >= 68 ? AppColors.mint : AppColors.canvas,
+                // Not [AppColors.canvas], which is the tile's own white: a
+                // score under 68 used to lose its pill entirely, so half the
+                // list was chips and half was loose numerals.
+                color: record.score >= 68 ? AppColors.mint : AppColors.subtle,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -396,7 +370,7 @@ class _SessionTile extends StatelessWidget {
                 style: TextStyle(
                   color: record.score >= 68
                       ? AppColors.forest
-                      : AppColors.muted,
+                      : AppColors.charcoal,
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
                 ),

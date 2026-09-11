@@ -545,7 +545,7 @@ class _Unavailable extends StatelessWidget {
       key: const Key('offer_unavailable'),
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        color: AppColors.canvas,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),

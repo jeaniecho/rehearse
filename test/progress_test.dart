@@ -185,7 +185,7 @@ void main() {
       );
 
       expect(find.text('2-day streak'), findsOneWidget);
-      expect(find.text('2 rehearsals on this device.'), findsOneWidget);
+      expect(find.text('2 rehearsals, newest first.'), findsOneWidget);
       expect(find.text('The slipping deadline'), findsOneWidget);
       expect(find.text('The impossible request'), findsOneWidget);
       expect(find.text('74'), findsOneWidget);

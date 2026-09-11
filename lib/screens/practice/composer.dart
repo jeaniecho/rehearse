@@ -42,13 +42,7 @@ class _ResponsePanel extends StatelessWidget {
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 18,
-            offset: Offset(0, -5),
-          ),
-        ],
+        boxShadow: Paper.ledge,
       ),
       padding: EdgeInsets.fromLTRB(
         20,
@@ -171,7 +165,7 @@ class _FreeformComposer extends StatelessWidget {
             errorText: inputError,
             counterText: '',
             filled: true,
-            fillColor: isListening ? AppColors.peach : AppColors.canvas,
+            fillColor: isListening ? AppColors.peach : AppColors.surface,
             contentPadding: const EdgeInsets.fromLTRB(14, 14, 4, 14),
             suffixIconConstraints: const BoxConstraints(minWidth: 104),
             suffixIcon: Row(
@@ -286,7 +280,7 @@ class _ChoiceButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.canvas,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(15),
       child: InkWell(
         key: Key('choice_$index'),

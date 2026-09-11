@@ -2,11 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 abstract final class AppColors {
-  /// Cards are white on white; the border is what separates them. The old
-  /// cream canvas was most of what made the app read as generated.
-  static const canvas = Color(0xFFFFFFFF);
+  /// Three surfaces, and every container in the app is exactly one of them.
+  ///
+  /// [ground] is the page, [surface] is a sheet laid on it, [subtle] is a
+  /// well cut into a sheet. Each step is a real but quiet change in
+  /// luminance — sheet on ground 1.12:1, ground on well 1.13:1 — so depth is
+  /// read from material rather than from a hairline doing all the work.
+  ///
+  /// [ground] is not a new colour. `web/manifest.json` has carried it as the
+  /// browser chrome since the icons were first generated, hand-held there
+  /// against a generator that keeps overwriting it, and guarded by a test.
+  /// The brand had already decided; only the app had not.
+  ///
+  /// **This is not the cream canvas that was removed.** That one painted
+  /// cards and page the same colour, which is why nothing read as laid on
+  /// anything and the app read as generated. Paper needs a ground *and* a
+  /// sheet; the mistake was having one surface, not a warm one. The
+  /// illustrations have said so all along — `docs/ILLUSTRATIONS.md` fixes
+  /// their stock at warm off-white and gives every mark "one soft contact
+  /// shadow beneath", which is a shape resting on a ground exactly like
+  /// this.
+  static const ground = Color(0xFFF5F2EA);
   static const surface = Color(0xFFFFFFFF);
-  static const subtle = Color(0xFFF3F3F5);
+
+  /// A well: a track, a chip, a pill — cut into a sheet, not laid on it.
+  ///
+  /// Warm now, and darker than the cool grey it replaced, which no longer
+  /// separated from a warm ground. The cost is that [muted] on it is 4.19:1,
+  /// under the floor for body text: **a well carries [ink] or [charcoal],
+  /// never [muted].**
+  static const subtle = Color(0xFFEBE4D8);
 
   /// The cut edge of a sheet, not a Material divider. `#E4E4E7` is a cool
   /// grey, and a cool line around a warm palette is what made every surface
@@ -16,10 +41,16 @@ abstract final class AppColors {
   static const ink = Color(0xFF1A1A1A);
   static const muted = Color(0xFF6B6B72);
 
-  /// Charcoal carries every primary action. Green is kept for progress and
-  /// success only, so it still means something when it appears.
+  /// Charcoal carries every primary action and the nav rail. [forest] is
+  /// kept for progress and success only, so it still means something when it
+  /// appears.
+  ///
+  /// There was a second green here, `#00A862`, at full saturation — the only
+  /// neon value in the file. Nothing drew it: it reached `colorScheme
+  /// .secondary` and stopped, one Material widget away from putting neon on
+  /// a warm paper screen. [forest] holds that slot now, so the scheme and
+  /// the app cannot disagree about what green is.
   static const charcoal = Color(0xFF3A342F);
-  static const green = Color(0xFF00A862);
   static const forest = Color(0xFF17624A);
 
   /// Semantic surfaces. Nothing here is decorative — a colour on screen
@@ -27,15 +58,45 @@ abstract final class AppColors {
   /// Secondary text and icons on the forest card — what [muted] is on white.
   static const onForestMuted = Color(0xFFAEC5B7);
 
-  static const mint = Color(0xFFE3F5EB);
+  /// The same, on [charcoal] — the unselected label in the nav rail. Warm,
+  /// because a cool grey on charcoal is the tell the whole palette avoids.
+  static const onCharcoalMuted = Color(0xFFC6BEB4);
+
+  /// Success, and the surface for whatever comes next.
+  ///
+  /// Rebuilt when the page went warm. It was `#E3F5EB` — hue 147, saturation
+  /// 47, lightness 92.5 — which made it the one cool surface in a palette
+  /// whose every other token sits at hue 37–44, and at a lightness within
+  /// 1.4 of [ground] it was not a surface at all but a wash of colour on the
+  /// same paper, with the hue doing all of the work and pulling the opposite
+  /// way from everything around it. This is the diagnosis already written on
+  /// [border] — "a cool line around a warm palette" — at sixty times the
+  /// area.
+  ///
+  /// Now hue 132, saturation 30, lightness 89.5: less cyan, calmer, and a
+  /// real step below the ground, so it reads as tinted stock rather than as
+  /// a highlighter. [forest] on it is 5.93:1; [muted] is 4.31 and therefore
+  /// out, the same rule as [subtle].
+  static const mint = Color(0xFFDCECDF);
   static const peach = Color(0xFFFDECE0);
   static const butter = Color(0xFFFBF7A8);
   static const butterEdge = Color(0xFFE6DF6A);
   static const coral = Color(0xFFB3400F);
   static const coralBright = Color(0xFFE05B2A);
-  static const lavender = Color(0xFFECE8F7);
+
+  /// The accent every illustration already carries and the UI had no answer
+  /// for. `docs/ILLUSTRATIONS.md` §1 fixes the set's palette at deep green,
+  /// charcoal, warm off-white, warm grey "with one small accent of muted
+  /// amber #C8873A" — so amber was in every mark on every screen while the
+  /// interface answered it in rust, a hotter and redder hue.
+  ///
+  /// Darkened from the art's #C8873A for the same reason [coral] was
+  /// darkened: the original is 2.35:1 on [border], under the 3:1 floor for
+  /// a graphic. This clears it at 3.28:1. It is still under the 4.5:1 floor
+  /// for body text, so it draws marks and never words.
+  static const amber = Color(0xFFAE6D20);
+
   static const sky = Color(0xFFE1ECF5);
-  static const rose = Color(0xFFF7E5EA);
 }
 
 abstract final class AppTheme {
@@ -92,7 +153,7 @@ abstract final class AppTheme {
       seedColor: AppColors.forest,
       brightness: Brightness.light,
       primary: AppColors.charcoal,
-      secondary: AppColors.green,
+      secondary: AppColors.forest,
       surface: AppColors.surface,
     );
 
@@ -103,7 +164,7 @@ abstract final class AppTheme {
       fontFamilyFallback: fontFamilyFallback,
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppColors.canvas,
+      scaffoldBackgroundColor: AppColors.ground,
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           color: AppColors.ink,

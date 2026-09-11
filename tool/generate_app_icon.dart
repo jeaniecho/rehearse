@@ -87,7 +87,7 @@ void main() {
       'launch_mark',
       const BrandMarkPainter(
         frontBubble: AppColors.forest,
-        separator: AppColors.canvas,
+        separator: AppColors.ground,
         scale: 0.9,
       ),
     );

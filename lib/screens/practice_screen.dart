@@ -12,9 +12,11 @@ import '../services/coach_service.dart';
 import '../services/speech_input_service.dart';
 import '../services/speech_output_service.dart';
 import '../theme/app_theme.dart';
+import '../theme/paper.dart';
 import '../widgets/analytics_scope.dart';
 import '../widgets/app_settings_scope.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/illustration.dart';
 import 'results_screen.dart';
 
 // Split only for length — the screen was 1,356 lines. These are `part`s
@@ -569,77 +571,106 @@ class _PracticeScreenState extends State<PracticeScreen> {
               // opening line was one paragraph stranded above two thirds of
               // an empty screen — which read as a page that had failed to
               // load rather than as a room gone quiet.
-              child: LayoutBuilder(
-                builder: (context, constraints) => SingleChildScrollView(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - 34,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (_responses.isEmpty) ...[
-                          const _RoomNotice(),
-                          const SizedBox(height: 20),
-                        ],
-                        for (
-                          var index = 0;
-                          index < _responses.length;
-                          index++
-                        ) ...[
-                          _PersonMessage(
-                            scenario: widget.scenario,
-                            text: index == 0
-                                ? widget.scenario.turns.first.employeeLine
-                                : _responses[index - 1].employeeReply ??
-                                      widget.scenario.turns[index].employeeLine,
+              child: Stack(
+                children: [
+                  // And a quiet room still has something in it. The
+                  // scenario's own mark holds the space above the opening
+                  // line, then clears as the conversation fills it — the
+                  // alignment puts it in the upper third, which the
+                  // transcript only reaches once there is enough said to
+                  // have earned the room.
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: AnimatedOpacity(
+                        opacity: _responses.isEmpty ? 1 : 0,
+                        duration: const Duration(milliseconds: 450),
+                        curve: Curves.easeOut,
+                        child: Align(
+                          alignment: const Alignment(0, -0.42),
+                          child: Illustration.scenario(
+                            widget.scenario.id,
+                            size: Illustration.stageSize,
                           ),
-                          const SizedBox(height: 14),
-                          _YourMessage(text: _responses[index].text),
-                          const SizedBox(height: 18),
-                        ],
-                        _PersonMessage(
-                          key: ValueKey(_turnIndex),
-                          scenario: widget.scenario,
-                          text: _employeeLine,
-                          isSpeaking: _isSpeaking,
-                          onReplay: _voiceAvailable && _voiceEnabled
-                              ? _replayEmployeeLine
-                              : null,
                         ),
-                        // Guided mode previews the chosen line with its authored
-                        // note; free-form mode never coaches mid-conversation.
-                        if (_selectedResponse case final selected?) ...[
-                          const SizedBox(height: 14),
-                          _YourMessage(text: selected.text),
-                          if (selected.feedback.isNotEmpty) ...[
-                            const SizedBox(height: 16),
-                            _InlineCoach(response: selected),
-                          ],
-                        ],
-                        if (_pendingManagerLine case final pending?) ...[
-                          const SizedBox(height: 14),
-                          _YourMessage(text: pending),
-                        ],
-                        if (_isThinking) ...[
-                          const SizedBox(height: 14),
-                          _Typing(scenario: widget.scenario),
-                        ],
-                        if (_isSummarizing) ...[
-                          const SizedBox(height: 22),
-                          const _Summarizing(),
-                        ],
-                        if (_summaryError case final error?) ...[
-                          const SizedBox(height: 22),
-                          _SummaryFailed(message: error, onRetry: _finish),
-                        ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                  LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight - 34,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_responses.isEmpty) ...[
+                              const _RoomNotice(),
+                              const SizedBox(height: 20),
+                            ],
+                            for (
+                              var index = 0;
+                              index < _responses.length;
+                              index++
+                            ) ...[
+                              _PersonMessage(
+                                scenario: widget.scenario,
+                                text: index == 0
+                                    ? widget.scenario.turns.first.employeeLine
+                                    : _responses[index - 1].employeeReply ??
+                                          widget
+                                              .scenario
+                                              .turns[index]
+                                              .employeeLine,
+                              ),
+                              const SizedBox(height: 14),
+                              _YourMessage(text: _responses[index].text),
+                              const SizedBox(height: 18),
+                            ],
+                            _PersonMessage(
+                              key: ValueKey(_turnIndex),
+                              scenario: widget.scenario,
+                              text: _employeeLine,
+                              isSpeaking: _isSpeaking,
+                              onReplay: _voiceAvailable && _voiceEnabled
+                                  ? _replayEmployeeLine
+                                  : null,
+                            ),
+                            // Guided mode previews the chosen line with its authored
+                            // note; free-form mode never coaches mid-conversation.
+                            if (_selectedResponse case final selected?) ...[
+                              const SizedBox(height: 14),
+                              _YourMessage(text: selected.text),
+                              if (selected.feedback.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                _InlineCoach(response: selected),
+                              ],
+                            ],
+                            if (_pendingManagerLine case final pending?) ...[
+                              const SizedBox(height: 14),
+                              _YourMessage(text: pending),
+                            ],
+                            if (_isThinking) ...[
+                              const SizedBox(height: 14),
+                              _Typing(scenario: widget.scenario),
+                            ],
+                            if (_isSummarizing) ...[
+                              const SizedBox(height: 22),
+                              const _Summarizing(),
+                            ],
+                            if (_summaryError case final error?) ...[
+                              const SizedBox(height: 22),
+                              _SummaryFailed(message: error, onRetry: _finish),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             if (!_isSummarizing && _summaryError == null)

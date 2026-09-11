@@ -33,9 +33,13 @@ class Illustration extends StatelessWidget {
   /// The home grid.
   static const tileSize = 56.0;
 
-  /// The home card for whatever is next — the largest a scenario mark is
-  /// drawn anywhere, and so the size they are all cut to.
+  /// The home card for whatever is next.
   static const spotSize = 88.0;
+
+  /// The rehearsal room: the mark holds the empty space above the opening
+  /// line until the conversation fills it. The largest a scenario mark is
+  /// drawn anywhere, and so the size they are all cut to.
+  static const stageSize = 132.0;
 
   /// A mark that heads a screen on its own.
   static const heroSize = 120.0;
@@ -50,22 +54,22 @@ class Illustration extends StatelessWidget {
   /// Every mark, and the size its variants are cut to — the **largest** it
   /// is drawn anywhere. Drawn smaller it downscales, which is cheap and
   /// stays sharp; drawn larger is what goes soft. Scenario marks appear at
-  /// three sizes, so they are cut at the biggest of the three.
+  /// four sizes, so they are cut at the biggest of the four.
   ///
   /// Change one of these and re-run `tool/generate_illustrations.dart`.
   static const sizes = <String, double>{
-    'missed-deadlines': spotSize,
-    'say-no': spotSize,
-    'peer-conflict': spotSize,
-    'upward-feedback': spotSize,
-    'promotion-denied': spotSize,
-    'high-performer': spotSize,
-    'resignation': spotSize,
-    'delegation': spotSize,
-    'after-hours': spotSize,
-    'below-bar': spotSize,
-    'disagree-commit': spotSize,
-    'overloaded': spotSize,
+    'missed-deadlines': stageSize,
+    'say-no': stageSize,
+    'peer-conflict': stageSize,
+    'upward-feedback': stageSize,
+    'promotion-denied': stageSize,
+    'high-performer': stageSize,
+    'resignation': stageSize,
+    'delegation': stageSize,
+    'after-hours': stageSize,
+    'below-bar': stageSize,
+    'disagree-commit': stageSize,
+    'overloaded': stageSize,
     'empty-progress': heroSize,
     'pro-unlock': heroSize,
     'logo': logoSize,

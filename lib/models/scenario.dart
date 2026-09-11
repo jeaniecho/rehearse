@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 import 'session_outcome.dart';
 
 /// How much the situation itself is carrying — a property of the scenario,
@@ -97,8 +95,6 @@ class Scenario {
     required this.skill,
     required this.durationMinutes,
     required this.stakes,
-    required this.icon,
-    required this.tint,
     required this.personName,
     required this.personRole,
     required this.personInitials,
@@ -116,12 +112,6 @@ class Scenario {
   final int durationMinutes;
   final ScenarioStakes stakes;
 
-  /// The compact stand-in, used where a paper mark would be too small to
-  /// read — the practice history rows. Everywhere the scenario is being
-  /// chosen or briefed, `Illustration.scenario` looks up its mark by [id].
-  final IconData icon;
-
-  final Color tint;
   final String personName;
   final String personRole;
   final String personInitials;

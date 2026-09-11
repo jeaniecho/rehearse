@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../theme/paper.dart';
 
 /// Keeps a phone-shaped column on iPad and the web instead of letting a
 /// screen stretch to the edges.
@@ -35,13 +36,7 @@ class PageActionBar extends StatelessWidget {
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 18,
-            offset: Offset(0, -5),
-          ),
-        ],
+        boxShadow: Paper.ledge,
       ),
       child: SafeArea(
         top: false,

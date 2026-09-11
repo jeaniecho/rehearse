@@ -397,8 +397,10 @@ class _PersonCard extends StatelessWidget {
             width: 48,
             height: 48,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: scenario.tint,
+            decoration: const BoxDecoration(
+              // Was `scenario.tint`, a per-scenario field that all twelve
+              // filled in with this same value.
+              color: AppColors.subtle,
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -469,7 +471,7 @@ class _BriefItem extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: AppColors.canvas,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, size: 19, color: AppColors.forest),

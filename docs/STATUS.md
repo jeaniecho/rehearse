@@ -563,26 +563,49 @@ over two dimensions level with it. It now names a skill only where that skill
 alone holds the extreme, and says nothing where the top is shared. The
 guard that existed only caught all four being equal.
 
-**Contrast — fixed, and this entry used to say otherwise.** Three pairs were
-recorded here as failing WCAG AA. The paper redesign darkened `coral` to
-`#B3400F` and took all three past the 4.5:1 floor for body text, and nobody
-updated this section. Re-measured 2026-09-04:
+**Contrast — re-measured 2026-09-11, after the paper redesign moved the
+palette a second time.** This entry has now been wrong twice for the same
+reason, so read the lesson first: **a measured claim in this file goes stale
+the moment the palette moves.** Re-measure before trusting it.
 
-| Pair | Recorded here | Actual | Verdict |
+The app now has three surfaces — `ground` (the page), `surface` (a sheet on
+it) and `subtle` (a well cut into a sheet) — and two new rules fall out of
+the numbers rather than out of taste:
+
+- **A tinted surface carries `ink` or `charcoal`, never `muted`.** `muted` is
+  4.19:1 on the rewarmed `subtle` and 4.31:1 on the rebuilt `mint`, both
+  under the floor. Three sites moved to `charcoal` as the tokens moved: the
+  unresolved outcome pill and the `TURN n` eyebrow in `results_screen.dart`,
+  and the sub-68 score pill in `progress_screen.dart`.
+- **`amber` draws marks and never words.** 3.28:1 on the bar track clears the
+  3:1 graphic floor and nothing else.
+
+| Pair | Ratio | Floor | Verdict |
 |---|---|---|---|
-| coral on peach | 2.34:1 | **4.99:1** | passes |
-| coral on canvas | 2.79:1 | **5.74:1** | passes |
-| muted on peach / mint | 3.8–4.1:1 | **4.6 / 4.67:1** | passes |
-| forest on mint | 7.63:1 | **6.43:1** | passes |
+| `ink` on `ground` | 15.63:1 | 4.5 | passes |
+| `muted` on `ground` | 4.73:1 | 4.5 | passes |
+| `coral` on `ground` | 5.13:1 | 4.5 | passes |
+| `coral` on `surface` | 5.74:1 | 4.5 | passes |
+| `coral` on `peach` | 4.99:1 | 4.5 | passes |
+| `muted` on `peach` | 4.60:1 | 4.5 | passes |
+| `forest` on `mint` / `sky` | 5.93 / 6.08:1 | 4.5 | passes |
+| `charcoal` on `mint` | 9.99:1 | 4.5 | passes |
+| `charcoal` on `subtle` | 9.71:1 | 4.5 | passes |
+| `amber` on `border` (bar on track) | 3.28:1 | 3.0 | passes, graphic only |
+| `muted` on `subtle` / `mint` | 4.19 / 4.31:1 | 4.5 | **fails — the rule above** |
+| `coralBright` on `peach` | 3.20:1 | 3.0 | passes, graphic only |
 
-One pair is still under the body-text floor: `coralBright` on peach, at
-**3.2:1**. It is used in exactly one place — the 4px rule beside YOUR GOAL in
-`brief_screen.dart` — where the relevant threshold is 3:1 for a non-text
-element, which it passes. Put `coralBright` on type and that stops being
-true.
+`muted` on `mint` was listed here at 4.67:1 as though it were a live pair.
+It was not: every selected/unselected control in the app puts `muted` on
+`surface` and `forest` on `mint`, and the single real occurrence was one
+eyebrow. **A measured pair that nothing uses is worse than no entry** — it
+invites a change to be waved through on a number that describes nothing.
 
-The lesson is the entry, not the ratios: a measured claim in this file goes
-stale the moment the palette moves. Re-measure before trusting it.
+The three surface steps are luminance changes, not contrast claims:
+`surface` on `ground` is 1.12:1 and `ground` on `subtle` is 1.13:1. Nothing
+is separated by those alone — `Paper.lift` carries a sheet, `Paper.float`
+carries the nav capsule, `Paper.ledge` carries a bottom bar, and the hairline
+is a refinement on top.
 
 **`flutter_tts` does not support Swift Package Manager.** Every iOS build
 prints a warning saying this will become an error in a future Flutter. It is

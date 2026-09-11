@@ -44,4 +44,25 @@ abstract final class Paper {
     BoxShadow(color: Color(0x14332E29), blurRadius: 1, offset: Offset(0, 1)),
     BoxShadow(color: Color(0x14332E29), blurRadius: 5, offset: Offset(0, 2)),
   ];
+
+  /// An object held clear of the page rather than resting on it — the nav
+  /// capsule, which floats over whatever is scrolling beneath it.
+  ///
+  /// The capsule used [lift] and read as glued down. A contact shadow says
+  /// the thing is touching; this one has to say it is not, which is the
+  /// whole reason the bar floats instead of being ruled across the page.
+  static const float = <BoxShadow>[
+    BoxShadow(color: Color(0x14332E29), blurRadius: 2, offset: Offset(0, 1)),
+    BoxShadow(color: Color(0x1F332E29), blurRadius: 14, offset: Offset(0, 6)),
+  ];
+
+  /// A bar pinned to the bottom edge, casting upward over the content it
+  /// covers — the composer, and every [PageActionBar].
+  ///
+  /// Both sites had this inline and identical, in pure black, which the
+  /// note on [lift] calls the tell of a default theme. Same warm ink as the
+  /// other two now, and in one place.
+  static const ledge = <BoxShadow>[
+    BoxShadow(color: Color(0x1A332E29), blurRadius: 18, offset: Offset(0, -5)),
+  ];
 }

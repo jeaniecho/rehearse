@@ -45,7 +45,7 @@ lib/
   main.dart            runApp
   app.dart             owns the four notifiers and installs their scopes
   data/
-    scenarios.dart     all authored content — 7 const Scenario values
+    scenarios.dart     all authored content — 12 const Scenario values
   models/
     scenario.dart          Scenario, DialogueTurn, ResponseChoice
     practice_response.dart PracticeResponse (one scored turn), PracticeMode
@@ -553,13 +553,31 @@ will need one — see `STATUS.md` §5.
 
 ## Theme
 
+**The content layer imports no Flutter.** `models/scenario.dart` and
+`data/scenarios.dart` are plain Dart — they carry no `Color`, no `IconData`,
+nothing from `package:flutter`. `Scenario` had both: a per-scenario `tint`
+that all twelve entries filled with the same value, and an `icon` whose
+doc called it "the compact stand-in ... the practice history rows", which
+stopped being true the moment those rows started drawing the scenario's own
+illustration. Twelve authored Material glyphs that nothing read. Keep it
+this way: what a scenario looks like is the widget layer's problem, and the
+illustration is already found by `id` with no field to forget.
+
 `AppColors` holds flat `const Color` tokens; `AppTheme.light` builds the
 Material 3 theme. Widgets reference `AppColors.*` **directly**, not through
 `Theme.of(context)`, which is why adding a dark theme is a change across the
 whole widget layer rather than a single addition in `app.dart`.
 
-Scenario cards use the tint set — `peach`, `lavender`, `mint`, `sky`, `butter`,
-`rose` — all light enough to carry `AppColors.ink`.
+Four surviving tints, each of which says what kind of thing it is rather than
+decorating: `mint` is success and whatever comes next, `peach` is the thing to
+work on and the live microphone, `sky` is a partial outcome, `butter` is the
+coach's own voice on the report. `lavender` and `rose` were part of this set
+and are gone — nothing had drawn either since scenario cards stopped being
+tinted and became white sheets carrying their own illustration.
+
+They are **not** all safe under `AppColors.muted`: it fails on `mint` and on
+`subtle`, which take `ink` or `charcoal` instead. `STATUS.md` §6 has every
+measured pair and the rule.
 
 ### Two families
 
@@ -682,7 +700,7 @@ Four masters come out of the generator, and each exists for a reason:
 | `app_icon` | iOS, web, Android legacy | opaque, mark nearly full-bleed |
 | `app_icon_foreground` | Android adaptive | transparent; sized so the mark still fills the circle *after* flutter_launcher_icons adds its own 16% inset |
 | `app_icon_monochrome` | Android 13 themed icons | one colour, with the gap between bubbles cut out rather than painted, so a tint keeps them legible |
-| `launch_mark` | both splashes | inked forest-on-canvas, because the icon's cream bubble is invisible on the splash colour |
+| `launch_mark` | both splashes | inked forest-on-`ground`, because the icon’s cream bubble is invisible on the splash colour. The five Android densities and the three iOS ones are **cut by hand** from the 1024 master — `flutter_launcher_icons` does the launcher icon only, and does not touch these |
 
 `test/app_icon_test.dart` guards the outputs, most importantly that the iOS
 1024 icon has no alpha channel — App Store Connect rejects one that does, at

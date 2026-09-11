@@ -15,16 +15,6 @@ class ScoreRing extends StatelessWidget {
     this.trackColor = AppColors.border,
   });
 
-  /// The same ring drawn to sit on a dark surface.
-  const ScoreRing.onDark({
-    required this.score,
-    super.key,
-    this.caption = 'CONVERSATION SCORE',
-    this.diameter = 142,
-  }) : valueColor = Colors.white,
-       captionColor = const Color(0xFFD9E5DD),
-       trackColor = const Color(0x33FFFFFF);
-
   final int score;
   final String caption;
   final double diameter;
@@ -60,7 +50,11 @@ class ScoreRing extends StatelessWidget {
                     value: score / 100,
                     strokeWidth: diameter * 0.077,
                     strokeCap: StrokeCap.round,
-                    color: AppColors.coral,
+                    // Green, because the arc is progress and the palette
+                    // reserves green for that. Rust read as a warning on a
+                    // good score, and on the forest card it sat red against
+                    // green.
+                    color: AppColors.forest,
                     backgroundColor: trackColor,
                   ),
                 ),
@@ -99,7 +93,17 @@ class ScoreRing extends StatelessWidget {
   }
 }
 
-/// A labelled 0-100 bar for one of the three conversation skills.
+/// A labelled 0-100 bar for one of the four conversation skills.
+///
+/// Colour ranks rather than labels. Four dimensions in four hues said
+/// nothing — clarity is not red — and one hue for all four said nothing
+/// either. Green marks the skill carrying you, amber the one to work on,
+/// and the two in between stay ink, so the chart makes the same claim the
+/// sentence above it makes. See [SkillBars], which decides.
+///
+/// The three are the illustration palette exactly: deep green, charcoal and
+/// muted amber (`docs/ILLUSTRATIONS.md` §1). The chart is drawn in the same
+/// colours as the art beside it.
 class SkillBar extends StatelessWidget {
   const SkillBar({
     required this.label,
@@ -157,23 +161,36 @@ class SkillBar extends StatelessWidget {
   }
 }
 
-/// The colour each conversation skill is drawn in, so the report and the
-/// progress screen stay consistent.
-abstract final class SkillColors {
-  static const clarity = AppColors.coral;
-  static const empathy = AppColors.forest;
-  static const directness = Color(0xFF7660A8);
-  static const confidence = Color(0xFF2E6E8E);
+/// The skill that alone scores [value], or null when it is shared.
+///
+/// The extremes are a claim about the numbers, so they may only name a skill
+/// the numbers actually single out. Reducing to the first of a tie once
+/// announced "Clarity is carrying you" off three dimensions level at 43 — a
+/// winner the numbers do not have.
+PracticeSkill? soleHolder(Map<PracticeSkill, int> skills, int value) {
+  final holders = skills.entries.where((entry) => entry.value == value);
+  return holders.length == 1 ? holders.first.key : null;
+}
 
-  static Color of(PracticeSkill skill) => switch (skill) {
-    PracticeSkill.clarity => clarity,
-    PracticeSkill.empathy => empathy,
-    PracticeSkill.directness => directness,
-    PracticeSkill.confidence => confidence,
-  };
+/// The strongest and the weakest skill in [skills], each null where the
+/// extreme is shared or where every skill is level.
+({PracticeSkill? strongest, PracticeSkill? weakest}) skillExtremes(
+  Map<PracticeSkill, int> skills,
+) {
+  final best = skills.values.reduce((a, b) => a >= b ? a : b);
+  final worst = skills.values.reduce((a, b) => a <= b ? a : b);
+  if (best == worst) return (strongest: null, weakest: null);
+  return (
+    strongest: soleHolder(skills, best),
+    weakest: soleHolder(skills, worst),
+  );
 }
 
 /// Every skill in a summary or a history average, drawn in report order.
+///
+/// The two extremes are coloured and the rest are ink. Both the chart and
+/// the sentence a caller writes above it go through [skillExtremes], so
+/// they cannot disagree about which skill is carrying you.
 class SkillBars extends StatelessWidget {
   const SkillBars({required this.values, super.key, this.spacing = 16});
 
@@ -183,6 +200,7 @@ class SkillBars extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = values.entries.toList();
+    final (:strongest, :weakest) = skillExtremes(values);
 
     return Column(
       children: [
@@ -190,7 +208,14 @@ class SkillBars extends StatelessWidget {
           SkillBar(
             label: entries[index].key.label,
             value: entries[index].value,
-            color: SkillColors.of(entries[index].key),
+            color: switch (entries[index].key) {
+              final skill when skill == strongest => AppColors.forest,
+              final skill when skill == weakest => AppColors.amber,
+              // Charcoal, not ink: the warm neutral the marks are cut in,
+              // and the lightest warm grey that still clears 3:1 on the
+              // track is barely lighter than this anyway.
+              _ => AppColors.charcoal,
+            },
           ),
           if (index != entries.length - 1) SizedBox(height: spacing),
         ],

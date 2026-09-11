@@ -99,7 +99,7 @@ void main() {
       ).readAsStringSync();
 
       expect(colors, contains(_hex(AppColors.forest)));
-      expect(colors, contains(_hex(AppColors.canvas)));
+      expect(colors, contains(_hex(AppColors.ground)));
     });
 
     test('both light and dark splashes draw the mark', () {
@@ -151,7 +151,7 @@ void main() {
 
     test('the manifest uses the brand canvas', () {
       final manifest = File('web/manifest.json').readAsStringSync();
-      expect(manifest, contains('#F5F2EA'));
+      expect(manifest, contains(_hex(AppColors.ground)));
     });
   });
 }

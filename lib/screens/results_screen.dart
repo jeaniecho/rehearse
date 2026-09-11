@@ -386,12 +386,15 @@ class _OutcomePill extends StatelessWidget {
   final SessionOutcome outcome;
 
   /// Every pair measured against the 4.5:1 floor for body text: forest on
-  /// mint 6.43, forest on sky 6.08, coral on peach 4.99, muted on subtle
-  /// 4.77. Re-measure if the palette moves — see `STATUS.md` §6.
+  /// mint 6.43, forest on sky 6.08, coral on peach 4.99, charcoal on subtle
+  /// 9.68. Re-measure if the palette moves — see `STATUS.md` §6.
+  ///
+  /// The unresolved pair was `muted` until [AppColors.subtle] was rewarmed,
+  /// which took it to 4.19 — the rule on the token, not an exception here.
   (Color, Color) get _colors => switch (outcome) {
     SessionOutcome.success => (AppColors.forest, AppColors.mint),
     SessionOutcome.partial => (AppColors.forest, AppColors.sky),
-    SessionOutcome.unresolved => (AppColors.muted, AppColors.subtle),
+    SessionOutcome.unresolved => (AppColors.charcoal, AppColors.subtle),
     SessionOutcome.escalated => (AppColors.coral, AppColors.peach),
   };
 
@@ -525,7 +528,10 @@ class _NoteCard extends StatelessWidget {
               Expanded(child: Eyebrow.small(eyebrow, color: color)),
               Eyebrow.small(
                 'TURN ${note.turnIndex + 1}',
-                color: AppColors.muted,
+                // The only [AppColors.muted] in the app that lands on a
+                // tint rather than on white, and 4.31:1 on the rebuilt
+                // mint. Charcoal, by the rule on the token.
+                color: AppColors.charcoal,
               ),
             ],
           ),

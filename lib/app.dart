@@ -132,13 +132,13 @@ class _Launch extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       key: Key('launch'),
-      backgroundColor: AppColors.canvas,
+      backgroundColor: AppColors.ground,
       body: Center(
         child: CustomPaint(
           size: Size.square(120),
           painter: BrandMarkPainter(
             frontBubble: AppColors.forest,
-            separator: AppColors.canvas,
+            separator: AppColors.ground,
             scale: 0.9,
           ),
         ),
