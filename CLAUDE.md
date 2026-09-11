@@ -25,7 +25,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 427 tests
+flutter test                    # 432 tests
 cd server && npm test           # 31 tests
 ```
 
@@ -118,8 +118,9 @@ From `ROADMAP.md` §0, and they hold:
 - **Plain `StatefulWidget` + `ChangeNotifier` via `InheritedNotifier`.** No
   provider, riverpod, or bloc. Do not introduce one.
 - **Imperative `Navigator.push`.** No named routes, no router package. The
-  three tabs live in one `TabsScreen` with an `IndexedStack`; everything else
-  is pushed onto the root navigator so it covers the bar.
+  two tabs — Practice and Progress — live in one `TabsScreen` with an
+  `IndexedStack`; everything else, You included, is pushed onto the root
+  navigator so it covers the bar.
 - **App-wide state reaches the tree through `RehearseScope`,** which nests the
   four `InheritedNotifier` scopes. Build the nest by hand in nothing — a
   harness that leaves a scope out is testing something the app is not.
@@ -201,7 +202,7 @@ From `ROADMAP.md` §0, and they hold:
 lib/data       authored scenario content (12 scenarios)
 lib/models     Scenario, PracticeResponse, PracticeSummary, PracticeRecord,
                Subscription plans and outcomes
-lib/screens    onboarding, tabs (home / progress / you), brief, practice,
+lib/screens    onboarding, tabs (home / progress), you, brief, practice,
                results, paywall
 lib/screens/practice
                `part`s of practice_screen, split for length only

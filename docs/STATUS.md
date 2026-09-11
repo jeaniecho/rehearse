@@ -409,8 +409,22 @@ about the content model changed — `stakes` was already authored and
 Scenario marks are cut at 88px rather than 40 as a result, since they are now
 drawn at three sizes. The bundled set went from 540 KB to 1.1 MB.
 
-**Navigation is three tabs, and the progress screen stopped doing two jobs.**
-Practice / Progress / You. The plan card and Restore, the spoken-replies
+**Navigation is two tabs and a profile button, and the progress screen
+stopped doing two jobs.** Practice / Progress in the bar; You is pushed from
+a profile button in each header. It was a third destination until
+2026-09-11 — it is somewhere you visit rather than somewhere you work, and a
+third of the bar said otherwise. Dropping to two is also what let the bar
+become a capsule: split in two, a full-width bar leaves each label marooned
+in half a screen.
+
+The bar is a white capsule with the card border and `Paper.lift`, sized to
+its labels and floated off the bottom edge — the same material as every
+other surface the app puts on this canvas. Two things it is not: it is not
+an overlay (it sits in `bottomNavigationBar`, because an opaque capsule
+would hide content passing under it rather than glimpse it), and its pills
+carry the flex rather than their labels (a `Flexible` inside a min-size row
+is handed the whole incoming width, so flexing only the text let both pills
+claim the full capsule and overflow it). The plan card and Restore, the spoken-replies
 preference, and clearing your history moved to the new You tab; progress is
 now only progress. Two things this buys beyond navigation: Restore is
 somewhere a reviewer will look for it, and the app finally says in plain
@@ -629,7 +643,7 @@ Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter, sentry_flutter,
                    url_launcher
-Tests            : 427 Flutter + 31 server
+Tests            : 432 Flutter + 31 server
 TODO/FIXME       : none
 ```
 

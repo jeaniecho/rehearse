@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
+import '../widgets/profile_button.dart';
 import '../widgets/score_display.dart';
 
 /// Everything the rehearsal history knows about you: how consistently you
@@ -33,6 +34,7 @@ class ProgressScreen extends StatelessWidget {
           'Your progress',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
+        actions: const [ProfileAction()],
       ),
       body: PageWidth(
         child: records.isEmpty

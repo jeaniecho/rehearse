@@ -28,7 +28,13 @@ class YouScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        // Pushed over the bar rather than sitting in it, so it needs the
+        // way back that a tab never did.
+        leading: IconButton(
+          tooltip: 'Back',
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text(
           'You',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -414,7 +420,14 @@ class _About extends StatelessWidget {
                 ListTile(
                   key: const Key('replay_intro'),
                   contentPadding: const EdgeInsets.fromLTRB(17, 4, 11, 4),
-                  onTap: settings.resetOnboarding,
+                  // Nothing navigates *to* the intro — the root watches the
+                  // flag and swaps itself. But this screen is pushed over
+                  // the root now, so it has to get out of the way or the
+                  // intro comes back underneath it.
+                  onTap: () {
+                    settings.resetOnboarding();
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
                   title: const Text(
                     'Show the intro again',
                     style: TextStyle(

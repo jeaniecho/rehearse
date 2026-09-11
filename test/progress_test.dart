@@ -128,14 +128,14 @@ void main() {
         ],
       );
 
-      await tester.tap(find.text('Progress'));
+      await tester.tap(find.byKey(const Key('tab_progress')));
       await tester.pumpAndSettle();
       expect(find.text('Your progress'), findsOneWidget);
       expect(find.text('Session history'), findsOneWidget);
 
       // The scenario list is still built behind it — an IndexedStack keeps
       // each tab alive so coming back does not reset the scroll.
-      await tester.tap(find.text('Practice'));
+      await tester.tap(find.byKey(const Key('tab_practice')));
       await tester.pumpAndSettle();
       expect(find.text('Conversations'), findsOneWidget);
     });

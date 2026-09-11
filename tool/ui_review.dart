@@ -29,6 +29,7 @@ import 'package:rehearse/screens/paywall_screen.dart';
 import 'package:rehearse/screens/practice_screen.dart';
 import 'package:rehearse/screens/results_screen.dart';
 import 'package:rehearse/screens/tabs_screen.dart';
+import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/services/analytics.dart';
 import 'package:rehearse/services/analytics_sink.dart';
 import 'package:rehearse/services/app_settings.dart';
@@ -219,10 +220,10 @@ void main() {
   });
 
   testWidgets('you — free', (t) async {
-    await shoot(t, '07-you-free', const TabsScreen(initialTab: 2));
+    await shoot(t, '07-you-free', const YouScreen());
   });
   testWidgets('you — pro', (t) async {
-    await shoot(t, '08-you-pro', const TabsScreen(initialTab: 2), isPro: true);
+    await shoot(t, '08-you-pro', const YouScreen(), isPro: true);
   });
 
   testWidgets('progress', (t) async {
@@ -267,7 +268,7 @@ void main() {
   // proves nothing overflows, which is not the same as it reading well.
   for (final (name, screen) in <(String, Widget)>[
     ('home', TabsScreen()),
-    ('you', TabsScreen(initialTab: 2)),
+    ('you', YouScreen()),
   ]) {
     testWidgets('$name — 1.6x text', (t) async {
       await shoot(t, '13-$name-1.6x', screen, textScale: 1.6);

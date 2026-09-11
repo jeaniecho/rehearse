@@ -130,11 +130,11 @@ void main() {
       expect(sink.names, isNot(contains('onboarding_started')));
     });
 
-    testWidgets('can ask for the intro again from the You tab', (tester) async {
+    testWidgets('can ask for the intro again from You', (tester) async {
       final (settings, _) = await pumpApp(tester, seenBefore: true);
       expect(find.byType(OnboardingScreen), findsNothing);
 
-      await tester.tap(find.text('You'));
+      await tester.tap(find.byKey(const Key('open_you')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('replay_intro')));
       await tester.pumpAndSettle();

@@ -12,6 +12,7 @@ import '../widgets/brand_mark.dart';
 import '../widgets/eyebrow.dart';
 import '../widgets/illustration.dart';
 import '../widgets/practice_history_scope.dart';
+import '../widgets/profile_button.dart';
 import '../widgets/subscription_scope.dart';
 import 'brief_screen.dart';
 import 'paywall_screen.dart';
@@ -100,15 +101,15 @@ class HomeScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Flexible so the wordmark yields to the progress button
-                  // rather than pushing it off the edge at a large text
-                  // scale.
-                  const Flexible(child: BrandMark()),
-                  const Spacer(),
-                  if (subscription?.isPro ?? false) ...[
-                    const Eyebrow('PRO', color: AppColors.forest),
-                    const SizedBox(width: 12),
-                  ],
+                  // `Expanded`, not `Flexible` beside a `Spacer` — a spacer
+                  // is a flex child too, so it was claiming half the row and
+                  // truncating the app's own name to "rehear…" at a large
+                  // text scale. The wordmark takes whatever the button
+                  // leaves and aligns itself left.
+                  const Expanded(child: BrandMark()),
+                  // Pro is worn on the button itself, so the eyebrow that
+                  // used to sit here would now say it twice.
+                  const ProfileButton(),
                 ],
               ),
             ),

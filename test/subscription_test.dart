@@ -626,7 +626,9 @@ void main() {
 
       await pump(tester, const HomeScreen(), subscription: subscription);
 
-      expect(find.text('PRO'), findsOneWidget);
+      // Pro is worn on the profile button rather than announced beside the
+      // wordmark, so the medal is the assertion.
+      expect(find.byIcon(Icons.workspace_premium_rounded), findsOneWidget);
       expect(find.byKey(const Key('free_allowance')), findsNothing);
     });
 
@@ -639,7 +641,7 @@ void main() {
       await pump(tester, const HomeScreen(), subscription: subscription);
 
       expect(find.byKey(const Key('free_allowance')), findsNothing);
-      expect(find.text('PRO'), findsNothing);
+      expect(find.byIcon(Icons.workspace_premium_rounded), findsNothing);
     });
 
     testWidgets('restore is reachable without passing the paywall', (
