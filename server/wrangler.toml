@@ -45,10 +45,16 @@ period = 60
 # --- Environment ----------------------------------------------------------
 
 [vars]
-# The origin allowed to call this. Leave it unset and `corsHeaders` falls back
-# to "*". Set it to the app's origin before this is reachable from the
-# internet — the rate limit bounds the damage, CORS narrows who can try.
-# ALLOWED_ORIGIN = "https://rehearse.app"
+# The origin allowed to call this. Unset falls back to "*", which is what a
+# public, unauthenticated endpoint should not be: the rate limit bounds the
+# damage, CORS narrows who can try.
+#
+# Rehearse ships native, and CORS is a browser rule — the iOS and Android
+# apps are unaffected by whatever is set here. The only browser that ever
+# holds this app is the local review build in `.claude/launch.json`, so that
+# is the origin named. Anything served publicly from a browser later has to
+# be added here, or it fails with a CORS error and no other clue.
+ALLOWED_ORIGIN = "http://localhost:8080"
 
 # Overrides DEFAULT_MODEL in coach.mjs. `/health` reports whichever is live.
 # OPENAI_MODEL = "gpt-5-nano"
