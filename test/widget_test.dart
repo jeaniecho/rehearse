@@ -320,7 +320,9 @@ void main() {
     final anchored = tester.getTopLeft(header);
     final listTop = tester.getTopLeft(find.text('Conversations')).dy;
 
-    await tester.drag(find.byType(ListView), const Offset(0, -300));
+    // The page list, not one of the horizontal rails inside it — the body
+    // runs the full height now, so a rail is built where none used to be.
+    await tester.drag(find.byType(ListView).first, const Offset(0, -300));
     await tester.pumpAndSettle();
 
     // The list really moved, so the header holding still means something.

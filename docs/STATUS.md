@@ -419,12 +419,22 @@ in half a screen.
 
 The bar is a white capsule with the card border and `Paper.lift`, sized to
 its labels and floated off the bottom edge — the same material as every
-other surface the app puts on this canvas. Two things it is not: it is not
-an overlay (it sits in `bottomNavigationBar`, because an opaque capsule
-would hide content passing under it rather than glimpse it), and its pills
-carry the flex rather than their labels (a `Flexible` inside a min-size row
-is handed the whole incoming width, so flexing only the text let both pills
-claim the full capsule and overflow it). The plan card and Restore, the spoken-replies
+other surface the app puts on this canvas.
+
+It floats **over** the page rather than beside it. A `bottomNavigationBar`
+reserves its own row, which left a full-width white band behind a control
+meant to be sitting on the page, so the capsule is positioned in a `Stack`
+and the tabs underneath are handed its height as extra `MediaQuery` bottom
+padding instead. Anything that respects that inset can scroll its last row
+clear of the capsule; `TabsScreen.navHeight` is the number, and
+`shell_test.dart` pins it to what the capsule actually measures, because
+nothing else would notice the two drifting apart and the symptom would be a
+row stuck behind the bar. The one layout in the tabs that centres rather
+than scrolls — the empty progress state — takes the inset as padding.
+
+Its pills carry the flex rather than their labels: a `Flexible` inside a
+min-size row is handed the whole incoming width, so flexing only the text
+let both pills claim the full capsule and overflow it. The plan card and Restore, the spoken-replies
 preference, and clearing your history moved to the new You tab; progress is
 now only progress. Two things this buys beyond navigation: Restore is
 somewhere a reviewer will look for it, and the app finally says in plain
@@ -643,7 +653,7 @@ Onboarding       : 3 screens on first run, flag in shared_preferences
 Dependencies     : http, speech_to_text, shared_preferences, flutter_tts,
                    purchases_flutter, posthog_flutter, sentry_flutter,
                    url_launcher
-Tests            : 432 Flutter + 31 server
+Tests            : 434 Flutter + 31 server
 TODO/FIXME       : none
 ```
 

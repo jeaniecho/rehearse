@@ -119,7 +119,13 @@ class HomeScreen extends StatelessWidget {
                 // edges, because a card cut off by the screen is the only
                 // thing that says there is more to the side. Everything
                 // else asks for the gutter itself.
-                padding: const EdgeInsets.only(top: 8, bottom: 24),
+                // The bottom inset carries the floating bar as well as the
+                // home indicator, so the last rail can be scrolled clear of
+                // the capsule instead of living behind it.
+                padding: EdgeInsets.only(
+                  top: 8,
+                  bottom: MediaQuery.paddingOf(context).bottom + 24,
+                ),
                 children: [
                   Padding(
                     padding: _gutter,

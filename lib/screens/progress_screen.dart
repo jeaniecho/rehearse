@@ -39,7 +39,15 @@ class ProgressScreen extends StatelessWidget {
       body: PageWidth(
         child: records.isEmpty
             ? Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                // The one layout here that centres rather than scrolls, so
+                // it takes the bottom inset as padding — otherwise it
+                // centres through the floating bar and sits low.
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  0,
+                  20,
+                  MediaQuery.paddingOf(context).bottom,
+                ),
                 child: _EmptyProgress(onPickScenario: onPickScenario),
               )
             : ListView(

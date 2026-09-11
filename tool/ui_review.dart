@@ -229,6 +229,16 @@ void main() {
   testWidgets('progress', (t) async {
     await shoot(t, '09-progress', const TabsScreen(initialTab: 1));
   });
+  testWidgets('progress — empty', (t) async {
+    // Centred rather than scrolling, so it is the one layout in the tabs
+    // that cannot move out from under the floating capsule.
+    await shoot(
+      t,
+      '09b-progress-empty',
+      const TabsScreen(initialTab: 1),
+      seedHistory: false,
+    );
+  });
 
   testWidgets('practice', (t) async {
     await shoot(

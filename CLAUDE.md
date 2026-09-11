@@ -25,7 +25,7 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 432 tests
+flutter test                    # 434 tests
 cd server && npm test           # 31 tests
 ```
 
@@ -120,7 +120,10 @@ From `ROADMAP.md` §0, and they hold:
 - **Imperative `Navigator.push`.** No named routes, no router package. The
   two tabs — Practice and Progress — live in one `TabsScreen` with an
   `IndexedStack`; everything else, You included, is pushed onto the root
-  navigator so it covers the bar.
+  navigator so it covers the bar. The bar floats over the page rather than
+  reserving a row, so a scrollable in a tab must respect
+  `MediaQuery.paddingOf(context).bottom` or its last row lives behind the
+  capsule.
 - **App-wide state reaches the tree through `RehearseScope`,** which nests the
   four `InheritedNotifier` scopes. Build the nest by hand in nothing — a
   harness that leaves a scope out is testing something the app is not.

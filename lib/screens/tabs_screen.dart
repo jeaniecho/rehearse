@@ -21,6 +21,16 @@ import 'progress_screen.dart';
 class TabsScreen extends StatefulWidget {
   const TabsScreen({super.key, this.initialTab = 0});
 
+  /// How much room the capsule takes above the home indicator.
+  ///
+  /// The bar floats over the content rather than sitting beside it, so the
+  /// screens underneath cannot discover this from layout — it is added to
+  /// their `MediaQuery` bottom padding instead, and a list that respects
+  /// that inset can scroll its last row clear of the capsule. A test pins
+  /// this number to what the capsule actually measures, because nothing
+  /// else would notice the two drifting apart.
+  static const navHeight = 72.0;
+
   final int initialTab;
 
   @override
@@ -32,17 +42,39 @@ class _TabsScreenState extends State<TabsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+
     return Scaffold(
-      body: IndexedStack(
-        index: _tab,
+      body: Stack(
         children: [
-          const HomeScreen(),
-          ProgressScreen(onPickScenario: () => setState(() => _tab = 0)),
+          // The tabs are told the capsule is there, rather than having a
+          // strip of the screen taken away from them. A bar that reserved
+          // its own row left a full-width white band behind a control that
+          // is meant to be floating on the page.
+          MediaQuery(
+            data: media.copyWith(
+              padding: media.padding.copyWith(
+                bottom: media.padding.bottom + TabsScreen.navHeight,
+              ),
+            ),
+            child: IndexedStack(
+              index: _tab,
+              children: [
+                const HomeScreen(),
+                ProgressScreen(onPickScenario: () => setState(() => _tab = 0)),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _PaperNav(
+              selected: _tab,
+              onSelected: (index) => setState(() => _tab = index),
+            ),
+          ),
         ],
-      ),
-      bottomNavigationBar: _PaperNav(
-        selected: _tab,
-        onSelected: (index) => setState(() => _tab = index),
       ),
     );
   }
@@ -54,7 +86,9 @@ class _TabsScreenState extends State<TabsScreen> {
 /// it — the scenario tiles, the plan card, the coaching notes — so the one
 /// permanent control is made of the same thing: a white capsule with the
 /// card's own border and contact shadow, sized to its contents and floated
-/// off the bottom edge rather than ruled across it.
+/// off the bottom edge rather than ruled across it, over the content rather
+/// than beside it — the page runs to the bottom of the screen and the
+/// capsule sits on top of it, which is the whole point of the shape.
 ///
 /// Two destinations is the reason it can be. A full-width bar divided in two
 /// leaves each label marooned in half a screen; a capsule takes only the
@@ -68,15 +102,12 @@ class _PaperNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      key: const Key('tabs'),
       top: false,
-      // Sits in `bottomNavigationBar` rather than over the content. The
-      // capsule is opaque, so anything scrolling under it would be hidden
-      // rather than glimpsed — the float is a look, not a layer.
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
-        // `Align` with a height factor, not `Center` — a bottom bar is given
-        // the whole screen to size itself in, and `Center` takes all of it,
-        // leaving the body nothing.
+        // `Align` with a height factor, not `Center`, which would stretch
+        // to whatever it is given.
         child: Align(
           heightFactor: 1,
           child: Container(

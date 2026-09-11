@@ -6,6 +6,7 @@ import 'package:rehearse/screens/tabs_screen.dart';
 import 'package:rehearse/screens/you_screen.dart';
 import 'package:rehearse/services/practice_history.dart';
 import 'package:rehearse/theme/app_theme.dart';
+import 'package:rehearse/widgets/eyebrow.dart';
 import 'package:rehearse/widgets/rehearse_scope.dart';
 
 Future<PracticeHistory> pump(WidgetTester tester, {Widget? home}) async {
@@ -41,15 +42,52 @@ void main() {
     expect(find.text('You'), findsNothing, reason: 'You left the bar');
   });
 
-  testWidgets('the capsule leaves the body its height', (tester) async {
-    // The bar is given the whole screen to size itself in, and a `Center`
-    // there takes all of it — which rendered an empty app once. The body
-    // having room is the assertion that stops it happening twice.
+  testWidgets('the body runs the full height, behind the capsule', (
+    tester,
+  ) async {
     await pump(tester);
 
     expect(find.byType(HomeScreen), findsOneWidget);
     expect(find.text('Conversations'), findsOneWidget);
-    expect(tester.getSize(find.byType(IndexedStack)).height, greaterThan(700));
+    // The page is not shortened to make room — the capsule floats over it,
+    // so there is no white band behind the bar.
+    expect(tester.getSize(find.byType(IndexedStack)).height, 932);
+  });
+
+  testWidgets('the reserved inset matches what the capsule measures', (
+    tester,
+  ) async {
+    // The screens underneath cannot see the capsule, so they are handed its
+    // height as bottom padding. Nothing but this would notice the constant
+    // and the real thing drifting apart, and the symptom would be a row
+    // stuck behind the bar with no way to scroll it clear.
+    await pump(tester);
+
+    expect(
+      tester.getSize(find.byKey(const Key('tabs'))).height,
+      TabsScreen.navHeight,
+    );
+  });
+
+  testWidgets('a list can scroll its last row clear of the capsule', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    final list = find.byType(ListView).first;
+    await tester.drag(list, const Offset(0, -4000));
+    await tester.pumpAndSettle();
+
+    final capsuleTop = tester.getTopLeft(find.byKey(const Key('tabs'))).dy;
+    final listBottom = tester.getBottomLeft(list).dy;
+    expect(
+      listBottom - capsuleTop,
+      greaterThan(0),
+      reason: 'the list really does run under the capsule',
+    );
+    // Scrolled to the end, the last thing in the list sits above the bar.
+    final lastRail = find.byType(Eyebrow).last;
+    expect(tester.getBottomLeft(lastRail).dy, lessThan(capsuleTop));
   });
 
   testWidgets('the profile button opens You over the bar', (tester) async {
