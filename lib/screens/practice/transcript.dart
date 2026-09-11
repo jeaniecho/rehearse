@@ -28,6 +28,17 @@ class _RoomNotice extends StatelessWidget {
   }
 }
 
+/// What the other person says, given the page rather than a bubble.
+///
+/// A chat log makes both sides the same kind of object, and they are not:
+/// this is the conversation happening to you, and the box below is your
+/// answer. So their line is set large and unboxed, with a rule beside it,
+/// and yours stays a block you have put down. The asymmetry is the point —
+/// symmetric bubbles were the thing that made this read as a messenger.
+///
+/// The avatar and the name went with the bubble. The header three lines up
+/// already carries both, and printing them again above every turn was the
+/// app talking over the person.
 class _PersonMessage extends StatelessWidget {
   const _PersonMessage({
     required this.scenario,
@@ -41,102 +52,101 @@ class _PersonMessage extends StatelessWidget {
   final String text;
   final bool isSpeaking;
 
-  /// Tapping the bubble replays the line, or cuts it short mid-sentence.
-  /// Null when the device has no voice or the manager has muted it.
+  /// Tapping the line replays it, or cuts it short mid-sentence. Null when
+  /// the device has no voice or the manager has muted it.
   final Future<void> Function()? onReplay;
 
   @override
   Widget build(BuildContext context) {
-    final bubble = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.subtle,
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(18),
-          bottomLeft: Radius.circular(18),
-          bottomRight: Radius.circular(18),
-        ),
-        border: Border.all(
-          color: isSpeaking ? AppColors.forest : AppColors.border,
-          width: isSpeaking ? 1.5 : 1,
-        ),
-      ),
-      child: Text(text, style: Theme.of(context).textTheme.bodyLarge),
-    );
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppColors.subtle,
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            scenario.personInitials,
-            style: const TextStyle(
-              color: AppColors.ink,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
+    final line = IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // The rule is the speaking indicator. It was a waveform glyph
+          // beside a name label, which needed the name label to have
+          // somewhere to sit — this says the same thing with the element
+          // that was already there to mark whose line it is.
+          AnimatedContainer(
+            key: isSpeaking ? const Key('speaking_indicator') : null,
+            duration: const Duration(milliseconds: 220),
+            width: 3,
+            decoration: BoxDecoration(
+              color: isSpeaking ? AppColors.forest : AppColors.border,
+              borderRadius: BorderRadius.circular(999),
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 3, bottom: 5),
-                child: Row(
-                  children: [
-                    Text(
-                      scenario.personName,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (isSpeaking) ...[
-                      const SizedBox(width: 5),
-                      const Icon(
-                        Icons.graphic_eq_rounded,
-                        key: Key('speaking_indicator'),
-                        size: 12,
-                        color: AppColors.forest,
-                      ),
-                    ],
-                  ],
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 1, 24, 1),
+              child: Text(
+                text,
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 20,
+                  height: 1.45,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.3,
                 ),
               ),
-              if (onReplay == null)
-                bubble
-              else
-                Semantics(
-                  button: true,
-                  label: isSpeaking
-                      ? 'Stop reading this line aloud'
-                      : 'Replay this line aloud',
-                  child: InkWell(
-                    key: const Key('replay_line'),
-                    onTap: onReplay,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(18),
-                      bottomLeft: Radius.circular(18),
-                      bottomRight: Radius.circular(18),
-                    ),
-                    child: bubble,
-                  ),
-                ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(width: 24),
-      ],
+        ],
+      ),
+    );
+
+    if (onReplay == null) return line;
+
+    return Semantics(
+      button: true,
+      label: isSpeaking
+          ? 'Stop reading this line aloud'
+          : 'Replay this line aloud',
+      child: InkWell(
+        key: const Key('replay_line'),
+        onTap: onReplay,
+        borderRadius: BorderRadius.circular(6),
+        child: line,
+      ),
+    );
+  }
+}
+
+/// How far through, as one mark per turn.
+///
+/// A continuous bar measures a download. Three turns is a countable number
+/// of moves, and saying so — three marks, one filling at a time — is both
+/// truer and the only place in the app where progress is a shape rather
+/// than a stock component.
+class _TurnTicks extends StatelessWidget {
+  const _TurnTicks({required this.turnIndex, required this.turns});
+
+  final int turnIndex;
+  final int turns;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Turn ${turnIndex + 1} of $turns',
+      child: Row(
+        children: [
+          for (var turn = 0; turn < turns; turn++) ...[
+            if (turn > 0) const SizedBox(width: 5),
+            Expanded(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOut,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: turn <= turnIndex
+                      ? AppColors.forest
+                      : AppColors.subtle,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

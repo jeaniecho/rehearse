@@ -7,7 +7,11 @@ abstract final class AppColors {
   static const canvas = Color(0xFFFFFFFF);
   static const surface = Color(0xFFFFFFFF);
   static const subtle = Color(0xFFF3F3F5);
-  static const border = Color(0xFFE4E4E7);
+
+  /// The cut edge of a sheet, not a Material divider. `#E4E4E7` is a cool
+  /// grey, and a cool line around a warm palette is what made every surface
+  /// read as a default component rather than as paper.
+  static const border = Color(0xFFE8E3DB);
 
   static const ink = Color(0xFF1A1A1A);
   static const muted = Color(0xFF6B6B72);
@@ -154,8 +158,8 @@ abstract final class AppTheme {
         // Material's own shadow rather than Paper.lift, because Card takes
         // an elevation and not a shadow list. Tuned to sit at the same
         // weight; if one moves, move the other.
-        elevation: 1.5,
-        shadowColor: const Color(0x1A000000),
+        elevation: 1,
+        shadowColor: const Color(0x26332E29),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

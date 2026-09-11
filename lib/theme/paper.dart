@@ -24,13 +24,24 @@ import 'package:flutter/material.dart';
 /// `4fa35fc` has the implementation if it is ever wanted back.
 abstract final class Paper {
   /// A contact shadow, not a drop shadow. Two stops: a tight one for the
-  /// edge, a wider one for the weight.
+  /// edge, a short falloff for the weight.
+  ///
+  /// Tuned against the marks rather than against Material. A 12px blur four
+  /// points down is a card *hovering*; the illustrations do not hover, they
+  /// rest — their style block asks for "one soft contact shadow beneath",
+  /// which is tight and close. Matching them is the whole point of lending
+  /// this to a card, and the old values were lent from elevation instead.
+  ///
+  /// Warm, too. Pure black under a warm palette is the tell of a default
+  /// theme: it makes white surfaces read blue-grey where they meet the
+  /// page. This is [AppColors.charcoal], the ink the app already presses
+  /// its buttons in.
   ///
   /// `AppTheme.cardTheme` carries the same weight through `elevation`,
   /// because `Card` takes an elevation rather than a shadow list. If one
   /// moves, move the other.
   static const lift = <BoxShadow>[
-    BoxShadow(color: Color(0x0A000000), blurRadius: 2, offset: Offset(0, 1)),
-    BoxShadow(color: Color(0x0D000000), blurRadius: 12, offset: Offset(0, 4)),
+    BoxShadow(color: Color(0x14332E29), blurRadius: 1, offset: Offset(0, 1)),
+    BoxShadow(color: Color(0x14332E29), blurRadius: 5, offset: Offset(0, 2)),
   ];
 }

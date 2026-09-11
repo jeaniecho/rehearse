@@ -461,8 +461,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final progress = (_turnIndex + 1) / widget.scenario.turns.length;
-
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 58,
@@ -555,12 +553,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
           preferredSize: const Size.fromHeight(6),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 2),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 6,
-              color: AppColors.green,
-              backgroundColor: AppColors.subtle,
-              borderRadius: BorderRadius.all(Radius.circular(999)),
+            child: _TurnTicks(
+              turnIndex: _turnIndex,
+              turns: widget.scenario.turns.length,
             ),
           ),
         ),
@@ -569,62 +564,82 @@ class _PracticeScreenState extends State<PracticeScreen> {
         child: Column(
           children: [
             Expanded(
-              child: ListView(
-                controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
-                children: [
-                  if (_responses.isEmpty) ...[
-                    const _RoomNotice(),
-                    const SizedBox(height: 20),
-                  ],
-                  for (var index = 0; index < _responses.length; index++) ...[
-                    _PersonMessage(
-                      scenario: widget.scenario,
-                      text: index == 0
-                          ? widget.scenario.turns.first.employeeLine
-                          : _responses[index - 1].employeeReply ??
-                                widget.scenario.turns[index].employeeLine,
+              // Bottom-aligned, so the conversation sits just above where
+              // you answer and grows upward as it goes. Top-aligned, the
+              // opening line was one paragraph stranded above two thirds of
+              // an empty screen — which read as a page that had failed to
+              // load rather than as a room gone quiet.
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight - 34,
                     ),
-                    const SizedBox(height: 14),
-                    _YourMessage(text: _responses[index].text),
-                    const SizedBox(height: 18),
-                  ],
-                  _PersonMessage(
-                    key: ValueKey(_turnIndex),
-                    scenario: widget.scenario,
-                    text: _employeeLine,
-                    isSpeaking: _isSpeaking,
-                    onReplay: _voiceAvailable && _voiceEnabled
-                        ? _replayEmployeeLine
-                        : null,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_responses.isEmpty) ...[
+                          const _RoomNotice(),
+                          const SizedBox(height: 20),
+                        ],
+                        for (
+                          var index = 0;
+                          index < _responses.length;
+                          index++
+                        ) ...[
+                          _PersonMessage(
+                            scenario: widget.scenario,
+                            text: index == 0
+                                ? widget.scenario.turns.first.employeeLine
+                                : _responses[index - 1].employeeReply ??
+                                      widget.scenario.turns[index].employeeLine,
+                          ),
+                          const SizedBox(height: 14),
+                          _YourMessage(text: _responses[index].text),
+                          const SizedBox(height: 18),
+                        ],
+                        _PersonMessage(
+                          key: ValueKey(_turnIndex),
+                          scenario: widget.scenario,
+                          text: _employeeLine,
+                          isSpeaking: _isSpeaking,
+                          onReplay: _voiceAvailable && _voiceEnabled
+                              ? _replayEmployeeLine
+                              : null,
+                        ),
+                        // Guided mode previews the chosen line with its authored
+                        // note; free-form mode never coaches mid-conversation.
+                        if (_selectedResponse case final selected?) ...[
+                          const SizedBox(height: 14),
+                          _YourMessage(text: selected.text),
+                          if (selected.feedback.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            _InlineCoach(response: selected),
+                          ],
+                        ],
+                        if (_pendingManagerLine case final pending?) ...[
+                          const SizedBox(height: 14),
+                          _YourMessage(text: pending),
+                        ],
+                        if (_isThinking) ...[
+                          const SizedBox(height: 14),
+                          _Typing(scenario: widget.scenario),
+                        ],
+                        if (_isSummarizing) ...[
+                          const SizedBox(height: 22),
+                          const _Summarizing(),
+                        ],
+                        if (_summaryError case final error?) ...[
+                          const SizedBox(height: 22),
+                          _SummaryFailed(message: error, onRetry: _finish),
+                        ],
+                      ],
+                    ),
                   ),
-                  // Guided mode previews the chosen line with its authored
-                  // note; free-form mode never coaches mid-conversation.
-                  if (_selectedResponse case final selected?) ...[
-                    const SizedBox(height: 14),
-                    _YourMessage(text: selected.text),
-                    if (selected.feedback.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      _InlineCoach(response: selected),
-                    ],
-                  ],
-                  if (_pendingManagerLine case final pending?) ...[
-                    const SizedBox(height: 14),
-                    _YourMessage(text: pending),
-                  ],
-                  if (_isThinking) ...[
-                    const SizedBox(height: 14),
-                    _Typing(scenario: widget.scenario),
-                  ],
-                  if (_isSummarizing) ...[
-                    const SizedBox(height: 22),
-                    const _Summarizing(),
-                  ],
-                  if (_summaryError case final error?) ...[
-                    const SizedBox(height: 22),
-                    _SummaryFailed(message: error, onRetry: _finish),
-                  ],
-                ],
+                ),
               ),
             ),
             if (!_isSummarizing && _summaryError == null)

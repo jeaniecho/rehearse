@@ -329,6 +329,55 @@ Three consequences worth knowing:
   is renamed, and the failure mode — the library closed to everyone who has
   not paid — is bad enough to be worth a guard.
 
+**The rehearsal stopped looking like a messenger — 2026-09-11.** It was the
+most generic screen in the app and the one people spend the most time on:
+grey bubble, circular initials, the person's name printed above a bubble
+when the header two lines up already carried it, a stock
+`LinearProgressIndicator`, and the opening line stranded above two thirds of
+an empty screen.
+
+Three changes, and the reasoning matters more than any of them:
+
+- **Their line gets the page; yours stays a box.** A chat log makes both
+  sides the same kind of object and they are not — this is the conversation
+  happening to you, and the composer below is your answer. Their turn is set
+  at 20pt, unboxed, with a rule beside it; yours is still a charcoal block.
+  The asymmetry is what stops it reading as a messenger, and it is why the
+  avatar and the repeated name could go.
+- **The rule is the speaking indicator.** It was a waveform glyph beside the
+  name label, which only existed because the name label was there to hang it
+  on.
+- **Progress is three marks, not a bar.** A continuous bar measures a
+  download; three turns is a countable number of moves.
+
+The transcript is bottom-aligned now, so the conversation sits just above
+where you answer and grows upward. Top-aligned, one paragraph above an empty
+screen read as a page that had failed to load rather than as a room gone
+quiet.
+
+**The serif was not widened to do this,** though it is the obvious move and
+was considered. `CLAUDE.md` names the practice transcript specifically as
+staying sans, and that invariant held: the line is large, not set in
+Literata. If it is ever revisited, this screen is the case for it.
+
+**The paper tokens stopped being lent from Material.** `Paper.lift` was a
+12px blur four points down — a card hovering — and the illustrations do not
+hover, they rest: their style block asks for one soft contact shadow
+beneath. It is tight and close now, and warm rather than black, because pure
+black under a warm palette makes white surfaces read blue-grey where they
+meet the page. `AppColors.border` moved the same way, from the cool
+`#E4E4E7` to a paper edge. Both are tokens, so every card, tile and the nav
+capsule took the change at once. This is not the off-white *canvas* that was
+tried and rejected — the ground is still pure white, for the reason recorded
+on `AppColors.canvas`.
+
+**Still generic, and known:** the icon set. Stock Material glyphs sit
+directly beside hand-cut paper marks, and that adjacency is most of what
+makes the chrome read as bought and the art as made. Drawing a dozen of them
+is the largest remaining win and has not been done. The onboarding preview
+also still shows conversation as two bubbles, which is now a bigger mismatch
+with the rehearsal than it was.
+
 **The app is set in two families, which the PRD does not mention.** Plus
 Jakarta Sans throughout, plus Literata on the results screen only — the quote
 in `_Quote` and the `STRONGER` rewrite. The rule is that sans is the app
