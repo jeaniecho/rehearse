@@ -21,7 +21,7 @@ unmetered and never shows a paywall — see [Behaviour without keys](#behaviour-
 | Entitlement refresh | ✅ `addCustomerInfoUpdateListener`, so renewals and expiries arrive live |
 | Cancelled purchase | ✅ treated as a normal outcome, no error shown |
 | Unavailable offerings | ✅ retry state, never a dead end |
-| Free tier | ✅ 2 conversations, rehearsed without limit |
+| Free tier | ✅ 3 conversations — the first of each tier of stakes — rehearsed without limit |
 | Contextual paywall | ✅ opens on the pattern the person's own history shows |
 | Sandbox purchase tested | ❌ **needs steps 2–5 below** |
 

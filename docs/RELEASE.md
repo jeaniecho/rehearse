@@ -19,7 +19,7 @@ or a human decision; one needs code, and is called out as such.
 | ✅ | App icon, adaptive icon, themed icon, favicon, PWA icons |
 | ✅ | Launch screen on both platforms |
 | ✅ | Crash reporting wired ([§6](#6-crash-reporting)) |
-| ✅ | Privacy policy and terms written and built as pages — **not yet deployed** |
+| ✅ | Privacy policy and terms **live** at `jeanie.dev/rehearse-privacy` and `/rehearse-terms` |
 | ✅ | Store copy drafted ([§3](#3-store-listing)) |
 | ✅ | Screenshots generated ([§4](#4-screenshots)) |
 | ✅ | Android release signing — verified against a real `--release` bundle |
@@ -27,7 +27,7 @@ or a human decision; one needs code, and is called out as such.
 | ❌ | Store records created, metadata entered |
 | 🟡 | Subscriptions: offerings return real prices; no purchase yet |
 | ✅ | Terms of Use and Privacy Policy links on the paywall (Apple 3.1.2) |
-| 🟡 | Coach server deployed and answering at `https://coach.example.invalid`, with `OPENAI_API_KEY` set as a secret; both routes verified against the live model. Still needs `ALLOWED_ORIGIN` set and `REHEARSE_COACH_URL` in the release build |
+| 🟡 | Coach server deployed and answering at `https://coach.example.invalid`, with `OPENAI_API_KEY` set as a secret and `ALLOWED_ORIGIN` live. Still needs `REHEARSE_COACH_URL` compiled into the release build |
 | ❌ | TestFlight / internal testing build |
 
 ---
@@ -42,11 +42,10 @@ Four things gate everything downstream, in this order:
    description says it does — silently, because `ResilientCoachService` falls
    back rather than failing. Everything in §9's "The product" checklist needs
    this define, and so does judging whether the prompts are any good.
-2. **Deploy the legal pages.** Both are written and build clean —
-   `/rehearse-privacy` and `/rehearse-terms` in the `jeanie-dev` repository,
-   which Firebase serves from `react/dist`. Both stores need a reachable
-   policy URL, and the paywall already links both, so until `firebase deploy`
-   runs those links 404.
+2. **Legal pages — done.** `/rehearse-privacy` and `/rehearse-terms` are
+   deployed and return 200 from the `jeanie-dev` repository, which Firebase
+   serves from `react/dist`. Both stores need a reachable policy URL, and the
+   paywall links both.
 3. **Finish subscriptions.** [`REVENUECAT.md`](REVENUECAT.md) §2–4. Products
    sit in "Missing Metadata" until their localizations and review screenshot
    are filled in, and offerings come back empty until then — which looks
@@ -298,9 +297,9 @@ private keys that must never be committed.
 
 1. Generate an upload keystore. **Do not commit it, and do not commit
    `key.properties`** — add both to `.gitignore` before creating them.
-2. Wire `android/app/build.gradle.kts` to read the keystore from
-   `key.properties`; it currently signs with the debug key, which Play
-   rejects.
+2. `android/app/build.gradle.kts` reads the keystore from `key.properties`
+   and falls back to the debug key only when it is absent. Done and verified
+   against a real `--release` bundle.
 3. `flutter build appbundle --dart-define=…`.
 4. Enrol in Play App Signing.
 
@@ -350,10 +349,12 @@ Run through this on a real device, on the build you are actually shipping:
       locked conversations are still locked until it does
 - [ ] The transaction appears in RevenueCat
 
-**Telemetry**
-- [ ] Events arrive in PostHog and the funnel is walkable
+**Telemetry** — PostHog and Sentry both confirmed receiving, 2026-09-13
+- [x] Events arrive in PostHog and the funnel is walkable
 - [ ] No event contains anything anyone typed
-- [ ] A deliberate crash arrives in Sentry
+- [ ] A deliberate crash arrives in Sentry — the DSN is verified and the app
+      connects to the ingest host, but no error has yet been raised *by the
+      app itself*, only sent to the project directly
 
 **Presentation**
 - [ ] Icon correct on the home screen, no white box behind it
@@ -370,7 +371,4 @@ Say these out loud rather than hoping nobody notices.
 - **The scenarios are 3 turns.** The PRD wants 4–7 with the model deciding
   when a conversation has resolved. Three is a complete rehearsal; it is not
   the full design.
-- **No session outcome.** Conversations do not end as
-  success/partial/unresolved/escalated. The report shows a score band instead,
-  named honestly.
 - **No dark theme.**

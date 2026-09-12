@@ -4,13 +4,15 @@
 > [`PRD.md`](PRD.md). Update this file whenever the answer changes; it is the
 > document a new session should read first.
 >
-> **Last audited:** 2026-09-11, after a full pass on a real simulator — the
-> first time the paywall and the plan card have been rendered rather than
-> asserted — and after session outcome and PRD §9's end conditions landed.
-> Every item PRD §11 lists under `Required:` now exists.
-> **Verified by:** `flutter analyze` (clean), `flutter test` (**420 passing,
-> none failing**), `cd server && npm test` (31 passing), `flutter build
-> appbundle --release` and `flutter build ios --no-codesign` (both succeed).
+> **Last audited:** 2026-09-13, after analytics and crash reporting were
+> watched working against live services for the first time — events arriving
+> in PostHog and an event in Sentry, from a build carrying both keys. The
+> 2026-09-11 pass before it was the first time the paywall and the plan card
+> had been rendered rather than asserted. Every item PRD §11 lists under
+> `Required:` exists.
+> **Verified by:** `flutter analyze` (clean), `flutter test` (**439 passing,
+> none failing**), `cd server && npm test` (**34 passing**), `flutter build
+> appbundle --release` (63.1 MB, signed with the `UPLOAD` key).
 
 ---
 
@@ -38,9 +40,11 @@ rework closed the last three: four scored dimensions, feedback that quotes the
 manager's own words with stronger wording to try, and a difficulty the manager
 picks that reaches the simulation prompt.
 
-What is left is not features. It is **verification against live services** —
-no sandbox purchase, no real analytics event, and no session yet run against a
-real model — and the **release checklist**.
+What is left is not features. It is **verification against live services** and
+the **release checklist**. Analytics and crash reporting came off that list on
+2026-09-13 — events arrive in PostHog and Sentry from a build carrying both
+keys. What remains unobserved is a sandbox purchase and a full session against
+a real model.
 
 ---
 
@@ -158,7 +162,7 @@ three simulation items are not the P0 gaps this section used to call them.
 
 ### Broken
 
-Nothing. 277 Flutter tests and 14 server tests pass, and analysis is clean.
+Nothing. 439 Flutter tests and 34 server tests pass, and analysis is clean.
 
 The four marks for the scenarios added in §4 landed 2026-09-08, closing a
 red suite that ran 251/26 — four asset tests plus every widget test that
@@ -186,15 +190,15 @@ future-risk issues rather than breakage.
 | **M1** Local vertical slice | 🟢 complete |
 | **M2** Real AI simulation | 🟢 separate in-character prompt driven by a chosen personality |
 | **M3** Evaluation + retry | 🟢 four scores, quoted critique with suggested wording, retry |
-| **M4** Monetization + analytics | 🟡 both built and tested; neither verified against a live service |
+| **M4** Monetization + analytics | 🟡 analytics and crash reporting verified against live services (2026-09-13); monetization still has no completed sandbox purchase |
 | **M5** Polish + reliability | 🟢 ahead of schedule — this is the strongest area |
 | **M6** Release + submission | 🟡 everything draftable is drafted; signing, store records, and the hosted policy need accounts |
 | **M7–M9** Launch, growth, submission package | ❌ not started |
 
-The product loop is done. The remaining risk is entirely that **none of the
-remote path has been observed working** — no sandbox purchase, no analytics
-event, no model-generated reply or evaluation — plus M6 being mostly
-untouched.
+The product loop is done. The remaining risk is that **most of the remote path
+has still not been observed working** — no sandbox purchase, and no full
+session against a real model — plus M6 being mostly untouched. Analytics and
+crash reporting are no longer on that list.
 
 ---
 
@@ -673,9 +677,9 @@ addition.
 
 Ordered by what moves the submission, not by what is most interesting.
 
-**Nothing on this list is a missing P0 feature.** Items 1–2 are hard release
-blockers found on the 2026-09-11 device pass; 3–5 are verification against
-live services; the rest is release and depth.
+**Nothing on this list is a missing P0 feature.** Item 1 is a hard release
+blocker; 2–3 are verification against live services; the rest is release and
+depth. Analytics and crash reporting left this list on 2026-09-13.
 
 1. **Compile the coach URL into the release build.** The server is deployed
    and both routes now answer against the live model, at
@@ -685,22 +689,12 @@ live services; the rest is release and depth.
    build made without it ships as the offline demo — which is what the store
    description sells against. Both keyed entries in `.vscode/launch.json`
    now pass it; the store build commands in `RELEASE.md` §8 are what is left.
-2. **Deploy the legal pages.** The paywall now links Terms of Use and
-   Privacy Policy, as Apple 3.1.2 requires at the point of purchase, and both
-   pages are written — `/rehearse-privacy` and `/rehearse-terms` in the
-   `jeanie-dev` repository, rendered from [`PRIVACY.md`](PRIVACY.md) and their
-   own source. They are not deployed, so the links 404 until `firebase deploy`
-   runs. Verified working on a simulator against the live host.
-3. **Complete a sandbox purchase.** The dashboards are further along than
+2. **Complete a sandbox purchase.** The dashboards are further along than
    this file used to say: offerings now return real prices on iOS (Annual
    $59.99, Monthly $8.99), so App Store Connect products and their metadata
    exist. What is unproven is a purchase, a restore, and a transaction
    arriving in RevenueCat — [`REVENUECAT.md`](REVENUECAT.md) §2–§6.
-4. **Point analytics at a real PostHog project and watch the funnel fill.**
-   One `--dart-define` ([`ANALYTICS.md`](ANALYTICS.md) §Setup). Do it at the
-   same time as the sandbox purchase so the monetization funnel is verified
-   in one pass.
-5. **Run a real conversation against a real model.** Play all three
+3. **Run a real conversation against a real model.** Play all three
    difficulty levels. Everything about the simulation and the quoted critique
    is verified against fakes; none of it has met an actual model. The device
    pass showed why this matters — the offline coach's report contradicted
@@ -708,13 +702,14 @@ live services; the rest is release and depth.
    saying it had not. Harmless behind "Private demo scoring", and no evidence
    either way about the real prompts. ROADMAP §5's test matrix is the
    checklist.
-6. **Work through [`RELEASE.md`](RELEASE.md).** The copy, the policy, the
-   screenshots and the privacy answers are written, and Android signing is
-   done. What is left needs an Apple account, a Play account, iOS signing,
-   and somewhere to host the policy.
-7. Dark theme, if there is time before submission. The contrast half of
+4. **Work through [`RELEASE.md`](RELEASE.md).** The copy, the policy, the
+   screenshots and the privacy answers are written, Android signing is done,
+   and the legal pages are live at `jeanie.dev/rehearse-privacy` and
+   `/rehearse-terms`. What is left needs an Apple account, a Play account,
+   and iOS signing.
+5. Dark theme, if there is time before submission. The contrast half of
    this item is done — see §6.
-8. Product depth the PRD lists but does not require for P0: a delegation
+6. Product depth the PRD lists but does not require for P0: a delegation
    scenario, 4–7 turn conversations, and simulation state. Session outcome
    is done — and raising the turn ceiling is now worth more than it was,
    because a conversation that can end early has almost no room to do so

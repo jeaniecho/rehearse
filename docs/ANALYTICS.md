@@ -180,6 +180,47 @@ tree, and replay would record what people type into a rehearsal.
 
 ---
 
+## Checking that events actually arrive
+
+Verified working against a live project on 2026-09-13. Getting there cost an
+hour, because the obvious check is worthless:
+
+**PostHog’s ingest endpoints answer `{"status":"Ok"}` and `200` to anything.**
+A deliberately invalid key gets the same reply as a real one, on both
+`/i/v0/e/` and `/batch`. Never conclude a key works because capture returned
+200.
+
+To check a **key**, call an endpoint that authenticates:
+
+```bash
+curl -s 'https://us.i.posthog.com/flags/?v=2' -H 'Content-Type: application/json' \
+  -d '{"api_key":"phc_…","distinct_id":"probe"}'
+```
+
+A valid key returns flags; an invalid one returns `401
+authentication_failed`. `https://us.i.posthog.com/array/<key>/config` also
+resolves only for a live project.
+
+To see **what the SDK actually sends**, point it at a local server — this is
+what `REHEARSE_POSTHOG_HOST` is for:
+
+```bash
+flutter run --dart-define=REHEARSE_POSTHOG_KEY=phc_… \
+            --dart-define=REHEARSE_POSTHOG_HOST=http://127.0.0.1:9876
+```
+
+Answer every request with `{"status":1}`. Startup fetches
+`/array/<key>/config` and posts `/flags`; events arrive separately as a
+**gzipped** `POST /batch`, so gunzip the body or it reads as binary noise.
+Expect `app_opened` and `onboarding_started` within one flush interval
+(30s) of a fresh launch.
+
+A device log is not enough on its own: `xcrun simctl spawn <udid> log stream`
+shows hostnames but not paths, so a flag fetch and an event upload look
+identical.
+
+---
+
 ## Swapping providers
 
 `AnalyticsSink` is three methods. To move to Amplitude, Mixpanel, or Segment,
