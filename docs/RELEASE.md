@@ -28,6 +28,8 @@ or a human decision; one needs code, and is called out as such.
 | 🟡 | Subscriptions: offerings return real prices; no purchase yet |
 | ✅ | Terms of Use and Privacy Policy links on the paywall (Apple 3.1.2) |
 | 🟡 | Coach server deployed and answering at `https://coach.example.invalid`, with `OPENAI_API_KEY` set as a secret and `ALLOWED_ORIGIN` live. Still needs `REHEARSE_COACH_URL` compiled into the release build |
+| ✅ | iPhone-only (`TARGETED_DEVICE_FAMILY = "1"`), so no iPad review surface and no iPad screenshots |
+| ✅ | Export compliance answered in Info.plist (`ITSAppUsesNonExemptEncryption = false`) |
 | ❌ | TestFlight / internal testing build |
 
 ---
@@ -186,6 +188,11 @@ Suggested captions, in order:
 
 Both stores also want a 6.5" set; scale the same images, or add the size to
 `_size` in the generator and re-run.
+
+**No iPad set is needed.** The app is iPhone-only as of 2026-09-13 —
+`TARGETED_DEVICE_FAMILY = "1"`. Flutter's default is `"1,2"`, which would
+have put the app in front of a reviewer on a 13" iPad, on a layout drawn for
+a phone, and required an iPad screenshot set to submit at all.
 
 ---
 

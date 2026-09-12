@@ -185,6 +185,8 @@ From `ROADMAP.md` §0, and they hold:
   app talking and serif is what a person said. Widen it and the distinction stops
   meaning anything; the brief was considered and rejected, see
   `docs/ARCHITECTURE.md`, Two families.
+- **iPhone only.** `TARGETED_DEVICE_FAMILY = "1"`. Flutter's default includes
+  iPad, which puts a phone layout in front of a reviewer on a 13" screen.
 - **Never send transcript content to analytics** (PRD §16). No method on
   `Analytics` may take a `String` parameter — use an id or an enum. There are
   tests that will fail if this slips.

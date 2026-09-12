@@ -30,6 +30,12 @@
 	     native SDK must not try to auto-initialise without one. -->
 	<key>com.posthog.posthog.AUTO_INIT</key>
 	<false/>
+	<!-- The app's only cryptography is HTTPS to the coach, RevenueCat,
+	     PostHog and Sentry, which is exempt. Declaring it here answers the
+	     export-compliance question at build time; leaving it out makes App
+	     Store Connect ask again on every single upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Rehearse uses the microphone while you practice a response.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
@@ -64,13 +70,6 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
