@@ -131,6 +131,27 @@ void main() {
         });
       }
 
+      // The composer holds six lines before it scrolls, and nothing else
+      // here ever puts a character in it — so an empty field was the only
+      // one being laid out. A full one is the tall case.
+      testWidgets('practice with a full composer', (tester) async {
+        await layOut(
+          tester,
+          PracticeScreen(
+            scenario: scenarios.first,
+            mode: PracticeMode.freestyle,
+            coachService: OfflineCoachService(),
+            speechOutputService: _SilentVoice(),
+          ),
+          textScale: textScale,
+        );
+        await tester.enterText(
+          find.byKey(const Key('freeform_response')),
+          'A' * 600,
+        );
+        await tester.pumpAndSettle();
+      });
+
       for (final scenario in scenarios) {
         testWidgets('coaching report ${scenario.id}', (tester) async {
           await layOut(

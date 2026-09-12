@@ -67,7 +67,6 @@ class DifficultyPicker extends StatelessWidget {
                           child: Text(
                             level.label,
                             textAlign: TextAlign.center,
-                            maxLines: 2,
                             style: TextStyle(
                               color: level == selected
                                   ? Colors.white

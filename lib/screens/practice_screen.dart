@@ -508,8 +508,6 @@ class _PracticeScreenState extends State<PracticeScreen>
                 children: [
                   Text(
                     widget.scenario.personName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
@@ -517,8 +515,6 @@ class _PracticeScreenState extends State<PracticeScreen>
                   ),
                   Text(
                     widget.scenario.personRole,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: AppColors.muted,
                       fontSize: 11,

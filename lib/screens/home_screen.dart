@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../data/scenarios.dart';
@@ -38,6 +40,33 @@ const _railShadowRoom = 22.0;
 /// an icon stranded in a large white card. The masters are cut at
 /// `Illustration.stageSize`, so this costs nothing to draw.
 const _tileMark = 72.0;
+const _tileWidth = 168.0;
+const _tilePadding = 14.0;
+
+/// Shared so the rail measures the same text it draws. A title is never
+/// truncated, so the rail has to be as tall as the longest one in it.
+const _tileTitleStyle = TextStyle(
+  color: AppColors.ink,
+  fontSize: 15,
+  fontWeight: FontWeight.w700,
+  height: 1.25,
+  letterSpacing: -0.2,
+);
+
+double _tallestTitle(BuildContext context, List<Scenario> items) {
+  final scaler = MediaQuery.textScalerOf(context);
+  var tallest = 0.0;
+  for (final scenario in items) {
+    final painter = TextPainter(
+      text: TextSpan(text: scenario.title, style: _tileTitleStyle),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+    )..layout(maxWidth: _tileWidth - _tilePadding * 2);
+    tallest = math.max(tallest, painter.height);
+    painter.dispose();
+  }
+  return tallest;
+}
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -254,8 +283,6 @@ class _ProUpsell extends StatelessWidget {
               const Expanded(
                 child: Text(
                   'Unlock all conversations',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: AppColors.ink,
                     fontSize: 14,
@@ -397,27 +424,21 @@ class _StakesGroup extends StatelessWidget {
         // for their shadow, so a label that looked close to the tiles was
         // eighteen points off them.
         const SizedBox(height: 4),
-        // A horizontal list has to be told its height, so it is derived from
-        // the text scale rather than fixed: the illustration is a constant
-        // but the two lines of title under it are not, and a rail that could
-        // not grow would clip them at an accessibility size.
-        //
-        // The scaled term is the title alone now. It was the title and a
-        // footer line; the state moved up beside the mark, and the rail gave
-        // back the height that line was holding.
+        // A horizontal list has to be told its height, so it is measured
+        // rather than assumed: the illustration is a constant but the title
+        // under it is not, and titles are never truncated. Two lines used to
+        // be the cap; now the rail is as tall as the longest title in it at
+        // whatever text scale is set, which is the only way every word shows.
         SizedBox(
           height:
-              _tileMark +
-              40 +
-              _railShadowRoom +
-              MediaQuery.textScalerOf(context).scale(43),
+              _tileMark + 40 + _railShadowRoom + _tallestTitle(context, items),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: _railGutter,
             itemCount: items.length,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (_, index) =>
-                SizedBox(width: 168, child: _tile(items[index])),
+                SizedBox(width: _tileWidth, child: _tile(items[index])),
           ),
         ),
         const SizedBox(height: 24),
@@ -512,20 +533,12 @@ class _ScenarioTile extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              Text(
-                scenario.title,
-                // The rail is a fixed height, so the title is capped rather
-                // than allowed to push past it at a large text scale.
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.ink,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  height: 1.25,
-                  letterSpacing: -0.2,
-                ),
-              ),
+              // The rail is as tall as its longest title, so most tiles have
+              // slack. It belongs above the title, not below it: titles then
+              // share a bottom edge across the rail instead of each floating
+              // at a different height over dead space.
+              const Spacer(),
+              Text(scenario.title, style: _tileTitleStyle),
             ],
           ),
         ),

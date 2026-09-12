@@ -311,8 +311,6 @@ class _ModeOption extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: selected ? AppColors.forest : AppColors.ink,
                           fontSize: 14,
@@ -322,8 +320,6 @@ class _ModeOption extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         description,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: AppColors.muted,
                           fontSize: 11,

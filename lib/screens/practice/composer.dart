@@ -213,7 +213,11 @@ class _FreeformComposer extends StatelessWidget {
           enabled: !isBusy,
           readOnly: isListening,
           minLines: 1,
-          maxLines: 3,
+          // Grows with what is being written rather than holding three
+          // lines and hiding the rest. Not unbounded: 600 characters is
+          // fifteen-odd lines, and a composer that tall would push the
+          // conversation it answers off the screen — past six it scrolls.
+          maxLines: 6,
           maxLength: 600,
           onSubmitted: (_) {
             if (!isBusy) onSubmit();

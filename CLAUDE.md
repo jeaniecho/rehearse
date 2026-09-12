@@ -185,6 +185,13 @@ From `ROADMAP.md` §0, and they hold:
   app talking and serif is what a person said. Widen it and the distinction stops
   meaning anything; the brief was considered and rejected, see
   `docs/ARCHITECTURE.md`, Two families.
+- **No text is ever truncated.** No `TextOverflow.ellipsis`, no `maxLines` on
+  display text, no `softWrap: false` — every word a screen shows has to be
+  readable. A container that cannot fit its text is the thing that changes:
+  the home rail measures its longest title rather than capping at two lines.
+  The one `maxLines` left is the composer's, because a text field scrolls
+  rather than hides. `test/text_scale_test.dart` lays every screen out at
+  1.6× to keep this honest.
 - **iPhone only.** `TARGETED_DEVICE_FAMILY = "1"`. Flutter's default includes
   iPad, which puts a phone layout in front of a reviewer on a 13" screen.
 - **Never send transcript content to analytics** (PRD §16). No method on

@@ -141,8 +141,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
                       _summary.usedAi
                           ? 'Personalized by AI'
                           : 'Private demo scoring',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.end,
                       style: const TextStyle(
                         color: AppColors.muted,

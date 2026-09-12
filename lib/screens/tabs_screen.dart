@@ -211,13 +211,11 @@ class _NavPill extends StatelessWidget {
                 children: [
                   Icon(icon, size: 19, color: ink),
                   const SizedBox(width: 8),
-                  // Flexible so a large text scale ellipsises inside the
-                  // capsule rather than pushing it past the gutter.
+                  // Flexible so a large text scale wraps inside the capsule
+                  // rather than pushing it past the gutter.
                   Flexible(
                     child: Text(
                       label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: ink,
                         fontSize: 13.5,
