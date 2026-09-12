@@ -137,8 +137,9 @@ class _Launch extends StatelessWidget {
         child: CustomPaint(
           size: Size.square(120),
           painter: BrandMarkPainter(
-            frontBubble: AppColors.forest,
-            separator: AppColors.ground,
+            frontBubble: AppColors.surface,
+            backBubble: AppColors.forest,
+            separator: AppColors.forest,
             scale: 0.9,
           ),
         ),

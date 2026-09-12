@@ -689,7 +689,10 @@ What is left in `BrandMarkPainter` is the icon and the splash, which stay
 `lib/theme/brand_mark_painter.dart` paints two speech bubbles on a 1024 grid
 using the same `AppColors` as the rest of the app, so the icon cannot drift
 from the brand. The same painter renders Flutter's own launch state, which is
-why the handoff from the native splash is invisible.
+why the handoff from the native splash is invisible — but only because both
+draw the mark at the same size. Android's bitmaps were 96dp against Flutter's
+120 until 2026-09-13, so the mark jumped a quarter larger at the handoff on
+that platform alone; `test/app_icon_test.dart` now pins all five densities.
 
 To regenerate after changing the mark:
 
@@ -713,7 +716,7 @@ Four masters come out of the generator, and each exists for a reason:
 | `app_icon` | iOS, web, Android legacy | opaque, mark nearly full-bleed |
 | `app_icon_foreground` | Android adaptive | transparent; sized so the mark still fills the circle *after* flutter_launcher_icons adds its own 16% inset |
 | `app_icon_monochrome` | Android 13 themed icons | one colour, with the gap between bubbles cut out rather than painted, so a tint keeps them legible |
-| `launch_mark` | both splashes | inked forest-on-`ground`, because the icon’s cream bubble is invisible on the splash colour. The five Android densities and the three iOS ones are **cut by hand** from the 1024 master — `flutter_launcher_icons` does the launcher icon only, and does not touch these |
+| `launch_mark` | both splashes | the icon’s own pairing — forest behind, white in front — but the separator is forest rather than `ground`, because white on `ground` is all but invisible and the outline is what makes the front bubble read. It disappears into the back bubble where they overlap, which is how the paper icon reads too. **120dp on every platform**: the five Android densities and the three iOS ones are cut from the 1024 master, and `flutter_launcher_icons` does the launcher icon only, so it never touches these |
 
 `test/app_icon_test.dart` guards the outputs, most importantly that the iOS
 1024 icon has no alpha channel — App Store Connect rejects one that does, at

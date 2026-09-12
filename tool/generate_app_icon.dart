@@ -79,15 +79,19 @@ void main() {
       ),
     );
 
-    // Launch screen: transparent, and inked so it reads on the canvas the
-    // splash paints behind it. The cream front bubble of the app icon would
-    // be invisible there.
+    // Launch screen: transparent, and in the icon's own pairing — forest
+    // behind, white in front — rather than the inked single colour it used
+    // to be. White on `ground` is all but invisible, so the separator does
+    // the work: forest, which outlines the front bubble against the splash
+    // and disappears into the back one where they overlap, exactly as the
+    // icon's paper cut-out reads.
     await render(
       tester,
       'launch_mark',
       const BrandMarkPainter(
-        frontBubble: AppColors.forest,
-        separator: AppColors.ground,
+        frontBubble: AppColors.surface,
+        backBubble: AppColors.forest,
+        separator: AppColors.forest,
         scale: 0.9,
       ),
     );

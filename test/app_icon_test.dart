@@ -133,6 +133,26 @@ void main() {
         );
       }
     });
+
+    // 120dp at every density, which is the size iOS uses and the size
+    // `_Launch` paints. They were 96dp until 2026-09-13, so the mark grew a
+    // quarter at the handoff on Android alone — the one platform where the
+    // seam was visible.
+    test('the launch mark is 120dp at every density', () {
+      for (final (density, size) in [
+        ('mdpi', 120),
+        ('hdpi', 180),
+        ('xhdpi', 240),
+        ('xxhdpi', 360),
+        ('xxxhdpi', 480),
+      ]) {
+        final png = _png(
+          'android/app/src/main/res/drawable-$density/launch_mark.png',
+        );
+        expect(png.width, size, reason: density);
+        expect(png.height, size, reason: density);
+      }
+    });
   });
 
   group('web', () {
