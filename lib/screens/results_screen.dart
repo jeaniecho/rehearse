@@ -161,9 +161,30 @@ class _ResultsScreenState extends State<ResultsScreen> {
               // actually produces: how it ended, and the authored notes.
               showsScore: widget.mode != PracticeMode.guided,
             ),
-            const SizedBox(height: 22),
-            _CoachBubble(text: _summary.summary),
-            const SizedBox(height: 30),
+            if (_summary.coachSummary case final read?) ...[
+              const SizedBox(height: 16),
+              // The coach's read of the conversation, in the app's own voice.
+              // It sat in a butter speech bubble with a mark floating beside
+              // it — two treatments that appeared nowhere else, to say the
+              // one thing on this screen that needs no decoration.
+              Text(
+                read,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.charcoal,
+                  fontSize: 15,
+                  height: 1.5,
+                ),
+              ),
+            ],
+            if (widget.mode != PracticeMode.guided) ...[
+              const SizedBox(height: 26),
+              // Directly under the number, because the number is their mean:
+              // the breakdown is what the score is made of, not an appendix
+              // to it. It spent a while collapsed at the foot of the page.
+              SkillBars(values: _summary.skills, spacing: 14),
+            ],
+            const SizedBox(height: 34),
             Text(
               focusIsImprovement ? 'The moment to rehearse' : 'What landed',
               style: Theme.of(context).textTheme.headlineMedium,
@@ -196,7 +217,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 eyebrow: 'KEEP DOING',
                 icon: Icons.check_circle_rounded,
                 color: AppColors.forest,
-                background: AppColors.mint,
+                // Paper rather than mint. Two mint cards against one peach
+                // one made a section called "the moment to rehearse" read as
+                // mostly praise; the eyebrow still says what they are.
+                background: AppColors.surface,
               ),
             ],
             for (final note in _summary.improvements.skip(
@@ -211,26 +235,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 background: AppColors.peach,
               ),
             ],
-            const SizedBox(height: 18),
-            if (widget.mode != PracticeMode.guided)
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: ExpansionTile(
-                  tilePadding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 4,
-                  ),
-                  childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
-                  title: const Text(
-                    'Your skill breakdown',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                  ),
-                  subtitle: const Text(
-                    'Clarity · empathy · directness · confidence',
-                  ),
-                  children: [SkillBars(values: _summary.skills, spacing: 17)],
-                ),
-              ),
             const SizedBox(height: 24),
           ],
         ),
@@ -381,7 +385,7 @@ class _ScoreBlockState extends State<_ScoreBlock>
           child: Column(
             children: [
               _OutcomePill(outcome: widget.summary.outcome),
-              const SizedBox(height: 16),
+              const SizedBox(height: 22),
               Text(
                 widget.summary.headline,
                 textAlign: TextAlign.center,
@@ -446,59 +450,6 @@ class _OutcomePill extends StatelessWidget {
             color: AppColors.muted,
             fontSize: 13,
             height: 1.35,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// The coach saying it, rather than a paragraph of report prose.
-///
-/// A voice needs somewhere to come from, so the read of the conversation is
-/// spoken by the mark the app is already signed with.
-class _CoachBubble extends StatelessWidget {
-  const _CoachBubble({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: AppColors.forest,
-            borderRadius: BorderRadius.circular(11),
-          ),
-          child: const Icon(Icons.forum_rounded, color: Colors.white, size: 18),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(15, 13, 15, 14),
-            decoration: BoxDecoration(
-              color: AppColors.butter,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
-              ),
-              border: Border.all(color: AppColors.butterEdge),
-            ),
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: AppColors.ink,
-                fontSize: 14,
-                height: 1.45,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
         ),
       ],
