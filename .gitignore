@@ -35,6 +35,10 @@ migrate_working_dir/
 .env
 .env.*
 
+# Every key the release build needs, in one file. `release.json.example` is
+# the committed template; the real one never is. See docs/RELEASE.md §8.
+release.json
+
 # Symbolication related
 app.*.symbols
 

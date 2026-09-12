@@ -1,0 +1,10 @@
+{
+  "_": "Copy to release.json and fill in. That file is gitignored; this one is the template, so never put a real key here. See docs/RELEASE.md §8.",
+
+  "REHEARSE_COACH_URL": "https://coach.example.invalid",
+  "REHEARSE_REVENUECAT_IOS_KEY": "appl_xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "REHEARSE_REVENUECAT_ANDROID_KEY": "goog_xxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "REHEARSE_POSTHOG_KEY": "phc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "REHEARSE_SENTRY_DSN": "https://xxxxxxxx@oxxxxxxx.ingest.us.sentry.io/xxxxxxx",
+  "REHEARSE_ENVIRONMENT": "production"
+}

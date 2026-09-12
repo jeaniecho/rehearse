@@ -33,6 +33,18 @@ cd server && npm test           # 33 tests
 flutter run                     # offline demo coach, unmetered, no keys needed
 ```
 
+To build for the stores, with every key read from `release.json` rather than
+typed (`cp release.json.example release.json` once, then fill it in — it is
+gitignored):
+
+```bash
+tool/release.sh ios      # or android, both, or check
+```
+
+It refuses to build unless the keys are all present, the tree is green, and
+the coach answers at the URL it is about to compile in — a wrong
+`REHEARSE_COACH_URL` fails as silently as a missing one.
+
 With monetization (see `docs/REVENUECAT.md`):
 
 ```bash

@@ -316,18 +316,39 @@ private keys that must never be committed.
 
 None of these are in the repo, and none should be.
 
+Do not type them. They live in `release.json`, which is gitignored, and
+`tool/release.sh` passes them:
+
 ```bash
-flutter build ipa \
-  --dart-define=REHEARSE_COACH_URL=https://coach.example.invalid \
-  --dart-define=REHEARSE_REVENUECAT_IOS_KEY=appl_… \
-  --dart-define=REHEARSE_REVENUECAT_ANDROID_KEY=goog_… \
-  --dart-define=REHEARSE_POSTHOG_KEY=phc_… \
-  --dart-define=REHEARSE_SENTRY_DSN=https://… \
-  --dart-define=REHEARSE_ENVIRONMENT=production
+cp release.json.example release.json   # once, then fill it in
 ```
 
-A `--dart-define-from-file=release.json` is easier to get right. **Add it to
-`.gitignore` the moment you create it.**
+```bash
+tool/release.sh ios        # .ipa, for Transporter or Xcode
+```
+
+`android` and `both` do the obvious thing, and `check` validates without
+building. Before either build it refuses to continue unless all six keys are
+present and none is still a placeholder, `flutter analyze` and `flutter test`
+are clean, and — the one worth having — **the coach answers at the URL it is
+about to compile in**:
+
+```text
+  Coach   https://coach.example.invalid
+          {"ok":true,"model":"gpt-5-nano","routes":[…]}
+  Keys    release.json — all 6 present
+  Version 1.0.0+1
+```
+
+A URL that is absent and a URL that is wrong fail the same way: silently,
+into the offline demo coach, with the store listing still describing the
+other thing. The health check is the only moment anyone would notice.
+
+The equivalent by hand, if you ever need it:
+
+```bash
+flutter build ipa --dart-define-from-file=release.json
+```
 
 The one secret that must never appear in any of these is `OPENAI_API_KEY`.
 That lives only in the coach server's environment. The app knows a URL.
