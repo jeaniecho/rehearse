@@ -8,6 +8,7 @@ import {
   evaluateWithOpenAI,
   extractOutputText,
   groundNotes,
+  overallFrom,
   respondWithOpenAI,
 } from "./coach.mjs";
 
@@ -245,7 +246,6 @@ test("a fabricated quote never reaches the client", async () => {
   const result = await evaluateWithOpenAI(evaluatePayload, {
     apiKey: "test-key",
     fetchImpl: respondWith({
-      overall_score: 74,
       clarity: 68,
       empathy: 90,
       directness: 62,
@@ -270,9 +270,57 @@ test("a fabricated quote never reaches the client", async () => {
     }),
   });
 
-  assert.equal(result.overall_score, 74);
+  // (68 + 90 + 62 + 71) / 4 — derived here, never asked of the model.
+  assert.equal(result.overall_score, 73);
   assert.equal(result.strengths.length, 1);
   assert.equal(result.improvements.length, 0);
+});
+
+test("the headline is the mean of the four dimensions", () => {
+  assert.equal(
+    overallFrom({ clarity: 68, empathy: 90, directness: 62, confidence: 71 }),
+    73,
+  );
+  // The case that sent this whole thing sideways: a weak conversation scores
+  // low, not zero, and never disagrees with its own breakdown.
+  assert.equal(
+    overallFrom({ clarity: 10, empathy: 0, directness: 25, confidence: 15 }),
+    13,
+  );
+  assert.equal(
+    overallFrom({ clarity: 0, empathy: 0, directness: 0, confidence: 0 }),
+    0,
+  );
+  assert.equal(
+    overallFrom({ clarity: 100, empathy: 100, directness: 100, confidence: 100 }),
+    100,
+  );
+});
+
+test("a dimension the model mangles cannot produce a wild headline", () => {
+  // Out of range, missing, and not a number: clamped rather than trusted.
+  assert.equal(
+    overallFrom({ clarity: 140, empathy: -20, directness: undefined, confidence: "72" }),
+    43,
+  );
+});
+
+test("a model that still volunteers an overall score is overruled", async () => {
+  const result = await evaluateWithOpenAI(evaluatePayload, {
+    apiKey: "test-key",
+    fetchImpl: respondWith({
+      overall_score: 0,
+      clarity: 80,
+      empathy: 80,
+      directness: 80,
+      confidence: 80,
+      summary: "Handled well.",
+      strengths: [],
+      improvements: [],
+    }),
+  });
+
+  assert.equal(result.overall_score, 80);
 });
 
 test("a missing key is a configuration error, not a crash", async () => {

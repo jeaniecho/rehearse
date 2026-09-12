@@ -67,11 +67,17 @@ const dimension = (description) => ({
   description,
 });
 
+// `overall_score` is deliberately absent. It used to be the model's own
+// number, described only as "how the conversation went overall", with nothing
+// tying it to the four dimensions below — and the model invented a scale each
+// call. The same weak transcript came back 36, then 0, then 22, with
+// dimensions that did not match any of them. It is derived in
+// `evaluateWithOpenAI` now, so the headline can never contradict the
+// breakdown under it.
 const evaluationSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    overall_score: dimension("How the conversation went overall."),
     clarity: dimension(
       "Whether the issue and the expectation were communicated clearly.",
     ),
@@ -98,7 +104,6 @@ const evaluationSchema = {
     improvements: { type: "array", items: noteSchema },
   },
   required: [
-    "overall_score",
     "clarity",
     "empathy",
     "directness",
@@ -227,6 +232,7 @@ export function buildEvaluateRequest(payload, model = DEFAULT_MODEL) {
             text: [
               "You are Rehearse, coaching a first-time manager on a conversation they have just finished.",
               "Score four dimensions from 0-100, independently: clarity, empathy, directness, confidence.",
+              "These four are the whole score — there is no separate overall number to give, and the headline the manager sees is their average. Score each one on its own evidence.",
               "They come apart. A blunt manager who folds under pushback is direct but not confident. A warm one who never states the expectation is empathetic but not clear.",
               "Give 1-2 strengths and 1-2 improvements.",
               "EVERY note must quote the manager's own words EXACTLY as written, copied character for character from a single manager turn. Never invent, paraphrase, tidy, or merge quotes. If you cannot quote it exactly, do not raise it.",
@@ -371,6 +377,23 @@ export async function respondWithOpenAI(payload, options = {}) {
   };
 }
 
+/**
+ * The four dimensions ARE the score. The headline is their mean rather than a
+ * fifth judgement, so a report can never show a number its own breakdown
+ * contradicts — see `evaluationSchema`.
+ *
+ * An unweighted mean because PRD §10 gives the four equal standing, and
+ * because any weighting would be a claim about which dimension matters most
+ * that nothing in the product makes.
+ */
+export function overallFrom({ clarity, empathy, directness, confidence }) {
+  const dimensions = [clarity, empathy, directness, confidence].map((value) =>
+    Math.min(100, Math.max(0, Math.round(Number(value) || 0))),
+  );
+  const mean = dimensions.reduce((sum, value) => sum + value, 0) / 4;
+  return Math.round(mean);
+}
+
 export async function evaluateWithOpenAI(payload, options = {}) {
   const { apiKey, model, fetchImpl } = resolve(options);
   const result = await callOpenAI(buildEvaluateRequest(payload, model), {
@@ -380,6 +403,7 @@ export async function evaluateWithOpenAI(payload, options = {}) {
 
   return {
     ...result,
+    overall_score: overallFrom(result),
     strengths: groundNotes(result.strengths, payload.history),
     improvements: groundNotes(result.improvements, payload.history),
   };
