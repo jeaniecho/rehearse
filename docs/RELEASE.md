@@ -15,7 +15,7 @@ or a human decision; one needs code, and is called out as such.
 | | |
 |---|---|
 | ✅ | Production bundle id `app.rehearse.rehearse`, both platforms |
-| ✅ | Version `1.0.0+2` |
+| ✅ | Version `1.0.0+3` |
 | ✅ | iOS deployment target **15.0** — Apple refuses anything lower from Spring 2027 (upload warning 90068), and the Flutter template still writes 13.0 |
 | ✅ | App icon, adaptive icon, themed icon, favicon, PWA icons |
 | ✅ | Launch screen on both platforms |
@@ -25,14 +25,14 @@ or a human decision; one needs code, and is called out as such.
 | ✅ | Store copy drafted ([§3](#3-store-listing)) |
 | ✅ | Screenshots generated ([§4](#4-screenshots)) |
 | ✅ | Android release signing — verified against a real `--release` bundle |
-| ✅ | iOS signing — **cloud-managed**. There is no distribution certificate in the local keychain and there does not need to be: Xcode signed the 1.0.0+2 archive with a *Cloud Managed Apple Distribution* certificate (expires 17/07/27) and an `iOS Team Store Provisioning Profile` it fetched on demand. `security find-identity` shows only Development certificates and is the wrong place to look |
+| ✅ | iOS signing — **cloud-managed**. There is no distribution certificate in the local keychain and there does not need to be: Xcode signed the 1.0.0+3 archive with a *Cloud Managed Apple Distribution* certificate (expires 17/07/27) and an `iOS Team Store Provisioning Profile` it fetched on demand. `security find-identity` shows only Development certificates and is the wrong place to look |
 | ❌ | Store records created, metadata entered |
 | 🟡 | Subscriptions: offerings return real prices; no purchase yet |
 | ✅ | Terms of Use and Privacy Policy links on the paywall (Apple 3.1.2) |
 | 🟡 | Coach server deployed and answering at `https://coach.example.invalid`, with `OPENAI_API_KEY` set as a secret and `ALLOWED_ORIGIN` live. Still needs `REHEARSE_COACH_URL` compiled into the release build |
 | ✅ | iPhone-only (`TARGETED_DEVICE_FAMILY = "1"`), so no iPad review surface and no iPad screenshots |
 | ✅ | Export compliance answered in Info.plist (`ITSAppUsesNonExemptEncryption = false`) |
-| 🟡 | TestFlight — `build/ios/ipa/Rehearse.ipa` builds clean (34.08 MB, 1.0.0+2, `MinimumOSVersion` 15.0, read back from the built app). Not uploaded yet |
+| 🟡 | TestFlight — `build/ios/ipa/Rehearse.ipa` builds clean (1.0.0+3, `MinimumOSVersion` 15.0, read back from the built app). Not uploaded yet |
 
 ---
 
@@ -390,7 +390,7 @@ about to compile in**:
   Coach   https://coach.example.invalid
           {"ok":true,"model":"gpt-5-nano","routes":[…]}
   Keys    release.json — all 6 present
-  Version 1.0.0+2
+  Version 1.0.0+3
 ```
 
 A URL that is absent and a URL that is wrong fail the same way: silently,
