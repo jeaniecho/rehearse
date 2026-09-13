@@ -565,18 +565,10 @@ class _LockedChip extends StatelessWidget {
     return Semantics(
       label: 'Pro',
       excludeSemantics: true,
-      child: Container(
-        padding: const EdgeInsets.all(5),
-        decoration: const BoxDecoration(
-          color: AppColors.subtle,
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.lock_rounded,
-          size: 13,
-          color: AppColors.charcoal,
-        ),
-      ),
+      // No disc behind it. The padlock sits on the tile's own paper, where
+      // the score chip opposite it is the only thing that needs a shape of
+      // its own — a number has to read as a value, a lock does not.
+      child: Icon(Icons.lock_rounded, size: 15, color: AppColors.muted),
     );
   }
 }
