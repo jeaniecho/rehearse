@@ -68,7 +68,7 @@ a real model.
   per-scenario best, full history, clearable.
 - Spoken employee replies with a persisted mute toggle *(P2 — see §5)*.
 - Production bundle id `app.rehearse.rehearse` on both platforms; version
-  `1.0.0+1`.
+  `1.0.0+2`, on an iOS floor of 15.0.
 - Layout verified at 1.0×/1.3×/1.6× text scale by `test/text_scale_test.dart`.
 - **RevenueCat**: SDK, `pro` entitlement, offerings fetched dynamically,
   paywall, purchase, restore (on the paywall and the progress screen), live

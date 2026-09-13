@@ -15,7 +15,8 @@ or a human decision; one needs code, and is called out as such.
 | | |
 |---|---|
 | ✅ | Production bundle id `app.rehearse.rehearse`, both platforms |
-| ✅ | Version `1.0.0+1` |
+| ✅ | Version `1.0.0+2` |
+| ✅ | iOS deployment target **15.0** — Apple refuses anything lower from Spring 2027 (upload warning 90068), and the Flutter template still writes 13.0 |
 | ✅ | App icon, adaptive icon, themed icon, favicon, PWA icons |
 | ✅ | Launch screen on both platforms |
 | ✅ | Crash reporting wired ([§6](#6-crash-reporting)) |
@@ -337,7 +338,7 @@ about to compile in**:
   Coach   https://coach.example.invalid
           {"ok":true,"model":"gpt-5-nano","routes":[…]}
   Keys    release.json — all 6 present
-  Version 1.0.0+1
+  Version 1.0.0+2
 ```
 
 A URL that is absent and a URL that is wrong fail the same way: silently,
