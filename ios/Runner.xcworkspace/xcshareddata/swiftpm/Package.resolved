@@ -1,4 +1,5 @@
 {
+  "originHash" : "011ebcc654c1ad96dd787fe5b0bbd8f6c10bed93a72faa086ee4e656d7f30e83",
   "pins" : [
     {
       "identity" : "cwlcatchexception",
@@ -14,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/PostHog/posthog-ios",
       "state" : {
-        "revision" : "dfbd8259873263d2e8c12fc99eaa206e21d4613e",
-        "version" : "3.71.2"
+        "revision" : "2a40ee24aebdb4d77525c5f547b61692c8ef87a9",
+        "version" : "3.74.0"
       }
     },
     {
@@ -35,7 +36,16 @@
         "revision" : "b65cae4f227be800c57cb9700dbd94f2aa5409b2",
         "version" : "5.87.1"
       }
+    },
+    {
+      "identity" : "sentry-cocoa",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/getsentry/sentry-cocoa",
+      "state" : {
+        "revision" : "f196cbb98e0388381d57908f2f5a9bdc385cde68",
+        "version" : "8.58.4"
+      }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
