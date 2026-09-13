@@ -242,7 +242,7 @@ void main() {
                                   top: 0,
                                   left: 0,
                                   right: 0,
-                                  child: _StatusBar(),
+                                  child: StoreStatusBar(),
                                 ),
                               ],
                             ),
@@ -375,71 +375,3 @@ PracticeSummary _report() => PracticeSummary.fromEvaluation(
   ],
   usedAi: true,
 );
-
-/// The iOS status bar, drawn. 9:41 is Apple's own convention in marketing
-/// images, and the island is what a 6.7" phone actually has — without it the
-/// frame reads as a rectangle with an app in it.
-class _StatusBar extends StatelessWidget {
-  const _StatusBar();
-
-  @override
-  Widget build(BuildContext context) {
-    const ink = AppColors.ink;
-    return SizedBox(
-      height: 59,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 11),
-              child: Container(
-                width: 124,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(32, 14, 26, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  '9:41',
-                  style: TextStyle(
-                    fontFamily: AppTheme.fontFamily,
-                    color: ink,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                Row(
-                  children: [
-                    const Icon(Icons.signal_cellular_alt, size: 16, color: ink),
-                    const SizedBox(width: 5),
-                    const Icon(Icons.wifi, size: 16, color: ink),
-                    const SizedBox(width: 5),
-                    Transform.rotate(
-                      angle: 1.5708,
-                      child: const Icon(
-                        Icons.battery_full,
-                        size: 18,
-                        color: ink,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

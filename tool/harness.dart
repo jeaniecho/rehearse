@@ -124,3 +124,77 @@ Future<void> writePng(
     image.dispose();
   });
 }
+
+/// The iOS status bar, drawn. Both store tools frame the app inside a phone,
+/// and a phone with no status bar reads as a mockup of one — but a widget
+/// test has no system chrome to capture, so it is drawn here.
+///
+/// 9:41 is Apple's own convention in marketing images. The height matches the
+/// top padding `sizeAsDevice` reserves, so this sits in space the screens
+/// already leave rather than over their content.
+class StoreStatusBar extends StatelessWidget {
+  const StoreStatusBar({this.height = 59, super.key});
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    const ink = AppColors.ink;
+    return SizedBox(
+      height: height,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 11),
+              child: Container(
+                width: 124,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 14, 26, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '9:41',
+                  style: TextStyle(
+                    fontFamily: AppTheme.fontFamily,
+                    color: ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                Row(
+                  children: [
+                    const Icon(Icons.signal_cellular_alt, size: 16, color: ink),
+                    const SizedBox(width: 5),
+                    const Icon(Icons.wifi, size: 16, color: ink),
+                    const SizedBox(width: 5),
+                    Transform.rotate(
+                      angle: 1.5708,
+                      child: const Icon(
+                        Icons.battery_full,
+                        size: 18,
+                        color: ink,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
