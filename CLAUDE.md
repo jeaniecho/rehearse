@@ -25,8 +25,8 @@ the code.** When reality diverges, record it in `STATUS.md`.
 ```bash
 flutter pub get
 flutter analyze                 # must be clean
-flutter test                    # 439 tests
-cd server && npm test           # 33 tests
+flutter test                    # 442 tests
+cd server && npm test           # 37 tests
 ```
 
 ```bash
@@ -157,8 +157,16 @@ From `ROADMAP.md` §0, and they hold:
   falls back to `OfflineCoachService`, and an unconfigured `Subscription`
   never gates. Every remote capability needs a local fallback, and the demo
   must never depend on one.
-- **Never gate on a store that isn't there.** No RevenueCat key, or a failed
-  `configure()`, means the whole library is open — never a locked app.
+- **Never gate on a store that isn't there — and never mistake a missing
+  network for a missing store.** No RevenueCat key at all (the demo, the web
+  build, every test) means the whole library is open. A build that *has* a
+  key gates, even when the store cannot be reached: `configure()` sets the
+  SDK up locally and that is what `isConfigured` means, while the entitlement
+  lookup is a separate call that is allowed to fail. Offline the SDK answers
+  from its own cache, so someone who has been Pro on that device stays Pro;
+  with no cache the honest answer is "not Pro", which shows the free tier.
+  These were one `try` block until 2026-09-13, and an aeroplane-mode launch
+  gave the paid library to anyone who turned off wifi.
 - **The gate is content, not a count.** `Subscription.freeScenarioIds` names
   the conversations a free account can rehearse, without limit. Nothing about
   the gate is stored, which is the point: a lifetime count of completed

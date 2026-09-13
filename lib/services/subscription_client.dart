@@ -70,12 +70,30 @@ class RevenueCatSubscriptionClient implements SubscriptionClient {
       });
 
       _configured = true;
-      _onProChanged?.call(_isPro(await Purchases.getCustomerInfo()));
-      return true;
     } on Object {
       // A misconfigured key must not take the app down with it.
       return false;
     }
+
+    // Asking who this person is, is a different question from whether the
+    // store is wired up, and it fails for a different reason: no network.
+    //
+    // It used to share the block above, so an aeroplane-mode launch returned
+    // false and the whole library fell open — a build with a key in it gave
+    // everything away to anyone offline. Configuring succeeded; only this
+    // call failed.
+    //
+    // Offline the SDK answers from its own cache, so someone who has been
+    // Pro on this device stays Pro. With no cache to answer from there is no
+    // evidence of an entitlement, and the honest reading of that is "not
+    // Pro" — which shows the free tier, not the whole library. Restore is on
+    // the paywall and on You for the case where that is wrong.
+    try {
+      _onProChanged?.call(_isPro(await Purchases.getCustomerInfo()));
+    } on Object {
+      _onProChanged?.call(false);
+    }
+    return true;
   }
 
   @override

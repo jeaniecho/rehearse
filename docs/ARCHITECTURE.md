@@ -464,9 +464,15 @@ rehearse this conversation?* — because the answer depends on both halves.
 
 Three rules:
 
-1. **An unconfigured build never gates.** No key, or a failed `configure()`,
-   means the whole library is open and no paywall anywhere. This keeps the
-   demo runnable and satisfies PRD §26.
+1. **A build with no key never gates**, which keeps the demo runnable and
+   satisfies PRD §26 — but a build that has one gates even when the store
+   cannot be reached. `configure()` answers whether the SDK is set up, which
+   is local and works offline; the entitlement lookup that follows is a
+   separate call allowed to fail on its own. They shared a `try` until
+   2026-09-13, so aeroplane mode read as "no store" and opened the paid
+   library to anyone who turned off wifi. Offline the SDK answers from its
+   own cache, so a device that has seen the entitlement keeps it; with no
+   cache the answer is "not Pro" and the free tier shows.
 2. **The gate holds no state.** It is a set of scenario ids in code, compared
    against the scenario being opened. Nothing is written, nothing is read,
    and nothing can drift — which is the difference from what this used to be.

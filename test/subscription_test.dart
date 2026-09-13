@@ -82,6 +82,39 @@ void main() {
       }
     });
 
+    test('no network does not open the library', () async {
+      // The bug this pins: `configure` wrapped the store setup and the
+      // entitlement lookup in one try, so an offline launch reported the
+      // build unconfigured and every conversation fell open. Anyone could
+      // have the paid library by turning off wifi.
+      final subscription = Subscription(client: _OfflineClient());
+      addTearDown(subscription.dispose);
+      await subscription.load();
+
+      expect(subscription.isConfigured, isTrue);
+      expect(subscription.isPro, isFalse);
+      expect(subscription.showsLocks, isTrue);
+      expect(subscription.isLocked(_lockedScenario), isTrue);
+      expect(subscription.canPractice(_freeScenario), isTrue);
+    });
+
+    test('no network does not lock out someone who paid', () async {
+      // The other half, and the reason this is not simply "gate harder":
+      // the store SDK answers from its own cache offline, so a device that
+      // has seen the entitlement keeps it.
+      final subscription = Subscription(
+        client: _OfflineClient(cachedPro: true),
+      );
+      addTearDown(subscription.dispose);
+      await subscription.load();
+
+      expect(subscription.isPro, isTrue);
+      expect(subscription.showsLocks, isFalse);
+      for (final scenario in scenarios) {
+        expect(subscription.isLocked(scenario), isFalse, reason: scenario.id);
+      }
+    });
+
     test(
       'a free account reaches the free conversations and no others',
       () async {
@@ -803,6 +836,34 @@ class FakeSubscriptionClient implements SubscriptionClient {
     if (restoreOutcome.unlocksPro) _onProChanged?.call(true);
     return restoreOutcome;
   }
+}
+
+/// Configures fine and then cannot reach the network, which is what an
+/// offline launch looks like to a build that has a key compiled into it.
+class _OfflineClient implements SubscriptionClient {
+  _OfflineClient({this.cachedPro = false});
+
+  /// What the store SDK's own cache can still answer with. False is a device
+  /// that has never seen an entitlement.
+  final bool cachedPro;
+
+  @override
+  Future<bool> configure({required ProStatusCallback onProChanged}) async {
+    // The key is valid and the SDK sets itself up locally; only the lookup
+    // that follows needs a network, and it answers from cache or not at all.
+    onProChanged(cachedPro);
+    return true;
+  }
+
+  @override
+  Future<SubscriptionOffer?> loadOffer() async => null;
+
+  @override
+  Future<PurchaseOutcome> purchase(String planId) async =>
+      PurchaseOutcome.failed;
+
+  @override
+  Future<PurchaseOutcome> restore() async => PurchaseOutcome.failed;
 }
 
 class _ThrowingClient implements SubscriptionClient {
