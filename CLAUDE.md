@@ -83,7 +83,8 @@ To rebuild the bundled illustrations after adding or replacing a master in
 flutter test tool/generate_illustrations.dart
 ```
 
-To regenerate the app icon and splash after changing the mark:
+To regenerate the app icon after changing the mark (the splash carries no
+mark — it is the canvas colour alone):
 
 ```bash
 flutter test tool/generate_app_icon.dart && dart run flutter_launcher_icons && git checkout -- ios/Runner.xcodeproj/project.pbxproj

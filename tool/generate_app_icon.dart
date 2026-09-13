@@ -11,7 +11,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rehearse/theme/app_theme.dart';
 import 'package:rehearse/theme/brand_mark_painter.dart';
 
 const _size = 1024.0;
@@ -76,23 +75,6 @@ void main() {
         backBubble: Color(0xFFFFFFFF),
         separator: null,
         scale: 0.95,
-      ),
-    );
-
-    // Launch screen: transparent, and in the icon's own pairing — forest
-    // behind, white in front — rather than the inked single colour it used
-    // to be. White on `ground` is all but invisible, so the separator does
-    // the work: forest, which outlines the front bubble against the splash
-    // and disappears into the back one where they overlap, exactly as the
-    // icon's paper cut-out reads.
-    await render(
-      tester,
-      'launch_mark',
-      const BrandMarkPainter(
-        frontBubble: AppColors.surface,
-        backBubble: AppColors.forest,
-        separator: AppColors.forest,
-        scale: 0.9,
       ),
     );
   });

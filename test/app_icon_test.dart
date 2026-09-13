@@ -16,7 +16,6 @@ void main() {
       'app_icon',
       'app_icon_foreground',
       'app_icon_monochrome',
-      'launch_mark',
     ]) {
       test('$name is a 1024 square', () {
         final png = _png('assets/icon/$name.png');
@@ -32,7 +31,6 @@ void main() {
       // three are transparent by design and would be wrong otherwise.
       expect(_png('assets/icon/app_icon_foreground.png').hasAlpha, isTrue);
       expect(_png('assets/icon/app_icon_monochrome.png').hasAlpha, isTrue);
-      expect(_png('assets/icon/launch_mark.png').hasAlpha, isTrue);
     });
   });
 
@@ -66,20 +64,6 @@ void main() {
         expect(png.width, png.height, reason: icon.path);
       }
     });
-
-    test('the launch image is the brand mark, not the Flutter logo', () {
-      for (final (name, size) in [
-        ('LaunchImage.png', 120),
-        ('LaunchImage@2x.png', 240),
-        ('LaunchImage@3x.png', 360),
-      ]) {
-        final png = _png(
-          'ios/Runner/Assets.xcassets/LaunchImage.imageset/$name',
-        );
-        expect(png.width, size, reason: name);
-        expect(png.hasAlpha, isTrue, reason: '$name sits on the splash colour');
-      }
-    });
   });
 
   group('Android', () {
@@ -102,22 +86,6 @@ void main() {
       expect(colors, contains(_hex(AppColors.ground)));
     });
 
-    test('both light and dark splashes draw the mark', () {
-      for (final directory in ['drawable', 'drawable-v21']) {
-        final xml = File(
-          'android/app/src/main/res/$directory/launch_background.xml',
-        ).readAsStringSync();
-
-        expect(xml, contains('@color/launch_background'), reason: directory);
-        expect(xml, contains('@drawable/launch_mark'), reason: directory);
-        expect(
-          xml,
-          isNot(contains('@android:color/white')),
-          reason: '$directory still has the default white splash',
-        );
-      }
-    });
-
     test('the launcher icon exists at every density', () {
       for (final density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']) {
         final root = 'android/app/src/main/res';
@@ -126,32 +94,36 @@ void main() {
           isTrue,
           reason: density,
         );
-        expect(
-          File('$root/drawable-$density/launch_mark.png').existsSync(),
-          isTrue,
-          reason: density,
-        );
       }
     });
+  });
 
-    // 120dp at every density, which is the size iOS uses and the size
-    // `_Launch` paints. They were 96dp until 2026-09-13, so the mark grew a
-    // quarter at the handoff on Android alone — the one platform where the
-    // seam was visible.
-    test('the launch mark is 120dp at every density', () {
-      for (final (density, size) in [
-        ('mdpi', 120),
-        ('hdpi', 180),
-        ('xhdpi', 240),
-        ('xxhdpi', 360),
-        ('xxxhdpi', 480),
-      ]) {
-        final png = _png(
-          'android/app/src/main/res/drawable-$density/launch_mark.png',
+  group('the splash', () {
+    test('is the canvas colour and nothing else, on both platforms', () {
+      // A mark on the splash was removed on 2026-09-13. These assert the
+      // absence, because the failure it prevents is a stock Flutter logo or
+      // a stale mark creeping back in under a colour nobody checks.
+      for (final directory in ['drawable', 'drawable-v21']) {
+        final xml = File(
+          'android/app/src/main/res/$directory/launch_background.xml',
+        ).readAsStringSync();
+        expect(xml, contains('@color/launch_background'), reason: directory);
+        expect(xml, isNot(contains('bitmap')), reason: directory);
+        expect(xml, isNot(contains('@mipmap/')), reason: directory);
+        expect(
+          xml,
+          isNot(contains('@android:color/white')),
+          reason: '$directory still has the default white splash',
         );
-        expect(png.width, size, reason: density);
-        expect(png.height, size, reason: density);
       }
+
+      final storyboard = File(
+        'ios/Runner/Base.lproj/LaunchScreen.storyboard',
+      ).readAsStringSync();
+      expect(storyboard, isNot(contains('imageView')));
+      expect(storyboard, isNot(contains('LaunchImage')));
+      // The cream is the splash, so it had better still be there.
+      expect(storyboard, contains('backgroundColor'));
     });
   });
 

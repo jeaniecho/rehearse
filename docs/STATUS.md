@@ -88,8 +88,10 @@ a real model.
 - **Onboarding**: three screens, skippable, remembered. The app waits on the
   preferences read rather than guessing, so a returning manager never sees a
   flash of the intro.
-- **App icon and splash** on iOS, Android (adaptive + themed), and web, drawn
-  in Dart from the brand tokens. Both native splashes match Flutter's own
+- **App icon** on iOS, Android (adaptive + themed), and web, drawn
+  in Dart from the brand tokens. **The splash carries no mark** — it is the
+  canvas colour on both platforms, so Flutter's first frame matches it by
+  drawing nothing either. Both native splashes match Flutter's own
   launch state, so the handoff is invisible.
 - **Simulation and evaluation are separate model tasks** on separate
   endpoints. Nothing coaches mid-conversation; the whole transcript is scored

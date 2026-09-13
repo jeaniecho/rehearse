@@ -688,11 +688,17 @@ What is left in `BrandMarkPainter` is the icon and the splash, which stay
 **drawn in Dart** rather than shipped as art:
 `lib/theme/brand_mark_painter.dart` paints two speech bubbles on a 1024 grid
 using the same `AppColors` as the rest of the app, so the icon cannot drift
-from the brand. The same painter renders Flutter's own launch state, which is
-why the handoff from the native splash is invisible — but only because both
-draw the mark at the same size. Android's bitmaps were 96dp against Flutter's
-120 until 2026-09-13, so the mark jumped a quarter larger at the handoff on
-that platform alone; `test/app_icon_test.dart` now pins all five densities.
+from the brand. **The splash carries no mark at all.** It is `AppColors.ground` and nothing
+else, on both platforms and in Flutter's own launch frame — which is why the
+handoff is invisible: there is nothing to hand over. It held a mark until
+2026-09-13, first a painted one and briefly the paper cut-out, and both had
+the same two problems: a white bubble all but disappears on a cream canvas,
+and every version of it had to be kept in step across eight platform files
+and a bundled asset, at the same size, or the launch blinked.
+
+`test/app_icon_test.dart` asserts the absence. A splash with the stock
+Flutter logo on it is the failure that matters, and it looks exactly like a
+splash nobody has looked at.
 
 To regenerate after changing the mark:
 
@@ -716,7 +722,6 @@ Four masters come out of the generator, and each exists for a reason:
 | `app_icon` | iOS, web, Android legacy | opaque, mark nearly full-bleed |
 | `app_icon_foreground` | Android adaptive | transparent; sized so the mark still fills the circle *after* flutter_launcher_icons adds its own 16% inset |
 | `app_icon_monochrome` | Android 13 themed icons | one colour, with the gap between bubbles cut out rather than painted, so a tint keeps them legible |
-| `launch_mark` | both splashes | the icon’s own pairing — forest behind, white in front — but the separator is forest rather than `ground`, because white on `ground` is all but invisible and the outline is what makes the front bubble read. It disappears into the back bubble where they overlap, which is how the paper icon reads too. **120dp on every platform**: the five Android densities and the three iOS ones are cut from the 1024 master, and `flutter_launcher_icons` does the launcher icon only, so it never touches these |
 
 `test/app_icon_test.dart` guards the outputs, most importantly that the iOS
 1024 icon has no alpha channel — App Store Connect rejects one that does, at

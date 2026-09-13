@@ -8,7 +8,6 @@ import 'services/app_settings.dart';
 import 'services/practice_history.dart';
 import 'services/subscription.dart';
 import 'theme/app_theme.dart';
-import 'theme/brand_mark_painter.dart';
 import 'widgets/app_settings_scope.dart';
 import 'widgets/rehearse_scope.dart';
 
@@ -133,17 +132,10 @@ class _Launch extends StatelessWidget {
     return const Scaffold(
       key: Key('launch'),
       backgroundColor: AppColors.ground,
-      body: Center(
-        child: CustomPaint(
-          size: Size.square(120),
-          painter: BrandMarkPainter(
-            frontBubble: AppColors.surface,
-            backBubble: AppColors.forest,
-            separator: AppColors.forest,
-            scale: 0.9,
-          ),
-        ),
-      ),
+      // Nothing on it. The native splash is the canvas colour alone, so the
+      // frame that replaces it is too — there is no mark to hand over and
+      // therefore nothing that can blink while one is decoded.
+      body: SizedBox.expand(),
     );
   }
 }

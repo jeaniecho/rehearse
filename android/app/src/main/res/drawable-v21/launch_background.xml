@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The native splash. Matches the app's canvas colour and mark so the
-     handoff to Flutter's own launch state is invisible. -->
+<!-- The native splash: the app's canvas colour and nothing else, which is
+     what Flutter's own launch state draws too, so the handoff is invisible
+     because there is nothing to hand over. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/launch_background" />
-    <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@drawable/launch_mark" />
-    </item>
 </layer-list>
