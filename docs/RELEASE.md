@@ -21,17 +21,18 @@ or a human decision; one needs code, and is called out as such.
 | ✅ | Launch screen on both platforms |
 | ✅ | Crash reporting wired ([§6](#6-crash-reporting)) |
 | ✅ | Privacy policy and terms **live** at `jeanie.dev/rehearse-privacy` and `/rehearse-terms` |
+| ✅ | Support URL **live** at `https://jeanie.dev/rehearse-support` — required by App Store Connect, and rejected if it lands on a homepage or a page with no support content. Answers restore, cancelling, "Private demo scoring", dictation, and the data deletion the privacy policy promises can be had by email |
 | ✅ | Store copy drafted ([§3](#3-store-listing)) |
 | ✅ | Screenshots generated ([§4](#4-screenshots)) |
 | ✅ | Android release signing — verified against a real `--release` bundle |
-| ❌ | iOS signing: distribution certificate and profile |
+| ✅ | iOS signing — **cloud-managed**. There is no distribution certificate in the local keychain and there does not need to be: Xcode signed the 1.0.0+2 archive with a *Cloud Managed Apple Distribution* certificate (expires 17/07/27) and an `iOS Team Store Provisioning Profile` it fetched on demand. `security find-identity` shows only Development certificates and is the wrong place to look |
 | ❌ | Store records created, metadata entered |
 | 🟡 | Subscriptions: offerings return real prices; no purchase yet |
 | ✅ | Terms of Use and Privacy Policy links on the paywall (Apple 3.1.2) |
 | 🟡 | Coach server deployed and answering at `https://coach.example.invalid`, with `OPENAI_API_KEY` set as a secret and `ALLOWED_ORIGIN` live. Still needs `REHEARSE_COACH_URL` compiled into the release build |
 | ✅ | iPhone-only (`TARGETED_DEVICE_FAMILY = "1"`), so no iPad review surface and no iPad screenshots |
 | ✅ | Export compliance answered in Info.plist (`ITSAppUsesNonExemptEncryption = false`) |
-| ❌ | TestFlight / internal testing build |
+| 🟡 | TestFlight — `build/ios/ipa/Rehearse.ipa` builds clean (34.08 MB, 1.0.0+2, `MinimumOSVersion` 15.0, read back from the built app). Not uploaded yet |
 
 ---
 
@@ -71,69 +72,120 @@ Four things gate everything downstream, in this order:
 
 ```text
 Name      Rehearse
-Subtitle  Practice hard conversations
+Subtitle  Rehearse it before you have it
 ```
 
 `Rehearse` is 8 characters, leaving room in the 30-character App Store name
-field. The subtitle is 29 of 30.
+field. The subtitle is 30 of 30, and echoes the description's
+opening line rather than describing a category — "practice hard
+conversations" named the shelf the app sits on, which the category field
+already does.
 
 ### Promotional text (App Store, 170 max — editable without review)
 
 ```text
-The conversation you have been putting off goes better when it is not the
-first time you have had it.
+You’ll have it once. Rehearse it as many times as you like — with someone who pushes back, and a report that quotes the sentence that cost you.
 ```
+
+143 of 170. It carries the hook's argument into the line that sits
+above the description, and says what the rehearsal actually gives back —
+pushback, and the sentence that cost you. Editable without review, so it is
+the one piece of store copy worth changing after launch.
 
 ### Description
 
-```text
-You know you need to have the conversation. You just do not know how to say
-it without making things worse.
+No counts, neither the catalogue's nor the free tier's. A number dates the
+copy the moment a scenario is added or the tier is re-picked — the free tier
+has already been three rehearsals, then three warm-ups, then one conversation
+per tier of stakes — and it invites the reader to judge whether the number is
+generous. What sells the free tier is that it is unlimited, which stays true
+however the membership changes. See `564b385` for the same rule in the app.
 
-Rehearse is a practice room for the conversations managers avoid. Pick a
-situation, choose how hard the other person pushes back, and have it — with
-someone who reacts to what you actually say. Then find out where it went
-wrong, in your own words.
+Paragraphs are deliberately unwrapped — one line each. The App Store wraps
+text itself, so a hard line break pasted into App Store Connect shows up as a
+break mid-sentence on a narrow phone. Only the bullets and the headings own
+their line breaks.
+
+The first line is the whole hook: the store collapses the description after
+about two lines, so everything below the first section is read only by
+people already half-sold.
+
+```text
+You’ll have the conversation once. You can rehearse it twenty times.
+
+Rehearse is a practice room for the conversations managers avoid. Pick a situation, choose how hard the other person pushes back, and have it — with someone who reacts to what you actually say. Then find out where it went wrong, in your own words.
 
 PRACTICE, NOT ADVICE
-Reading about difficult conversations does not prepare you for one. Four
-minutes of rehearsing does. Every scenario is a real situation with a real
-goal and a trap most people fall into.
+Reading about difficult conversations doesn’t prepare you for one. Four minutes of rehearsing does. Every conversation is a real situation with a real goal and the trap most people fall into.
 
-THEY WILL NOT JUST AGREE
-Choose calm, defensive, or very defensive. A vague message earns a vague
-answer. Soften the expectation and watch it disappear. Nothing coaches you
-mid-conversation, because nothing does in the room either.
+THEY WON’T JUST AGREE
+Choose calm, defensive, or very defensive. A vague message earns a vague answer. Soften the expectation and watch it disappear. Nothing coaches you mid-conversation, because nothing does in the room either.
 
 SEE THE EXACT MOMENT
-Afterwards you get a score for clarity, empathy, directness and confidence —
-and the specific sentence that cost you, quoted back, with stronger wording
-to use instead.
+Afterwards you get a score for clarity, empathy, directness and confidence, how the conversation ended, and the specific sentence that cost you — quoted back, with stronger wording to use instead.
 
-SEVEN SITUATIONS
+FREE TO START, AND UNLIMITED
+Start with a warm-up and work up to the ones that keep you awake:
+· The tense teammate — repairing a strained relationship
 · The slipping deadline — repeated missed commitments
 · The impossible request — saying no to your director
-· The tense teammate — repairing a strained relationship
+· The notice you didn’t see coming — hearing a resignation well
+· The brilliant difficult one — behaviour from someone you can’t lose
+· The promotion that isn’t — delivering a no they expected to be a yes
 · The feedback upward — telling your own manager something hard
-· The promotion that isn't — delivering a no you promised would be a yes
-· The brilliant difficult one — behaviour from someone you cannot lose
-· The notice you didn't see coming — hearing a resignation well
+· The person who never says no — protecting someone from their own yes
+· The midnight messages — naming a pattern nobody wants to name
+
+The free conversations stay free, and you can rehearse them as many times as you like — the repetition is the point, not a trial. Rehearse Pro opens the whole library.
 
 PRIVATE
-Your practice history never leaves your phone, and you can erase it whenever
-you like. Nothing you say in a rehearsal is stored anywhere.
+Your practice history never leaves your phone, and you can erase it whenever you like. What you type during a rehearsal is used to generate the reply and the feedback, and is not kept.
 
 Rehearse is a coaching simulator. It is not HR, legal, or medical advice.
+
+Terms of Use: https://jeanie.dev/rehearse-terms
+Privacy Policy: https://jeanie.dev/rehearse-privacy
 ```
+
+Both links are required in the description itself for an auto-renewing
+subscription, not only on the paywall — Apple asks for the EULA and the
+privacy policy where a buyer can read them before installing, and the EU
+requires the same of a trader selling to consumers there. The paywall links
+to both as well (Apple 3.1.2), and `lib/data/legal_links.dart` is the one
+place either URL is written in the app.
 
 ### Keywords (App Store, 100 characters, comma-separated, no spaces)
 
 ```text
-manager,leadership,feedback,difficult,conversation,coaching,management,1on1,practice,communication
+manager,leadership,feedback,difficult,conversation,coaching,conflict,roleplay,boss,assertive,1on1,hr
 ```
 
-99 characters. Do not repeat words from the name or subtitle — the store
-already indexes those.
+Exactly 100 of 100, twelve terms.
+
+Three rules decided this list:
+
+- **Nothing already in the name or subtitle.** `rehearse`, `before` and
+  `have` are indexed from those fields, so spending characters on them buys
+  nothing. That is also why the subtitle is worth writing as copy rather than
+  as keywords — it earns both.
+- **No two words that stem to each other.** The earlier draft carried
+  `manager` *and* `management`, which is about ten characters for one term.
+- **Single words beat phrases**, because the store builds phrases by
+  combining these with the title and subtitle — `difficult` and
+  `conversation` reach "difficult conversations" without either being spent
+  on the pair.
+
+What changed and why: `management` dropped as a duplicate of `manager`;
+`practice` and `communication` dropped as broad, high-competition terms this
+app will not rank for. In came `conflict` (conflict resolution is the
+adjacent category people actually search), `roleplay` and `assertive` (what
+the app mechanically is, and the skill it trains), `boss` (plain-language
+searching, much less contested than "leadership"), and `hr`, which costs two
+characters.
+
+Not included deliberately: **"crucial conversations"** is the title of a
+trademarked book and a rejection risk, and competitor names in a keyword
+field are against App Store review guideline 5.2.
 
 ### Play Store short description (80 max)
 
