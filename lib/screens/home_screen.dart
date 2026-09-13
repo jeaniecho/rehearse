@@ -40,7 +40,7 @@ const _railShadowRoom = 22.0;
 /// an icon stranded in a large white card. The masters are cut at
 /// `Illustration.stageSize`, so this costs nothing to draw.
 const _tileMark = 72.0;
-const _tileWidth = 168.0;
+const _tileWidth = 180.0;
 const _tilePadding = 14.0;
 
 /// Shared so the rail measures the same text it draws. A title is never
