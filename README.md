@@ -1,130 +1,165 @@
-# Rehearse
+<div align="center">
+  <img src="assets/icon/app_icon.png" width="96" alt="Rehearse app icon" />
+  <h1>Rehearse</h1>
+  <p><strong>Practice the difficult conversation before it matters.</strong></p>
+  <p>Flutter · iOS · Android · Web</p>
+  <p><a href="https://apps.apple.com/us/app/rehearse-conversation-coach/id6808087516">Available on the App Store</a></p>
+</div>
 
-> Practice the difficult conversation before it matters.
+Rehearse is a conversation practice app that helps new managers
+build confidence in difficult workplace conversations through
+interactive simulations and actionable coaching.
 
-Rehearse is a private practice room for difficult workplace conversations. It
-helps new managers build confidence through short, branching simulations and
-specific feedback on clarity, empathy, directness, and confidence.
+Originally built for RevenueCat Shipaton 2026.
 
-Built for the RevenueCat Shipaton 2026, leadership and career coaching.
+<p align="center">
+  <img src="docs/screenshots/01-home.png" width="23%" alt="Scenario library" />
+  <img src="docs/screenshots/03-practice.png" width="23%" alt="Conversation practice" />
+  <img src="docs/screenshots/04-report.png" width="23%" alt="Coaching report" />
+  <img src="docs/screenshots/05-progress.png" width="23%" alt="Practice progress" />
+</p>
 
-## Documentation
+## Features
 
-| Document | What it is |
-|---|---|
-| [`docs/STATUS.md`](docs/STATUS.md) | **Start here.** What is built, what is missing, what to do next. |
-| [`docs/PRD.md`](docs/PRD.md) | Product spec: requirements, priorities, acceptance criteria. |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Execution plan and milestones. |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the code is put together. |
-| [`docs/REVENUECAT.md`](docs/REVENUECAT.md) | Subscription setup, and how the app behaves without keys. |
-| [`docs/ANALYTICS.md`](docs/ANALYTICS.md) | The tracking plan and its privacy rule. |
-| [`CLAUDE.md`](CLAUDE.md) | Conventions and invariants for anyone, human or agent, changing this repo. |
+- **Scenario library:** 12 curated workplace conversations,
+  including feedback, delegation, conflict, and boundary setting.
+- **Interactive practice:** guided choices or free-form responses
+  with adjustable difficulty and resistance.
+- **Voice interaction:** speech recognition and spoken replies.
+- **Personalized coaching:** feedback on clarity, empathy,
+  directness, and confidence, grounded in the user's responses.
+- **Progress tracking:** practice streaks, skill averages,
+  session history, and personal bests.
+- **Offline practice:** a fully functional demo without
+  API keys or a network connection.
 
-## What works today
+## Engineering highlights
 
-- Seven playable leadership scenarios: clear feedback, boundaries, repair,
-  upward candor, hard news, standards, and hearing a resignation.
-- A briefing before each conversation with context, goal, and a common trap.
-- Guided choices or typed or spoken free-form answers for every scenario.
-- A resistance level you pick before each rehearsal, from calm to very
-  defensive, that changes how the other person answers.
-- Spoken replies, so the other person's lines are heard rather than read.
-- AI-personalized scoring and in-character replies through a secure server.
-- Automatic offline coaching when the server is not configured or unavailable.
-- A final conversation score and skill-by-skill coaching report.
-- On-device progress: a practice streak, weekly count, average score, and a
-  full session history that never leaves the phone.
-- A responsive Material 3 experience for iOS, Android, and web, verified up to
-  1.6x system text size.
-- Fully local scenario logic, so the demo is fast and reliable without an API
-  key or network connection.
-- Two conversations free and unlimited, the rest behind a RevenueCat
-  subscription, with prices and paywall copy driven from the dashboard rather
-  than the code.
-- A product funnel instrumented end to end, built so that nothing you say in a
-  rehearsal can reach analytics.
-- A three-screen intro on first run that previews the real thing.
+### Resilient AI integration
 
-## What does not exist yet
+Conversation simulation and evaluation are separate model tasks.
+Structured responses are validated on both the server and client,
+and coaching quotes are checked against the original transcript.
 
-Every P0 feature is built, and every PRD acceptance criterion for the product
-loop is met. What is unproven is the remote path: no sandbox purchase, no real
-analytics event, and no conversation yet run against an actual model.
+When the remote coach is unavailable, an on-device coach
+provides a fallback without interrupting the practice flow.
 
-For release, what remains is a privacy policy, store metadata and screenshots,
-signing, and crash reporting.
+### Privacy by design
 
-Subscriptions are built and tested but have never completed a sandbox
-purchase, which needs App Store Connect and Play Console configuration —
-[`docs/REVENUECAT.md`](docs/REVENUECAT.md) has the steps.
+Practice history is stored locally. Analytics interfaces accept
+only predefined identifiers, enums, numbers, and booleans,
+rather than conversation text.
 
-[`docs/STATUS.md`](docs/STATUS.md) has the full gap list and the recommended
-order of work.
+Crash reporting is configured to avoid capturing sensitive
+practice content. AI requests are handled by a server-side proxy,
+keeping the provider API key out of the client.
 
-## Project structure
+### Product infrastructure
 
-- `lib/data`: curated branching scenario content
-- `lib/models`: scenario, response, summary, and history-record models
-- `lib/screens`: onboarding, home, briefing, simulation, coaching report,
-  progress, and paywall
-- `lib/services`: remote and offline coaching, speech in and out, the local
-  practice history and preferences, subscriptions, and analytics
-- `lib/theme`: visual tokens and Material theme
-- `lib/widgets`: shared layout and brand components
-- `server`: lightweight OpenAI Responses API proxy and tests
+RevenueCat handles subscriptions, dynamic offerings,
+purchase restoration, and entitlement updates.
 
-## Run
+PostHog supports product analytics through a provider-independent
+interface, while Sentry handles error monitoring.
+All integrations are optional in local development.
 
-```sh
+### Design and quality
+
+A custom Material 3 design system, reusable components,
+bundled typography, and a consistent illustration library.
+
+Automated tests cover product behavior, accessibility,
+subscription states, coaching responses, and server validation.
+Store screenshots are generated directly from the Flutter UI.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    UI[Flutter UI] --> State[Application State]
+    State --> Coach[Coach Service]
+    Coach --> Remote[Remote Coach]
+    Coach --> Offline[Offline Coach]
+    Remote --> Server[Cloudflare Workers / Node.js]
+    Server --> AI[OpenAI Responses API]
+    Remote -. Fallback .-> Offline
+    State --> Storage[Local Persistence]
+    State --> Integrations[Subscriptions / Analytics / Monitoring]
+```
+
+## Tech stack
+
+**Application:** Flutter, Dart, Material 3
+
+**Backend:** Node.js, Cloudflare Workers, OpenAI Responses API
+
+**Product infrastructure:** RevenueCat, PostHog, Sentry
+
+**Local storage:** SharedPreferences
+
+## Getting started
+
+Requires Flutter with Dart 3.12 or compatible SDK,
+and a configured target platform.
+
+```bash
 flutter pub get
 flutter run
 ```
 
-Finished rehearsals are stored on the device with `shared_preferences`, so the
-streak and history survive a restart. Nothing is uploaded; the progress screen
-can clear everything at any time.
+The app runs in offline demo mode by default.
+No API keys, accounts, or backend configuration are required.
 
-Without configuration, free-form mode uses the private on-device demo coach.
-Tap the microphone in free-form mode to dictate a response; the system speech
-service may require network access depending on the device. Typing remains
-available when speech recognition is unsupported or permission is declined.
-Guided mode is always available.
+### Optional AI integration
 
-The other person's lines are read aloud by the system voice. Tap their message
-to replay it, or the speaker button in the header to mute — the choice is
-remembered. A device without a usable voice simply stays quiet.
+To enable remote coaching, run your own local server
+with Node.js 20 or later.
 
-## Enable the AI coach
+Set your own `OPENAI_API_KEY` in the server environment,
+then start the server:
 
-The OpenAI API key belongs on the server, never in the Flutter app or repository.
+```bash
+cd server
+npm start
+```
 
-1. Set `OPENAI_API_KEY` in the server environment or secret manager.
-2. Start the coach:
+From the project root, in another terminal:
 
-   ```sh
-   cd server
-   npm start
-   ```
+```bash
+flutter run \
+  --dart-define=REHEARSE_COACH_URL=http://127.0.0.1:8787
+```
 
-3. Point Flutter at it:
+For Android emulators, use `10.0.2.2` instead of
+`127.0.0.1` and configure the local server to accept
+emulator connections.
 
-   ```sh
-   flutter run --dart-define=REHEARSE_COACH_URL=http://127.0.0.1:8787
-   ```
+Production credentials and deployment configuration
+are intentionally excluded from this repository.
 
-The server defaults to `gpt-5.6-sol` with low reasoning effort for responsive
-turn-by-turn feedback. Override it with `OPENAI_MODEL` after evaluating quality,
-latency, and cost. It listens only on `127.0.0.1` during local development;
-deployment environments can set `HOST` and should restrict `ALLOWED_ORIGIN`.
-For Android Emulator, use `http://10.0.2.2:8787` and set `HOST=0.0.0.0`
-only on a trusted development network.
+## Testing
 
-## Verify
-
-```sh
+```bash
 flutter analyze
 flutter test
 cd server && npm test
 ```
 
-See [`docs/STATUS.md`](docs/STATUS.md) §7 for what to build next.
+### Generate screenshots
+
+```bash
+flutter test tool/generate_screenshots.dart
+```
+
+Screenshots are rendered from the actual app with seeded demo data.
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Product requirements](docs/PRD.md)
+- [Analytics](docs/ANALYTICS.md)
+- [Subscription integration](docs/REVENUECAT.md)
+- [Implementation history](docs/STATUS.md)
+
+The documentation also preserves the project's original
+development decisions and historical implementation notes.
